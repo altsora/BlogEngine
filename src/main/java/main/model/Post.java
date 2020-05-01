@@ -16,19 +16,17 @@ public class Post {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    //@Column(name = "id")
     private int id;
 
     @Column(name = "is_active", nullable = false)
     private boolean isActive;
 
-    //@Column(name = "moderation_status", columnDefinition = "ENUM('NEW', 'ACCEPTED', 'DECLINED')")
     @Column(name = "moderation_status", columnDefinition = "enum")
     @Enumerated(EnumType.STRING)
-    private ModerationStatusType moderationStatus;
+    private ModerationStatusType moderationStatus = ModerationStatusType.NEW;
 
-    @Column(name = "moderator_id")
-    private Integer moderatorId;
+    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private User moderator;
 
     @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private User user;

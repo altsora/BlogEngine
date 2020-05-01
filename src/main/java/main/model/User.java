@@ -17,7 +17,6 @@ public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
     private int id;
 
     @Column(name = "is_moderator", nullable = false)
@@ -43,4 +42,7 @@ public class User {
 
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
     private List<Post> posts;
+
+    @OneToMany(mappedBy = "moderator", fetch = FetchType.LAZY)
+    private List<Post> modifiedPosts;
 }
