@@ -18,14 +18,14 @@ public class PostComment {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
-    @Column(name = "parent_id")
-    private Integer parentId;
+    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private Post parent;
 
-    @Column(name = "post_id", nullable = false)
-    private int postId;
+    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private Post post;
 
-    @Column(name = "user_id", nullable = false)
-    private int userId;
+    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private User user;
 
     @Column(name = "time", nullable = false)
     private Date time;
