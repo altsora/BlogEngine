@@ -27,7 +27,7 @@ public class Post {
     private ModerationStatusType moderationStatus;
 
     @Column(name = "moderator_id")
-    private int moderatorId;
+    private Integer moderatorId;
 
     @Column(name = "user_id", nullable = false)
     private int userId;
