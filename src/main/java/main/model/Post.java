@@ -29,7 +29,6 @@ public class Post {
     @Column(name = "moderator_id")
     private Integer moderatorId;
 
-    //@Column(name = "user_id", nullable = false)
     @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private User user;
 
