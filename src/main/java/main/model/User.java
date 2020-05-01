@@ -2,18 +2,22 @@ package main.model;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 import javax.persistence.*;
 import java.util.Date;
+import java.util.List;
 
 @Entity
 @Table(name = "users")
 @NoArgsConstructor
 @Data
+@ToString(exclude = {"posts"})
 public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
     private int id;
 
     @Column(name = "is_moderator", nullable = false)
@@ -36,4 +40,7 @@ public class User {
 
     @Column(name = "photo")
     private String photo;
+
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
+    private List<Post> posts;
 }

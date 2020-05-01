@@ -16,6 +16,7 @@ public class Post {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    //@Column(name = "id")
     private int id;
 
     @Column(name = "is_active", nullable = false)
@@ -29,7 +30,7 @@ public class Post {
     @Column(name = "moderator_id")
     private Integer moderatorId;
 
-    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private User user;
 
     @Column(name = "time", nullable = false)
