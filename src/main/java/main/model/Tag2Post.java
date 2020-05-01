@@ -17,9 +17,11 @@ public class Tag2Post {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
-    @Column(name = "post_id", nullable = false)
-    private int postId;
+//    @Column(name = "post_id", nullable = false)
+    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private Post post;
 
-    @Column(name = "tag_id", nullable = false)
-    private int tagId;
+//    @Column(name = "tag_id", nullable = false)
+    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private Tag tag;
 }
