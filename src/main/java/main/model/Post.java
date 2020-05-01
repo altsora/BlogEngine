@@ -22,15 +22,16 @@ public class Post {
     private boolean isActive;
 
     //@Column(name = "moderation_status", columnDefinition = "ENUM('NEW', 'ACCEPTED', 'DECLINED')")
-    @Column(name = "moderation_status")
+    @Column(name = "moderation_status", columnDefinition = "enum")
     @Enumerated(EnumType.STRING)
     private ModerationStatusType moderationStatus;
 
     @Column(name = "moderator_id")
     private Integer moderatorId;
 
-    @Column(name = "user_id", nullable = false)
-    private int userId;
+    //@Column(name = "user_id", nullable = false)
+    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private User user;
 
     @Column(name = "time", nullable = false)
     private Date time;
