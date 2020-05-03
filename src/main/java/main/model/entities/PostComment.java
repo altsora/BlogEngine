@@ -1,4 +1,4 @@
-package main.model.entity;
+package main.model.entities;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -6,25 +6,26 @@ import lombok.ToString;
 
 import javax.persistence.*;
 import java.util.Date;
+import java.util.List;
 
 @Entity
 @Table(name = "post_comments")
 @NoArgsConstructor
 @Data
-@ToString
+@ToString(exclude = {"children"})
 public class PostComment {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
-    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private Post parent;
+    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private PostComment parent;
 
-    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Post post;
 
-    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private User user;
 
     @Column(name = "time", nullable = false)
@@ -32,4 +33,7 @@ public class PostComment {
 
     @Column(name = "text", nullable = false)
     private String text;
+
+    @OneToMany(mappedBy = "parent", fetch = FetchType.LAZY)
+    private List<PostComment> children;
 }

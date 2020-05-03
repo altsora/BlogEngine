@@ -1,4 +1,4 @@
-package main.model.entity;
+package main.model.entities;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -8,25 +8,22 @@ import javax.persistence.*;
 import java.util.Date;
 
 @Entity
-@Table(name = "post_votes")
+@Table(name = "captcha_codes")
 @NoArgsConstructor
 @Data
 @ToString
-public class PostVote {
+public class CaptchaCode {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
-    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private User user;
-
-    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private Post post;
-
     @Column(name = "time", nullable = false)
     private Date time;
 
-    @Column(name = "value", nullable = false)
-    private int value;
+    @Column(name = "code", nullable = false)
+    private String code;
+
+    @Column(name = "secret_code", nullable = false)
+    private String secretCode;
 }

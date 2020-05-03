@@ -1,18 +1,21 @@
-package main.model.entity;
+package main.model.entities;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 import main.model.ModerationStatusType;
 
 import javax.persistence.*;
 import java.util.Date;
+import java.util.List;
 
 @Entity
 @Table(name = "posts")
 @NoArgsConstructor
 @Data
-@ToString(exclude = {"user", "moderator"})
+@ToString(exclude = {"postRatings", "tags", "comments"})
+@EqualsAndHashCode(of = {"user", "title", "time"})
 public class Post {
 
     @Id
@@ -43,4 +46,13 @@ public class Post {
 
     @Column(name = "view_count", nullable = false)
     private int viewCount;
+
+    @OneToMany(mappedBy = "post", fetch = FetchType.LAZY)
+    private List<PostVote> postRatings;
+
+    @OneToMany(mappedBy = "post", fetch = FetchType.LAZY)
+    private List<Tag2Post> tags;
+
+    @OneToMany(mappedBy = "post", fetch = FetchType.LAZY)
+    private List<PostComment> comments;
 }

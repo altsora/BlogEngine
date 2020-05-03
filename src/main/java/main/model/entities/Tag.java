@@ -1,27 +1,28 @@
-package main.model.entity;
+package main.model.entities;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
 import javax.persistence.*;
+import java.util.List;
 
 @Entity
-@Table(name = "global_settings")
+@Table(name = "tags")
 @NoArgsConstructor
 @Data
-@ToString
-public class GlobalSettings {
+@ToString(exclude = {"posts"})
+@EqualsAndHashCode(of = {"name"})
+public class Tag {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
-    @Column(name = "code", nullable = false)
-    private String code;
-
     @Column(name = "name", nullable = false)
     private String name;
 
-    @Column(name = "value", nullable = false)
-    private String value;
+    @OneToMany(mappedBy = "tag", fetch = FetchType.LAZY)
+    private List<Tag2Post> posts;
 }

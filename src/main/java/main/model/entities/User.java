@@ -1,9 +1,9 @@
-package main.model.entity;
+package main.model.entities;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
-import main.model.entity.Post;
 
 import javax.persistence.*;
 import java.util.Date;
@@ -13,7 +13,8 @@ import java.util.List;
 @Table(name = "users")
 @NoArgsConstructor
 @Data
-@ToString(exclude = {"posts"})
+@ToString(exclude = {"posts", "modifiedPosts", "ratedPosts", "comments"})
+@EqualsAndHashCode(of = {"email"})
 public class User {
 
     @Id
@@ -46,4 +47,10 @@ public class User {
 
     @OneToMany(mappedBy = "moderator", fetch = FetchType.LAZY)
     private List<Post> modifiedPosts;
+
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
+    private List<PostVote> ratedPosts;
+
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
+    private List<PostComment> comments;
 }

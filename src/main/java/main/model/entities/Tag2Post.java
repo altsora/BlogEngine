@@ -1,10 +1,9 @@
-package main.model.entity;
+package main.model.entities;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
-import main.model.entity.Post;
-import main.model.entity.Tag;
 
 import javax.persistence.*;
 
@@ -13,17 +12,16 @@ import javax.persistence.*;
 @NoArgsConstructor
 @Data
 @ToString
+@EqualsAndHashCode(of = {"post", "tag"})
 public class Tag2Post {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
-//    @Column(name = "post_id", nullable = false)
-    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Post post;
 
-//    @Column(name = "tag_id", nullable = false)
-    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Tag tag;
 }
