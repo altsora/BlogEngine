@@ -1,4 +1,4 @@
-package main.model;
+package main.model.entity;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -8,28 +8,25 @@ import javax.persistence.*;
 import java.util.Date;
 
 @Entity
-@Table(name = "post_comments")
+@Table(name = "post_votes")
 @NoArgsConstructor
 @Data
 @ToString
-public class PostComment {
+public class PostVote {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
     @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private Post parent;
+    private User user;
 
     @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Post post;
 
-    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private User user;
-
     @Column(name = "time", nullable = false)
     private Date time;
 
-    @Column(name = "text", nullable = false)
-    private String text;
+    @Column(name = "value", nullable = false)
+    private int value;
 }

@@ -1,4 +1,4 @@
-spring.datasource.url=jdbc:mysql://localhost:3306/booklib?useSSL=false&useLegacyDatetimeCode=false&serverTimezone=UTC
+spring.datasource.url=jdbc:mysql://localhost:3306/test_blog_engine?useSSL=false&useLegacyDatetimeCode=false&serverTimezone=UTC
 spring.datasource.username=root
 spring.datasource.password=1235
 spring.jpa.hibernate.ddl-auto=none

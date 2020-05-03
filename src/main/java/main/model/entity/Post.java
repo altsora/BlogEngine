@@ -1,8 +1,9 @@
-package main.model;
+package main.model.entity;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
+import main.model.ModerationStatusType;
 
 import javax.persistence.*;
 import java.util.Date;
@@ -11,7 +12,7 @@ import java.util.Date;
 @Table(name = "posts")
 @NoArgsConstructor
 @Data
-@ToString
+@ToString(exclude = {"user", "moderator"})
 public class Post {
 
     @Id

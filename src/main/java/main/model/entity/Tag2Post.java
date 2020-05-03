@@ -1,32 +1,29 @@
-package main.model;
+package main.model.entity;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
+import main.model.entity.Post;
+import main.model.entity.Tag;
 
 import javax.persistence.*;
-import java.util.Date;
 
 @Entity
-@Table(name = "post_votes")
+@Table(name = "tag2post")
 @NoArgsConstructor
 @Data
 @ToString
-public class PostVote {
+public class Tag2Post {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
-    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private User user;
-
+//    @Column(name = "post_id", nullable = false)
     @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Post post;
 
-    @Column(name = "time", nullable = false)
-    private Date time;
-
-    @Column(name = "value", nullable = false)
-    private int value;
+//    @Column(name = "tag_id", nullable = false)
+    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private Tag tag;
 }

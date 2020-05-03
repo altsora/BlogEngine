@@ -1,4 +1,4 @@
-package main.model;
+package main.model.entity;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -7,21 +7,16 @@ import lombok.ToString;
 import javax.persistence.*;
 
 @Entity
-@Table(name = "global_settings")
+@Table(name = "tags")
 @NoArgsConstructor
 @Data
 @ToString
-public class GlobalSettings {
+public class Tag {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
-    @Column(name = "code", nullable = false)
-    private String code;
-
     @Column(name = "name", nullable = false)
     private String name;
-
-    @Column(name = "value", nullable = false)
-    private String value;
 }
