@@ -5,13 +5,14 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 
 import javax.persistence.*;
+import java.io.Serializable;
 
 @Entity
 @Table(name = "global_settings")
 @NoArgsConstructor
 @Data
 @ToString
-public class GlobalSettings {
+public class GlobalSettings implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;

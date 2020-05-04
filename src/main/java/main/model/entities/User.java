@@ -1,13 +1,15 @@
 package main.model.entities;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
 import javax.persistence.*;
+import java.io.Serializable;
 import java.util.Date;
-import java.util.List;
+import java.util.Set;
 
 @Entity
 @Table(name = "users")
@@ -15,7 +17,7 @@ import java.util.List;
 @Data
 @ToString(exclude = {"posts", "modifiedPosts", "ratedPosts", "comments"})
 @EqualsAndHashCode(of = {"email"})
-public class User {
+public class User implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -39,18 +41,40 @@ public class User {
     @Column(name = "code")
     private String code;
 
-    @Column(name = "photo")
+    @Column(name = "photo", columnDefinition = "TEXT")
     private String photo;
 
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
-    private List<Post> posts;
+    private Set<Post> posts;
 
     @OneToMany(mappedBy = "moderator", fetch = FetchType.LAZY)
-    private List<Post> modifiedPosts;
+    private Set<Post> modifiedPosts;
 
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
-    private List<PostVote> ratedPosts;
+    private Set<PostVote> ratedPosts;
 
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
-    private List<PostComment> comments;
+    private Set<PostComment> comments;
+
+    //==============================================================================
+
+    @JsonManagedReference
+    public Set<Post> getPosts() {
+        return posts;
+    }
+
+    @JsonManagedReference
+    public Set<Post> getModifiedPosts() {
+        return modifiedPosts;
+    }
+
+    @JsonManagedReference
+    public Set<PostVote> getRatedPosts() {
+        return ratedPosts;
+    }
+
+    @JsonManagedReference
+    public Set<PostComment> getComments() {
+        return comments;
+    }
 }
