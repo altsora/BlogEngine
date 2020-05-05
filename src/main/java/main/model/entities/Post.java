@@ -20,102 +20,187 @@ import java.util.Set;
 @NoArgsConstructor
 @Data
 @ToString(exclude = {"postRatings", "tags", "comments"})
-@EqualsAndHashCode(of = {"user", "title", "time"})
+@EqualsAndHashCode(exclude = {"postRatings", "tags", "comments"})
 public class Post implements Serializable {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
-
-    @Column(name = "is_active", nullable = false)
     private boolean isActive;
-
-    @Column(name = "moderation_status", columnDefinition = "enum('NEW', 'ACCEPTED', 'DECLINED')")
-    @Enumerated(EnumType.STRING)
     private ModerationStatusType moderationStatus = ModerationStatusType.NEW;
-
-    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JoinColumn(name = "moderator_id")
     private User moderator;
-
-    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "user_id")
     private User user;
-
-    @Column(name = "time", nullable = false)
     private Date time;
-
-    @Column(name = "title", nullable = false)
     private String title;
-
-    @Column(name = "text", nullable = false, columnDefinition = "TEXT")
     private String text;
-
-    @Column(name = "view_count", nullable = false)
     private int viewCount;
-
-    @OneToMany(mappedBy = "post", fetch = FetchType.LAZY)
     private Set<PostVote> postRatings;
-
-    @OneToMany(mappedBy = "post", fetch = FetchType.LAZY)
     private Set<Tag2Post> tags;
-
-    @OneToMany(mappedBy = "post", fetch = FetchType.LAZY)
     private Set<PostComment> comments;
 
     //==============================================================================
 
 
+//    @Id
+//    @GeneratedValue(strategy = GenerationType.IDENTITY)
+//    private int id;
+//
+//    @Column(name = "is_active", nullable = false)
+//    private boolean isActive;
+//
+//    @Column(name = "moderation_status", columnDefinition = "enum('NEW', 'ACCEPTED', 'DECLINED')")
+//    @Enumerated(EnumType.STRING)
+//    private ModerationStatusType moderationStatus = ModerationStatusType.NEW;
+//
+//    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+//    @JoinColumn(name = "moderator_id")
+//    private User moderator;
+//
+//    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY, optional = false)
+//    @JoinColumn(name = "user_id")
+//    private User user;
+//
+//    @Column(name = "time", nullable = false)
+//    private Date time;
+//
+//    @Column(name = "title", nullable = false)
+//    private String title;
+//
+//    @Column(name = "text", nullable = false, columnDefinition = "TEXT")
+//    private String text;
+//
+//    @Column(name = "view_count", nullable = false)
+//    private int viewCount;
+//
+//    @OneToMany(mappedBy = "post", fetch = FetchType.LAZY)
+//    private Set<PostVote> postRatings;
+//
+//    @OneToMany(mappedBy = "post", fetch = FetchType.LAZY)
+//    private Set<Tag2Post> tags;
+//
+//    @OneToMany(mappedBy = "post", fetch = FetchType.LAZY)
+//    private Set<PostComment> comments;
+
+    //==============================================================================
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     public int getId() {
         return id;
     }
 
+    @Column(name = "is_active", nullable = false)
     public boolean isActive() {
         return isActive;
     }
 
+    @Column(name = "moderation_status", columnDefinition = "enum('NEW', 'ACCEPTED', 'DECLINED')")
+    @Enumerated(EnumType.STRING)
     public ModerationStatusType getModerationStatus() {
         return moderationStatus;
     }
 
-    public Date getTime() {
-        return time;
-    }
-
-    public String getTitle() {
-        return title;
-    }
-
-    public String getText() {
-        return text;
-    }
-
-    public int getViewCount() {
-        return viewCount;
-    }
-
     @JsonBackReference
+    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JoinColumn(name = "moderator_id")
     public User getModerator() {
         return moderator;
     }
 
     @JsonBackReference
+    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "user_id")
     public User getUser() {
         return user;
     }
 
+    @Column(name = "time", nullable = false)
+    public Date getTime() {
+        return time;
+    }
+
+    @Column(name = "title", nullable = false)
+    public String getTitle() {
+        return title;
+    }
+
+    @Column(name = "text", nullable = false, columnDefinition = "TEXT")
+    public String getText() {
+        return text;
+    }
+
+    @Column(name = "view_count", nullable = false)
+    public int getViewCount() {
+        return viewCount;
+    }
+
     @JsonManagedReference
+    @OneToMany(mappedBy = "post", fetch = FetchType.LAZY)
     public Set<PostVote> getPostRatings() {
         return postRatings;
     }
 
     @JsonManagedReference
+    @OneToMany(mappedBy = "post", fetch = FetchType.LAZY)
     public Set<Tag2Post> getTags() {
         return tags;
     }
 
     @JsonManagedReference
+    @OneToMany(mappedBy = "post", fetch = FetchType.LAZY)
     public Set<PostComment> getComments() {
         return comments;
     }
+
+
+//    public int getId() {
+//        return id;
+//    }
+//
+//    public boolean isActive() {
+//        return isActive;
+//    }
+//
+//    public ModerationStatusType getModerationStatus() {
+//        return moderationStatus;
+//    }
+//
+//    public Date getTime() {
+//        return time;
+//    }
+//
+//    public String getTitle() {
+//        return title;
+//    }
+//
+//    public String getText() {
+//        return text;
+//    }
+//
+//    public int getViewCount() {
+//        return viewCount;
+//    }
+//
+//    @JsonBackReference
+//    public User getModerator() {
+//        return moderator;
+//    }
+//
+//    @JsonBackReference
+//    public User getUser() {
+//        return user;
+//    }
+//
+//    @JsonManagedReference
+//    public Set<PostVote> getPostRatings() {
+//        return postRatings;
+//    }
+//
+//    @JsonManagedReference
+//    public Set<Tag2Post> getTags() {
+//        return tags;
+//    }
+//
+//    @JsonManagedReference
+//    public Set<PostComment> getComments() {
+//        return comments;
+//    }
 }

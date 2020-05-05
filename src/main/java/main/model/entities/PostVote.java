@@ -2,6 +2,7 @@ package main.model.entities;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
@@ -14,35 +15,75 @@ import java.util.Date;
 @NoArgsConstructor
 @Data
 @ToString
+@EqualsAndHashCode
 public class PostVote implements Serializable {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
-
-    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "user_id")
     private User user;
-
-    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "post_id")
     private Post post;
-
-    @Column(name = "time", nullable = false)
     private Date time;
-
-    @Column(name = "value", nullable = false)
-    private int value;
+    private boolean value;
 
     //==============================================================================
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    public int getId() {
+        return id;
+    }
+
     @JsonBackReference
+    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "user_id")
     public User getUser() {
         return user;
     }
 
     @JsonBackReference
+    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "post_id")
     public Post getPost() {
         return post;
     }
+
+    @Column(name = "time", nullable = false)
+    public Date getTime() {
+        return time;
+    }
+
+    @Column(name = "value", nullable = false)
+    public boolean getValue() {
+        return value;
+    }
+
+
+//    @Id
+//    @GeneratedValue(strategy = GenerationType.IDENTITY)
+//    private int id;
+//
+//    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY, optional = false)
+//    @JoinColumn(name = "user_id")
+//    private User user;
+//
+//    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY, optional = false)
+//    @JoinColumn(name = "post_id")
+//    private Post post;
+//
+//    @Column(name = "time", nullable = false)
+//    private Date time;
+//
+//    @Column(name = "value", nullable = false)
+//    private int value;
+//
+//    //==============================================================================
+//
+//    @JsonBackReference
+//    public User getUser() {
+//        return user;
+//    }
+//
+//    @JsonBackReference
+//    public Post getPost() {
+//        return post;
+//    }
 }

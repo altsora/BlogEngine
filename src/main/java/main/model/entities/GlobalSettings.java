@@ -1,6 +1,7 @@
 package main.model.entities;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
@@ -12,17 +13,47 @@ import java.io.Serializable;
 @NoArgsConstructor
 @Data
 @ToString
+@EqualsAndHashCode
 public class GlobalSettings implements Serializable {
+
+    private int id;
+    private String code;
+    private String name;
+    private String value;
+
+    //==============================================================================
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
+    public int getId() {
+        return id;
+    }
 
     @Column(name = "code", nullable = false)
-    private String code;
+    public String getCode() {
+        return code;
+    }
 
     @Column(name = "name", nullable = false)
-    private String name;
+    public String getName() {
+        return name;
+    }
 
     @Column(name = "value", nullable = false)
-    private String value;
+    public String getValue() {
+        return value;
+    }
+
+//        @Id
+//    @GeneratedValue(strategy = GenerationType.IDENTITY)
+//    private int id;
+//
+//    @Column(name = "code", nullable = false)
+//    private String code;
+//
+//    @Column(name = "name", nullable = false)
+//    private String name;
+//
+//    @Column(name = "value", nullable = false)
+//    private String value;
 }

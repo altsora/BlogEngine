@@ -16,23 +16,46 @@ import java.util.Set;
 @NoArgsConstructor
 @Data
 @ToString(exclude = {"posts"})
-@EqualsAndHashCode(of = {"name"})
+@EqualsAndHashCode(exclude = {"posts"})
 public class Tag implements Serializable {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
-
-    @Column(name = "name", nullable = false)
     private String name;
-
-    @OneToMany(mappedBy = "tag", fetch = FetchType.LAZY)
     private Set<Tag2Post> posts;
 
     //==============================================================================
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    public int getId() {
+        return id;
+    }
+
+    @Column(name = "name", nullable = false)
+    public String getName() {
+        return name;
+    }
+
     @JsonManagedReference
+    @OneToMany(mappedBy = "tag", fetch = FetchType.LAZY)
     public Set<Tag2Post> getPosts() {
         return posts;
     }
+
+//        @Id
+//    @GeneratedValue(strategy = GenerationType.IDENTITY)
+//    private int id;
+//
+//    @Column(name = "name", nullable = false)
+//    private String name;
+//
+//    @OneToMany(mappedBy = "tag", fetch = FetchType.LAZY)
+//    private Set<Tag2Post> posts;
+//
+    //==============================================================================
+//
+//    @JsonManagedReference
+//    public Set<Tag2Post> getPosts() {
+//        return posts;
+//    }
 }

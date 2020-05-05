@@ -1,6 +1,7 @@
 package main.model.entities;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
@@ -13,18 +14,34 @@ import java.util.Date;
 @NoArgsConstructor
 @Data
 @ToString
+@EqualsAndHashCode
 public class CaptchaCode implements Serializable {
+
+    private int id;
+    private Date time;
+    private String code;
+    private String secretCode;
+
+    //==============================================================================
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
+    public int getId() {
+        return id;
+    }
 
     @Column(name = "time", nullable = false)
-    private Date time;
+    public Date getTime() {
+        return time;
+    }
 
     @Column(name = "code", nullable = false)
-    private String code;
+    public String getCode() {
+        return code;
+    }
 
     @Column(name = "secret_code", nullable = false)
-    private String secretCode;
+    public String getSecretCode() {
+        return secretCode;
+    }
 }
