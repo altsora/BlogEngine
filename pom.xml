@@ -8,6 +8,12 @@
     <artifactId>BlogEngine</artifactId>
     <version>1.0-SNAPSHOT</version>
 
+    <parent>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <groupId>org.springframework.boot</groupId>
+        <version>2.2.3.RELEASE</version>
+    </parent>
+
     <build>
         <plugins>
             <plugin>

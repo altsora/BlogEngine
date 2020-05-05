@@ -42,20 +42,4 @@ public class Tag implements Serializable {
         return posts;
     }
 
-//        @Id
-//    @GeneratedValue(strategy = GenerationType.IDENTITY)
-//    private int id;
-//
-//    @Column(name = "name", nullable = false)
-//    private String name;
-//
-//    @OneToMany(mappedBy = "tag", fetch = FetchType.LAZY)
-//    private Set<Tag2Post> posts;
-//
-    //==============================================================================
-//
-//    @JsonManagedReference
-//    public Set<Tag2Post> getPosts() {
-//        return posts;
-//    }
 }

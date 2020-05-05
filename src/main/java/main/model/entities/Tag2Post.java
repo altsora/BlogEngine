@@ -43,27 +43,4 @@ public class Tag2Post implements Serializable {
         return tag;
     }
 
-//        @Id
-//    @GeneratedValue(strategy = GenerationType.IDENTITY)
-//    private int id;
-//
-//    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY, optional = false)
-//    @JoinColumn(name = "post_id")
-//    private Post post;
-//
-//    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY, optional = false)
-//    @JoinColumn(name = "tag_id")
-//    private Tag tag;
-//
-////    ==============================================================================
-//
-//    @JsonBackReference
-//    public Post getPost() {
-//        return post;
-//    }
-//
-//    @JsonBackReference
-//    public Tag getTag() {
-//        return tag;
-//    }
 }

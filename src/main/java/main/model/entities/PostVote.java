@@ -56,34 +56,4 @@ public class PostVote implements Serializable {
         return value;
     }
 
-
-//    @Id
-//    @GeneratedValue(strategy = GenerationType.IDENTITY)
-//    private int id;
-//
-//    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY, optional = false)
-//    @JoinColumn(name = "user_id")
-//    private User user;
-//
-//    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY, optional = false)
-//    @JoinColumn(name = "post_id")
-//    private Post post;
-//
-//    @Column(name = "time", nullable = false)
-//    private Date time;
-//
-//    @Column(name = "value", nullable = false)
-//    private int value;
-//
-//    //==============================================================================
-//
-//    @JsonBackReference
-//    public User getUser() {
-//        return user;
-//    }
-//
-//    @JsonBackReference
-//    public Post getPost() {
-//        return post;
-//    }
 }
