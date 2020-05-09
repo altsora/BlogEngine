@@ -22,7 +22,7 @@ public class PostVote implements Serializable {
     private User user;
     private Post post;
     private Date time;
-    private boolean value;
+    private byte value;
 
     //==============================================================================
 
@@ -52,7 +52,7 @@ public class PostVote implements Serializable {
     }
 
     @Column(name = "value", nullable = false)
-    public boolean getValue() {
+    public byte getValue() {
         return value;
     }
 

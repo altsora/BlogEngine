@@ -20,7 +20,7 @@ import java.util.Set;
 public class User implements Serializable {
 
     private int id;
-    private boolean isModerator;
+    private byte isModerator;
     private Date regTime;
     private String name;
     private String email;
@@ -41,9 +41,13 @@ public class User implements Serializable {
     }
 
     @Column(name = "is_moderator", nullable = false)
-    public boolean isModerator() {
+    public byte getIsModerator() {
         return isModerator;
     }
+
+//    public byte getIsModerator() {
+//        return isModerator;
+//    }
 
     @Column(name = "reg_time", nullable = false)
     public Date getRegTime() {

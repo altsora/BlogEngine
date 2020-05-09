@@ -24,7 +24,7 @@ import java.util.Set;
 public class Post implements Serializable {
 
     private int id;
-    private boolean isActive;
+    private byte isActive;
     private ModerationStatusType moderationStatus = ModerationStatusType.NEW;
     private User moderator;
     private User user;
@@ -88,9 +88,13 @@ public class Post implements Serializable {
     }
 
     @Column(name = "is_active", nullable = false)
-    public boolean isActive() {
+    public byte getIsActive() {
         return isActive;
     }
+
+//    public byte getActive() {
+//        return isActive;
+//    }
 
     @Column(name = "moderation_status", columnDefinition = "enum('NEW', 'ACCEPTED', 'DECLINED')")
     @Enumerated(EnumType.STRING)

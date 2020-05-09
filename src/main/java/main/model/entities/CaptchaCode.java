@@ -35,12 +35,12 @@ public class CaptchaCode implements Serializable {
         return time;
     }
 
-    @Column(name = "code", nullable = false)
+    @Column(name = "code", nullable = false, columnDefinition = "TINYTEXT")
     public String getCode() {
         return code;
     }
 
-    @Column(name = "secret_code", nullable = false)
+    @Column(name = "secret_code", nullable = false, columnDefinition = "TINYTEXT")
     public String getSecretCode() {
         return secretCode;
     }
