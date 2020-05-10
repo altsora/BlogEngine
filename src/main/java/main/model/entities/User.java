@@ -45,10 +45,6 @@ public class User implements Serializable {
         return isModerator;
     }
 
-//    public byte getIsModerator() {
-//        return isModerator;
-//    }
-
     @Column(name = "reg_time", nullable = false)
     public Date getRegTime() {
         return regTime;

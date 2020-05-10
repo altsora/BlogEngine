@@ -1,4 +1,4 @@
-package main.model;
+package main.model.responses;
 
 import lombok.Data;
 import lombok.ToString;

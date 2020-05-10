@@ -38,49 +38,6 @@ public class Post implements Serializable {
 
     //==============================================================================
 
-
-//    @Id
-//    @GeneratedValue(strategy = GenerationType.IDENTITY)
-//    private int id;
-//
-//    @Column(name = "is_active", nullable = false)
-//    private boolean isActive;
-//
-//    @Column(name = "moderation_status", columnDefinition = "enum('NEW', 'ACCEPTED', 'DECLINED')")
-//    @Enumerated(EnumType.STRING)
-//    private ModerationStatusType moderationStatus = ModerationStatusType.NEW;
-//
-//    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-//    @JoinColumn(name = "moderator_id")
-//    private User moderator;
-//
-//    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY, optional = false)
-//    @JoinColumn(name = "user_id")
-//    private User user;
-//
-//    @Column(name = "time", nullable = false)
-//    private Date time;
-//
-//    @Column(name = "title", nullable = false)
-//    private String title;
-//
-//    @Column(name = "text", nullable = false, columnDefinition = "TEXT")
-//    private String text;
-//
-//    @Column(name = "view_count", nullable = false)
-//    private int viewCount;
-//
-//    @OneToMany(mappedBy = "post", fetch = FetchType.LAZY)
-//    private Set<PostVote> postRatings;
-//
-//    @OneToMany(mappedBy = "post", fetch = FetchType.LAZY)
-//    private Set<Tag2Post> tags;
-//
-//    @OneToMany(mappedBy = "post", fetch = FetchType.LAZY)
-//    private Set<PostComment> comments;
-
-    //==============================================================================
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     public int getId() {
@@ -91,10 +48,6 @@ public class Post implements Serializable {
     public byte getIsActive() {
         return isActive;
     }
-
-//    public byte getActive() {
-//        return isActive;
-//    }
 
     @Column(name = "moderation_status", columnDefinition = "enum('NEW', 'ACCEPTED', 'DECLINED')")
     @Enumerated(EnumType.STRING)
