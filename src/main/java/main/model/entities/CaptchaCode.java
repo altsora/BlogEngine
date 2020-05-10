@@ -7,6 +7,7 @@ import lombok.ToString;
 
 import javax.persistence.*;
 import java.io.Serializable;
+import java.time.LocalDateTime;
 import java.util.Date;
 
 @Entity
@@ -18,7 +19,8 @@ import java.util.Date;
 public class CaptchaCode implements Serializable {
 
     private int id;
-    private Date time;
+//    private Date time;
+    private LocalDateTime time;
     private String code;
     private String secretCode;
 
@@ -31,7 +33,7 @@ public class CaptchaCode implements Serializable {
     }
 
     @Column(name = "time", nullable = false)
-    public Date getTime() {
+    public LocalDateTime getTime() {
         return time;
     }
 

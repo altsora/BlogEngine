@@ -20,4 +20,12 @@ public class PostVoteDTO extends PostSimpleDTO {
         this.dislikeCount = dislikeCount;
         this.viewCount = viewCount;
     }
+
+    public void increaseLikeCount() {
+        likeCount++;
+    }
+
+    public void increaseDislikeCount() {
+        dislikeCount++;
+    }
 }

@@ -1,6 +1,7 @@
 package main.controller;
 
 import main.model.entities.Post;
+import main.model.entities.PostVote;
 import main.model.entities.User;
 import main.model.repositories.PostCommentRepository;
 import main.model.repositories.PostRepository;
@@ -38,11 +39,11 @@ public class ApiPostController {
             @RequestParam(value = "limit") long limit,
             @RequestParam(value = "mode") String mode
     ) {
-        CollectionPostsResponseDTO collectionPostsResponseDTO = new CollectionPostsResponseDTO();
-        collectionPostsResponseDTO.setCount(postRepository.findAll().size());
 
         List<PostVoteDTO> posts = new ArrayList<>();
-        for (Post postRep : postRepository.findAll()) {
+        List<Post> postListRep = postRepository.findAll();
+        for (int i = 0; i < limit; i++) {
+            Post postRep = postListRep.get(i);
             UserSimple user = new UserSimple();
             user.setId(postRep.getUser().getId());
             user.setName(postRep.getUser().getName());
@@ -51,16 +52,68 @@ public class ApiPostController {
             postVoteDTO.setId(postRep.getId());
             postVoteDTO.setTime(postRep.getTime().toString());
             postVoteDTO.setTitle(postRep.getTitle());
-            postVoteDTO.setAnnounce("Анонс");
             postVoteDTO.setViewCount(postRep.getViewCount());
             postVoteDTO.setUser(user);
 
+            int postId = postRep.getId();
+            List<PostVote> postVoteList = postVoteRepository.findAllPostVotesByPostId(postId);
+            for (PostVote postVoteRep : postVoteList) {
+                if (postVoteRep.getValue() > 0) {
+                    postVoteDTO.increaseLikeCount();
+                } else {
+                    postVoteDTO.increaseDislikeCount();
+                }
+            }
+
+            //TODO: Max size announce is 200-500 symbols
+            int maxSizeAnnounce = 200;
+            String announce = postRep.getText();
+            if (announce.length() > maxSizeAnnounce) {
+                announce = announce.substring(0, maxSizeAnnounce);
+            }
+            postVoteDTO.setAnnounce(announce);
+
             posts.add(postVoteDTO);
         }
+//        for (Post postRep : postRepository.findAll()) {
+//            UserSimple user = new UserSimple();
+//            user.setId(postRep.getUser().getId());
+//            user.setName(postRep.getUser().getName());
+//
+//            PostVoteDTO postVoteDTO = new PostVoteDTO();
+//            postVoteDTO.setId(postRep.getId());
+//            postVoteDTO.setTime(postRep.getTime().toString());
+//            postVoteDTO.setTitle(postRep.getTitle());
+//            postVoteDTO.setViewCount(postRep.getViewCount());
+//            postVoteDTO.setUser(user);
+//
+//            int postId = postRep.getId();
+//            List<PostVote> postVoteList = postVoteRepository.findAllPostVotesByPostId(postId);
+//            for (PostVote postVoteRep : postVoteList) {
+//                if (postVoteRep.getValue() > 0) {
+//                    postVoteDTO.increaseLikeCount();
+//                } else {
+//                    postVoteDTO.increaseDislikeCount();
+//                }
+//            }
+//
+//            //TODO: Max size announce is 200-500 symbols
+//            int maxSizeAnnounce = 200;
+//            String announce = postRep.getText();
+//            if (announce.length() > maxSizeAnnounce) {
+//                announce = announce.substring(0, maxSizeAnnounce);
+//            }
+//            postVoteDTO.setAnnounce(announce);
+//
+//            posts.add(postVoteDTO);
+//        }
+        CollectionPostsResponseDTO collectionPostsResponseDTO = new CollectionPostsResponseDTO();
+        collectionPostsResponseDTO.setCount(postRepository.findAll().size());
         collectionPostsResponseDTO.setPosts(posts);
 
         return collectionPostsResponseDTO;
     }
+
 
     @GetMapping(value = "/api/tag")
     public ResponseEntity getTag() {

@@ -11,6 +11,7 @@ import main.model.ModerationStatusType;
 
 import javax.persistence.*;
 import java.io.Serializable;
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
@@ -21,6 +22,7 @@ import java.util.Set;
 @Data
 @ToString(exclude = {"postRatings", "tags", "comments"})
 @EqualsAndHashCode(exclude = {"postRatings", "tags", "comments"})
+//@EqualsAndHashCode(of = {"id"})
 public class Post implements Serializable {
 
     private int id;
@@ -28,7 +30,8 @@ public class Post implements Serializable {
     private ModerationStatusType moderationStatus = ModerationStatusType.NEW;
     private User moderator;
     private User user;
-    private Date time;
+//    private Date time;
+    private LocalDateTime time;
     private String title;
     private String text;
     private int viewCount;
@@ -70,7 +73,7 @@ public class Post implements Serializable {
     }
 
     @Column(name = "time", nullable = false)
-    public Date getTime() {
+    public LocalDateTime getTime() {
         return time;
     }
 

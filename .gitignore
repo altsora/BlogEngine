@@ -3,3 +3,4 @@
 target
 src/main/java/Test.java
 src/main/resources/hibernate.cfg.xml
+src/main/java/main/controller/TestController.java

@@ -8,6 +8,7 @@ import lombok.ToString;
 
 import javax.persistence.*;
 import java.io.Serializable;
+import java.time.LocalDateTime;
 import java.util.Date;
 
 @Entity
@@ -21,7 +22,8 @@ public class PostVote implements Serializable {
     private int id;
     private User user;
     private Post post;
-    private Date time;
+//    private Date time;
+    private LocalDateTime time;
     private byte value;
 
     //==============================================================================
@@ -47,7 +49,7 @@ public class PostVote implements Serializable {
     }
 
     @Column(name = "time", nullable = false)
-    public Date getTime() {
+    public LocalDateTime getTime() {
         return time;
     }
 

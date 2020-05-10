@@ -8,6 +8,7 @@ import lombok.ToString;
 
 import javax.persistence.*;
 import java.io.Serializable;
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.Set;
 
@@ -16,12 +17,14 @@ import java.util.Set;
 @NoArgsConstructor
 @Data
 @ToString(exclude = {"posts", "modifiedPosts", "ratedPosts", "comments"})
-@EqualsAndHashCode(exclude = {"posts", "modifiedPosts", "ratedPosts", "comments"})
+//@EqualsAndHashCode(exclude = {"posts", "modifiedPosts", "ratedPosts", "comments"})
+@EqualsAndHashCode(of = {"id"})
 public class User implements Serializable {
 
     private int id;
     private byte isModerator;
-    private Date regTime;
+//    private Date regTime;
+    private LocalDateTime regTime;
     private String name;
     private String email;
     private String password;
@@ -46,7 +49,7 @@ public class User implements Serializable {
     }
 
     @Column(name = "reg_time", nullable = false)
-    public Date getRegTime() {
+    public LocalDateTime getRegTime() {
         return regTime;
     }
 

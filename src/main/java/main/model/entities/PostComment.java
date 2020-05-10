@@ -10,6 +10,7 @@ import lombok.ToString;
 import javax.persistence.*;
 import java.io.Serializable;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.Set;
 
@@ -25,7 +26,8 @@ public class PostComment implements Serializable {
     private PostComment parent;
     private Post post;
     private User user;
-    private Date time;
+//    private Date time;
+    private LocalDateTime time;
     private String text;
     private Set<PostComment> children;
 
@@ -59,7 +61,7 @@ public class PostComment implements Serializable {
     }
 
     @Column(name = "time", nullable = false)
-    public Date getTime() {
+    public LocalDateTime getTime() {
         return time;
     }
 
