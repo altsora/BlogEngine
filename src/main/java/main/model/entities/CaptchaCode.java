@@ -19,7 +19,6 @@ import java.util.Date;
 public class CaptchaCode implements Serializable {
 
     private int id;
-//    private Date time;
     private LocalDateTime time;
     private String code;
     private String secretCode;

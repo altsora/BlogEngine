@@ -22,7 +22,6 @@ import java.util.Set;
 @Data
 @ToString(exclude = {"postRatings", "tags", "comments"})
 @EqualsAndHashCode(exclude = {"postRatings", "tags", "comments"})
-//@EqualsAndHashCode(of = {"id"})
 public class Post implements Serializable {
 
     private int id;
@@ -30,7 +29,6 @@ public class Post implements Serializable {
     private ModerationStatusType moderationStatus = ModerationStatusType.NEW;
     private User moderator;
     private User user;
-//    private Date time;
     private LocalDateTime time;
     private String title;
     private String text;

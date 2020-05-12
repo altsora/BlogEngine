@@ -17,13 +17,11 @@ import java.util.Set;
 @NoArgsConstructor
 @Data
 @ToString(exclude = {"posts", "modifiedPosts", "ratedPosts", "comments"})
-//@EqualsAndHashCode(exclude = {"posts", "modifiedPosts", "ratedPosts", "comments"})
-@EqualsAndHashCode(of = {"id"})
+@EqualsAndHashCode(exclude = {"posts", "modifiedPosts", "ratedPosts", "comments"})
 public class User implements Serializable {
 
     private int id;
     private byte isModerator;
-//    private Date regTime;
     private LocalDateTime regTime;
     private String name;
     private String email;

@@ -22,7 +22,6 @@ public class PostVote implements Serializable {
     private int id;
     private User user;
     private Post post;
-//    private Date time;
     private LocalDateTime time;
     private byte value;
 

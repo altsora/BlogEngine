@@ -26,7 +26,6 @@ public class PostComment implements Serializable {
     private PostComment parent;
     private Post post;
     private User user;
-//    private Date time;
     private LocalDateTime time;
     private String text;
     private Set<PostComment> children;
