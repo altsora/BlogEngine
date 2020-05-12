@@ -18,11 +18,11 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     @Query("SELECT u FROM #{#entityName} u ORDER BY u.viewCount DESC")
     List<Post> findAllPostPopular();
 
-    @Query(
-            value = "SELECT * FROM POSTS p " +
-                    "INNER JOIN POST_VOTES pv " +
-                    "ON p.id = pv.post_id",
+    @Query(value = "SELECT *, SUM(pv.value) as 'value'" +
+                    "FROM posts p LEFT JOIN post_votes pv " +
+                    "ON pv.post_id = p.id AND pv.value = 1 " +
+                    "GROUP BY p.id ORDER BY value DESC",
             nativeQuery = true)
-    List<Post> test();
+    List<Post> findAllPostBest();
 
 }

@@ -41,11 +41,23 @@ public class ApiPostController {
             @RequestParam(value = "limit") int limit,
             @RequestParam(value = "mode") String mode
     ) {
-//        List<PostVoteDTO> posts = new ArrayList<>();
-//        List<Post> postListRep = postRepository.findAll();
 
         List<PostVoteDTO> posts = new ArrayList<>();
-        List<Post> postListRep = postRepository.findAll();
+        List<Post> postListRep;
+        switch (mode) {
+            case "popular":
+                postListRep = postRepository.findAllPostPopular();
+                break;
+            case "early":
+                postListRep = postRepository.findAllPostEarly();
+                break;
+            case "best":
+                postListRep = postRepository.findAllPostBest();
+                break;
+            default:
+                postListRep = postRepository.findAllPostRecent();
+        }
+
         long minCountPostsOnPage = Math.min(limit, postListRep.size());
 
         for (int j = 0; j < minCountPostsOnPage; j++) {
