@@ -1,5 +1,6 @@
 package main.controller;
 
+import main.model.ModerationStatusType;
 import main.model.entities.Post;
 import main.model.entities.PostComment;
 import main.model.entities.PostVote;
@@ -36,32 +37,34 @@ public class ApiPostController {
 
     @GetMapping(value = "/api/post")
     @ResponseBody
-    public CollectionPostsResponseDTO method1(
+    public CollectionPostsResponseDTO getAllPosts(
             @RequestParam(value = "offset") int offset,
             @RequestParam(value = "limit") int limit,
             @RequestParam(value = "mode") String mode
     ) {
-
-        List<PostVoteDTO> posts = new ArrayList<>();
         List<Post> postListRep;
         switch (mode) {
             case "popular":
-                postListRep = postRepository.findAllPostPopular();
+                postListRep = postRepository.findAllPostPopular((byte) 1, ModerationStatusType.ACCEPTED);
                 break;
             case "early":
-                postListRep = postRepository.findAllPostEarly();
+                postListRep = postRepository.findAllPostEarly((byte) 1, ModerationStatusType.ACCEPTED);
                 break;
             case "best":
-                postListRep = postRepository.findAllPostBest();
+                postListRep = postRepository.findAllPostBest((byte) 1, ModerationStatusType.ACCEPTED);
                 break;
             default:
-                postListRep = postRepository.findAllPostRecent();
+                postListRep = postRepository.findAllPostRecent((byte) 1, ModerationStatusType.ACCEPTED);
         }
 
-        long minCountPostsOnPage = Math.min(limit, postListRep.size());
-
-        for (int j = 0; j < minCountPostsOnPage; j++) {
-            Post postRep = postListRep.get(j);
+        long allPostsCount = postListRep.size();
+        long minCountPostsOnPage = Math.min(limit, allPostsCount);
+        List<PostVoteDTO> posts = new ArrayList<>();
+        for (int i = offset; i < minCountPostsOnPage + offset; i++) {
+            if (i == allPostsCount) {
+                break;
+            }
+            Post postRep = postListRep.get(i);
             UserSimple user = new UserSimple();
             user.setId(postRep.getUser().getId());
             user.setName(postRep.getUser().getName());
