@@ -1,6 +1,6 @@
 package main.controller;
 
-import main.model.responses.Blog;
+import main.model.responses.BlogDTO;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -12,15 +12,15 @@ public class ApiGeneralController {
 
     @GetMapping(value = "/api/init")
     @ResponseBody
-    public Blog init() {
-        Blog blog = new Blog();
-        blog.setTitle("DevPub");
-        blog.setSubtitle("Рассказы разработчиков");
-        blog.setPhone("+7 903 666-44-55");
-        blog.setEmail("mail@mail.ru");
-        blog.setCopyright("Дмитрий Сергеев");
-        blog.setCopyrightFrom("2005");
-        return blog;
+    public BlogDTO init() {
+        BlogDTO blogDTO = new BlogDTO();
+        blogDTO.setTitle("DevPub");
+        blogDTO.setSubtitle("Рассказы разработчиков");
+        blogDTO.setPhone("+7 903 666-44-55");
+        blogDTO.setEmail("mail@mail.ru");
+        blogDTO.setCopyright("Александр Вергун");
+        blogDTO.setCopyrightFrom("2005");
+        return blogDTO;
     }
 
     @GetMapping(value = "/api/settings")

@@ -5,7 +5,7 @@ import lombok.ToString;
 
 @Data
 @ToString
-public class Blog {
+public class BlogDTO {
     private String title = "DevPub";
     private String subtitle = "Рассказы разработчиков";
     private String phone = "+7 903 666-44-55";

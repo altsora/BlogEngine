@@ -61,9 +61,9 @@ public class ApiPostController {
         long minCountPostsOnPage = Math.min(limit, allPostsCount);
         List<PostVoteDTO> posts = new ArrayList<>();
         for (int i = offset; i < minCountPostsOnPage + offset; i++) {
-            if (i == allPostsCount) {
-                break;
-            }
+//            if (i == allPostsCount) {
+//                break;
+//            }
             Post postRep = postListRep.get(i);
             UserSimple user = new UserSimple();
             user.setId(postRep.getUser().getId());
@@ -109,7 +109,7 @@ public class ApiPostController {
         }
 
         CollectionPostsResponseDTO collectionPostsResponseDTO = new CollectionPostsResponseDTO();
-        collectionPostsResponseDTO.setCount(postRepository.findAll().size());
+        collectionPostsResponseDTO.setCount(allPostsCount);
         collectionPostsResponseDTO.setPosts(posts);
 
         return collectionPostsResponseDTO;

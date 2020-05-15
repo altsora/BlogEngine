@@ -50,7 +50,7 @@ public class Post implements Serializable {
         return isActive;
     }
 
-    @Column(name = "moderation_status", columnDefinition = "enum('NEW', 'ACCEPTED', 'DECLINED')")
+    @Column(name = "moderation_status")
     @Enumerated(EnumType.STRING)
     public ModerationStatusType getModerationStatus() {
         return moderationStatus;
