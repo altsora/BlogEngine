@@ -5,7 +5,7 @@ import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor
-public class PostVoteDTO extends PostSimpleDTO {
+public class PostInfoDTO extends PostSimpleDTO {
     private int likeCount;
     private int dislikeCount;
     private int viewCount;
@@ -17,9 +17,5 @@ public class PostVoteDTO extends PostSimpleDTO {
 
     public void increaseDislikeCount() {
         dislikeCount++;
-    }
-
-    public void increaseCommentCount() {
-        commentCount++;
     }
 }

@@ -9,7 +9,7 @@ import main.model.repositories.PostRepository;
 import main.model.repositories.PostVoteRepository;
 import main.model.repositories.UserRepository;
 import main.model.responses.CollectionPostsResponseDTO;
-import main.model.responses.PostVoteDTO;
+import main.model.responses.PostInfoDTO;
 import main.model.responses.UserSimple;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -37,7 +37,7 @@ public class ApiPostController {
 
     @GetMapping(value = "/api/post")
     @ResponseBody
-    public CollectionPostsResponseDTO getAllPosts(
+    public CollectionPostsResponseDTO<PostInfoDTO> getAllPosts(
             @RequestParam(value = "offset") int offset,
             @RequestParam(value = "limit") int limit,
             @RequestParam(value = "mode") String mode
@@ -59,41 +59,40 @@ public class ApiPostController {
 
         long allPostsCount = postListRep.size();
         long minCountPostsOnPage = Math.min(limit, allPostsCount);
-        List<PostVoteDTO> posts = new ArrayList<>();
+        List<PostInfoDTO> posts = new ArrayList<>();
         for (int i = offset; i < minCountPostsOnPage + offset; i++) {
-//            if (i == allPostsCount) {
-//                break;
-//            }
+            if (i == allPostsCount) {
+                break;
+            }
+            PostInfoDTO postInfoDTO = new PostInfoDTO();
+
             Post postRep = postListRep.get(i);
+            postInfoDTO.setId(postRep.getId());
+            postInfoDTO.setTitle(postRep.getTitle());
+            postInfoDTO.setViewCount(postRep.getViewCount());
+
             UserSimple user = new UserSimple();
             user.setId(postRep.getUser().getId());
             user.setName(postRep.getUser().getName());
-
-            PostVoteDTO postVoteDTO = new PostVoteDTO();
-            postVoteDTO.setId(postRep.getId());
-            postVoteDTO.setTitle(postRep.getTitle());
-            postVoteDTO.setViewCount(postRep.getViewCount());
-            postVoteDTO.setUser(user);
+            postInfoDTO.setUser(user);
 
             String time = getStringTime(postRep.getTime());
-            postVoteDTO.setTime(time);
+            postInfoDTO.setTime(time);
 
             int postId = postRep.getId();
             // Likes/Dislikes
             List<PostVote> postVoteListRep = postVoteRepository.findAllPostVotesByPostId(postId);
             for (PostVote postVoteRep : postVoteListRep) {
                 if (postVoteRep.getValue() > 0) {
-                    postVoteDTO.increaseLikeCount();
+                    postInfoDTO.increaseLikeCount();
                 } else {
-                    postVoteDTO.increaseDislikeCount();
+                    postInfoDTO.increaseDislikeCount();
                 }
             }
 
             // CommentCount
             List<PostComment> postCommentListRep = postCommentRepository.findAllPostCommentByPostId(postId);
-            for (PostComment postComment : postCommentListRep) {
-                postVoteDTO.increaseCommentCount();
-            }
+            postInfoDTO.setCommentCount(postCommentListRep.size());
 
             // Announce
             //TODO: Max size announce is 200-500 symbols
@@ -102,13 +101,81 @@ public class ApiPostController {
             if (announce.length() > maxSizeAnnounce) {
                 announce = announce.substring(0, maxSizeAnnounce);
             }
-            postVoteDTO.setAnnounce(announce);
+            postInfoDTO.setAnnounce(announce);
 
             //===========================================================
-            posts.add(postVoteDTO);
+            posts.add(postInfoDTO);
         }
 
-        CollectionPostsResponseDTO collectionPostsResponseDTO = new CollectionPostsResponseDTO();
+        CollectionPostsResponseDTO<PostInfoDTO> collectionPostsResponseDTO = new CollectionPostsResponseDTO<>();
+        collectionPostsResponseDTO.setCount(allPostsCount);
+        collectionPostsResponseDTO.setPosts(posts);
+
+        return collectionPostsResponseDTO;
+    }
+
+    @GetMapping(value = "/api/post/search")
+    @ResponseBody
+    public CollectionPostsResponseDTO searchPost(
+            @RequestParam(value = "offset") int offset,
+            @RequestParam(value = "limit") int limit,
+            @RequestParam(value = "query") String query
+    ) {
+        List<Post> postListRep = (query.equals("")) ?
+                postRepository.findAllPostRecent((byte)1, ModerationStatusType.ACCEPTED) :
+                postRepository.findAllPostRecentByQuery((byte)1, ModerationStatusType.ACCEPTED, query);
+
+        List<PostInfoDTO> posts = new ArrayList<>();
+        long allPostsCount = postListRep.size();
+        long minCountPostsOnPage = Math.min(limit, allPostsCount);
+        for (int i = offset; i < minCountPostsOnPage + offset; i++) {
+            if (i == allPostsCount) {
+                break;
+            }
+            PostInfoDTO postInfoDTO = new PostInfoDTO();
+
+            Post postRep = postListRep.get(i);
+            postInfoDTO.setId(postRep.getId());
+            postInfoDTO.setTitle(postRep.getTitle());
+            postInfoDTO.setViewCount(postRep.getViewCount());
+
+            UserSimple user = new UserSimple();
+            user.setId(postRep.getUser().getId());
+            user.setName(postRep.getUser().getName());
+            postInfoDTO.setUser(user);
+
+            String time = getStringTime(postRep.getTime());
+            postInfoDTO.setTime(time);
+
+            int postId = postRep.getId();
+            // Likes/Dislikes
+            List<PostVote> postVoteListRep = postVoteRepository.findAllPostVotesByPostId(postId);
+            for (PostVote postVoteRep : postVoteListRep) {
+                if (postVoteRep.getValue() > 0) {
+                    postInfoDTO.increaseLikeCount();
+                } else {
+                    postInfoDTO.increaseDislikeCount();
+                }
+            }
+
+            // CommentCount
+            List<PostComment> postCommentListRep = postCommentRepository.findAllPostCommentByPostId(postId);
+            postInfoDTO.setCommentCount(postCommentListRep.size());
+
+            // Announce
+            //TODO: Max size announce is 200-500 symbols
+            int maxSizeAnnounce = 200;
+            String announce = postRep.getText();
+            if (announce.length() > maxSizeAnnounce) {
+                announce = announce.substring(0, maxSizeAnnounce);
+            }
+            postInfoDTO.setAnnounce(announce);
+
+            //===========================================================
+            posts.add(postInfoDTO);
+        }
+
+        CollectionPostsResponseDTO<PostInfoDTO> collectionPostsResponseDTO = new CollectionPostsResponseDTO<>();
         collectionPostsResponseDTO.setCount(allPostsCount);
         collectionPostsResponseDTO.setPosts(posts);
 

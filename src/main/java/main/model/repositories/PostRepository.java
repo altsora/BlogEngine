@@ -45,7 +45,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
             @Param("moderationStatus") ModerationStatusType moderationStatusType
     );
 
-    @Query(value = "SELECT p, (SELECT COUNT(*) FROM PostVote pv WHERE pv.post.id = p.id AND pv.value = 1) " +
+    @Query("SELECT p, (SELECT COUNT(*) FROM PostVote pv WHERE pv.post.id = p.id AND pv.value = 1) " +
             "FROM Post p LEFT JOIN PostVote pv " +
             "ON pv.post.id = p.id " +
             "WHERE " +
@@ -56,5 +56,18 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     List<Post> findAllPostBest(
             @Param("isActive") byte isActive,
             @Param("moderationStatus") ModerationStatusType moderationStatusType
+    );
+
+    @Query("SELECT p FROM Post p " +
+            "WHERE " +
+            "   p.isActive = :isActive AND " +
+            "   p.moderationStatus = :moderationStatus AND " +
+            "   (now() - p.time) >= 0 AND " +
+            "   p.title LIKE %:query% OR p.text LIKE %:query% " +
+            "ORDER BY p.time DESC")
+    List<Post> findAllPostRecentByQuery(
+            @Param("isActive") byte isActive,
+            @Param("moderationStatus") ModerationStatusType moderationStatusType,
+            @Param("query") String query
     );
 }
