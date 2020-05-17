@@ -70,4 +70,16 @@ public interface PostRepository extends JpaRepository<Post, Long> {
             @Param("moderationStatus") ModerationStatusType moderationStatusType,
             @Param("query") String query
     );
+
+    @Query("SELECT p FROM Post p " +
+            "WHERE " +
+            "   p.id = :postId AND" +
+            "   p.isActive = :isActive AND " +
+            "   p.moderationStatus = :moderationStatus AND " +
+            "   (now() - p.time) >= 0")
+    Post findPostById(
+            @Param("postId") Integer postId,
+            @Param("isActive") byte isActive,
+            @Param("moderationStatus") ModerationStatusType moderationStatusType
+    );
 }

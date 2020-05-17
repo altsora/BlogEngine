@@ -1,5 +1,13 @@
 package main.model.responses;
 
-public class PostFullDTO {
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
+import java.util.List;
+
+@Data
+@NoArgsConstructor
+public class PostFullDTO extends PostInfoDTO{
+    private List<CommentDTO> comments;
+    private List<String> tags;
 }

@@ -8,9 +8,7 @@ import main.model.repositories.PostCommentRepository;
 import main.model.repositories.PostRepository;
 import main.model.repositories.PostVoteRepository;
 import main.model.repositories.UserRepository;
-import main.model.responses.CollectionPostsResponseDTO;
-import main.model.responses.PostInfoDTO;
-import main.model.responses.UserSimple;
+import main.model.responses.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -67,7 +65,9 @@ public class ApiPostController {
             PostInfoDTO postInfoDTO = new PostInfoDTO();
 
             Post postRep = postListRep.get(i);
-            postInfoDTO.setId(postRep.getId());
+            int postId = postRep.getId();
+
+            postInfoDTO.setId(postId);
             postInfoDTO.setTitle(postRep.getTitle());
             postInfoDTO.setViewCount(postRep.getViewCount());
 
@@ -79,29 +79,13 @@ public class ApiPostController {
             String time = getStringTime(postRep.getTime());
             postInfoDTO.setTime(time);
 
-            int postId = postRep.getId();
-            // Likes/Dislikes
-            List<PostVote> postVoteListRep = postVoteRepository.findAllPostVotesByPostId(postId);
-            for (PostVote postVoteRep : postVoteListRep) {
-                if (postVoteRep.getValue() > 0) {
-                    postInfoDTO.increaseLikeCount();
-                } else {
-                    postInfoDTO.increaseDislikeCount();
-                }
-            }
+            countLikesAndDislikes(postId, postInfoDTO);
 
-            // CommentCount
-            List<PostComment> postCommentListRep = postCommentRepository.findAllPostCommentByPostId(postId);
-            postInfoDTO.setCommentCount(postCommentListRep.size());
+            int countComment = postCommentRepository.getCountCommentsByPostId(postId);
+            postInfoDTO.setCommentCount(countComment);
 
-            // Announce
-            //TODO: Max size announce is 200-500 symbols
-            int maxSizeAnnounce = 200;
-            String announce = postRep.getText();
-            if (announce.length() > maxSizeAnnounce) {
-                announce = announce.substring(0, maxSizeAnnounce);
-            }
-            postInfoDTO.setAnnounce(announce);
+            String text = postRep.getText();
+            postInfoDTO.setAnnounce(getAnnounce(text));
 
             //===========================================================
             posts.add(postInfoDTO);
@@ -135,7 +119,9 @@ public class ApiPostController {
             PostInfoDTO postInfoDTO = new PostInfoDTO();
 
             Post postRep = postListRep.get(i);
-            postInfoDTO.setId(postRep.getId());
+            int postId = postRep.getId();
+
+            postInfoDTO.setId(postId);
             postInfoDTO.setTitle(postRep.getTitle());
             postInfoDTO.setViewCount(postRep.getViewCount());
 
@@ -147,29 +133,13 @@ public class ApiPostController {
             String time = getStringTime(postRep.getTime());
             postInfoDTO.setTime(time);
 
-            int postId = postRep.getId();
-            // Likes/Dislikes
-            List<PostVote> postVoteListRep = postVoteRepository.findAllPostVotesByPostId(postId);
-            for (PostVote postVoteRep : postVoteListRep) {
-                if (postVoteRep.getValue() > 0) {
-                    postInfoDTO.increaseLikeCount();
-                } else {
-                    postInfoDTO.increaseDislikeCount();
-                }
-            }
+            countLikesAndDislikes(postId, postInfoDTO);
 
-            // CommentCount
-            List<PostComment> postCommentListRep = postCommentRepository.findAllPostCommentByPostId(postId);
-            postInfoDTO.setCommentCount(postCommentListRep.size());
+            int commentCount = postCommentRepository.getCountCommentsByPostId(postId);
+            postInfoDTO.setCommentCount(commentCount);
 
-            // Announce
-            //TODO: Max size announce is 200-500 symbols
-            int maxSizeAnnounce = 200;
-            String announce = postRep.getText();
-            if (announce.length() > maxSizeAnnounce) {
-                announce = announce.substring(0, maxSizeAnnounce);
-            }
-            postInfoDTO.setAnnounce(announce);
+            String text = postRep.getText();
+            postInfoDTO.setAnnounce(getAnnounce(text));
 
             //===========================================================
             posts.add(postInfoDTO);
@@ -182,10 +152,48 @@ public class ApiPostController {
         return collectionPostsResponseDTO;
     }
 
+//    @GetMapping(value = "/api/post/{id}")
+//    @ResponseBody
+//    public ResponseEntity getPostById(@PathVariable(value = "id") int id) {
+//        Post postRep = postRepository.findPostById(id, (byte) 1, ModerationStatusType.ACCEPTED);
+//        if (postRep == null) {
+//            return ResponseEntity.status(HttpStatus.OK).body(null);
+//        }
+//        PostFullDTO postFullDTO = new PostFullDTO();
+//        postFullDTO.setId(postRep.getId());
+//        postFullDTO.setTime(getStringTime(postRep.getTime()));
+//
+//        UserSimple userSimple = new UserSimple();
+//        userSimple.setId(postRep.getUser().getId());
+//        userSimple.setName(postRep.getUser().getName());
+//        postFullDTO.setUser(userSimple);
+//
+//
+//    }
 
     @GetMapping(value = "/api/tag")
     public ResponseEntity getTag() {
         return ResponseEntity.status(HttpStatus.OK).body(null);
+    }
+
+    private String getAnnounce(String text) {
+        int maxSizeAnnounce = 200;
+        String announce = text;
+        if (announce.length() > maxSizeAnnounce) {
+            announce = announce.substring(0, maxSizeAnnounce);
+        }
+        return announce;
+    }
+
+    private void countLikesAndDislikes(int postId, PostInfoDTO postDTO) {
+        List<PostVote> postVoteListRep = postVoteRepository.findAllPostVotesByPostId(postId);
+        for (PostVote postVoteRep : postVoteListRep) {
+            if (postVoteRep.getValue() > 0) {
+                postDTO.increaseLikeCount();
+            } else {
+                postDTO.increaseDislikeCount();
+            }
+        }
     }
 
     private static String getStringTime(LocalDateTime localDateTime) {
