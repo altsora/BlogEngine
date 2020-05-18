@@ -18,7 +18,12 @@ public interface PostVoteRepository extends JpaRepository<PostVote, Long> {
     );
 
     @Query("SELECT u FROM #{#entityName} u WHERE u.post.id = :postId")
-    List<PostVote> findAllPostVotesByPostId(
-            @Param("postId") Integer postId
-    );
+    List<PostVote> findAllPostVotesByPostId(@Param("postId") Integer postId);
+
+    @Query("SELECT COUNT(*) FROM PostVote pv WHERE pv.post.id = :postId AND pv.value = 1")
+    int getCountLikesByPostId(@Param("postId") Integer postId);
+
+    @Query("SELECT COUNT(*) FROM PostVote pv WHERE pv.post.id = :postId AND pv.value = -1")
+    int getCountDislikesByPostId(@Param("postId") Integer postId);
+
 }

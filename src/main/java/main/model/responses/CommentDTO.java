@@ -3,13 +3,11 @@ package main.model.responses;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
-
 @Data
 @NoArgsConstructor
 public class CommentDTO {
     private int id;
-    private LocalDateTime time;
+    private String time;
     private String text;
-    private UserWithPhoto userWithPhoto;
+    private UserWithPhoto user;
 }

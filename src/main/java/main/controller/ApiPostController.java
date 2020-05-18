@@ -1,13 +1,11 @@
 package main.controller;
 
-import main.model.ModerationStatusType;
+import main.model.entities.enums.ModerationStatusType;
 import main.model.entities.Post;
 import main.model.entities.PostComment;
 import main.model.entities.PostVote;
-import main.model.repositories.PostCommentRepository;
-import main.model.repositories.PostRepository;
-import main.model.repositories.PostVoteRepository;
-import main.model.repositories.UserRepository;
+import main.model.entities.Tag2Post;
+import main.model.repositories.*;
 import main.model.responses.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -32,6 +30,9 @@ public class ApiPostController {
 
     @Autowired
     private PostCommentRepository postCommentRepository;
+
+    @Autowired
+    private Tag2PostRepository tag2PostRepository;
 
     @GetMapping(value = "/api/post")
     @ResponseBody
@@ -62,31 +63,22 @@ public class ApiPostController {
             if (i == allPostsCount) {
                 break;
             }
-            PostInfoDTO postInfoDTO = new PostInfoDTO();
-
             Post postRep = postListRep.get(i);
             int postId = postRep.getId();
+            int userId = postRep.getUser().getId();
+            String userName = postRep.getUser().getName();
+            UserSimple user = new UserSimple(userId, userName);
 
+            PostInfoDTO postInfoDTO = new PostInfoDTO();
             postInfoDTO.setId(postId);
-            postInfoDTO.setTitle(postRep.getTitle());
-            postInfoDTO.setViewCount(postRep.getViewCount());
-
-            UserSimple user = new UserSimple();
-            user.setId(postRep.getUser().getId());
-            user.setName(postRep.getUser().getName());
+            postInfoDTO.setTime(getStringTime(postRep.getTime()));
             postInfoDTO.setUser(user);
-
-            String time = getStringTime(postRep.getTime());
-            postInfoDTO.setTime(time);
-
-            countLikesAndDislikes(postId, postInfoDTO);
-
-            int countComment = postCommentRepository.getCountCommentsByPostId(postId);
-            postInfoDTO.setCommentCount(countComment);
-
-            String text = postRep.getText();
-            postInfoDTO.setAnnounce(getAnnounce(text));
-
+            postInfoDTO.setTitle(postRep.getTitle());
+            postInfoDTO.setAnnounce(getAnnounce(postRep.getText()));
+            postInfoDTO.setLikeCount(postVoteRepository.getCountLikesByPostId(postId));
+            postInfoDTO.setDislikeCount(postVoteRepository.getCountDislikesByPostId(postId));
+            postInfoDTO.setCommentCount(postCommentRepository.getCountCommentsByPostId(postId));
+            postInfoDTO.setViewCount(postRep.getViewCount());
             //===========================================================
             posts.add(postInfoDTO);
         }
@@ -116,30 +108,22 @@ public class ApiPostController {
             if (i == allPostsCount) {
                 break;
             }
-            PostInfoDTO postInfoDTO = new PostInfoDTO();
-
             Post postRep = postListRep.get(i);
             int postId = postRep.getId();
+            int userId = postRep.getUser().getId();
+            String userName = postRep.getUser().getName();
+            UserSimple user = new UserSimple(userId, userName);
 
+            PostInfoDTO postInfoDTO = new PostInfoDTO();
             postInfoDTO.setId(postId);
-            postInfoDTO.setTitle(postRep.getTitle());
-            postInfoDTO.setViewCount(postRep.getViewCount());
-
-            UserSimple user = new UserSimple();
-            user.setId(postRep.getUser().getId());
-            user.setName(postRep.getUser().getName());
+            postInfoDTO.setTime(getStringTime(postRep.getTime()));
             postInfoDTO.setUser(user);
-
-            String time = getStringTime(postRep.getTime());
-            postInfoDTO.setTime(time);
-
-            countLikesAndDislikes(postId, postInfoDTO);
-
-            int commentCount = postCommentRepository.getCountCommentsByPostId(postId);
-            postInfoDTO.setCommentCount(commentCount);
-
-            String text = postRep.getText();
-            postInfoDTO.setAnnounce(getAnnounce(text));
+            postInfoDTO.setTitle(postRep.getTitle());
+            postInfoDTO.setAnnounce(getAnnounce(postRep.getText()));
+            postInfoDTO.setLikeCount(postVoteRepository.getCountLikesByPostId(postId));
+            postInfoDTO.setDislikeCount(postVoteRepository.getCountDislikesByPostId(postId));
+            postInfoDTO.setCommentCount(postCommentRepository.getCountCommentsByPostId(postId));
+            postInfoDTO.setViewCount(postRep.getViewCount());
 
             //===========================================================
             posts.add(postInfoDTO);
@@ -152,28 +136,66 @@ public class ApiPostController {
         return collectionPostsResponseDTO;
     }
 
-//    @GetMapping(value = "/api/post/{id}")
-//    @ResponseBody
-//    public ResponseEntity getPostById(@PathVariable(value = "id") int id) {
-//        Post postRep = postRepository.findPostById(id, (byte) 1, ModerationStatusType.ACCEPTED);
-//        if (postRep == null) {
-//            return ResponseEntity.status(HttpStatus.OK).body(null);
-//        }
-//        PostFullDTO postFullDTO = new PostFullDTO();
-//        postFullDTO.setId(postRep.getId());
-//        postFullDTO.setTime(getStringTime(postRep.getTime()));
-//
-//        UserSimple userSimple = new UserSimple();
-//        userSimple.setId(postRep.getUser().getId());
-//        userSimple.setName(postRep.getUser().getName());
-//        postFullDTO.setUser(userSimple);
-//
-//
-//    }
+    @GetMapping(value = "/api/post/{id}")
+    @ResponseBody
+    public PostFullDTO getPostById(@PathVariable(value = "id") int id) {
+        Post postRep = postRepository.findPostById(id, (byte) 1, ModerationStatusType.ACCEPTED);
+        int postId = postRep.getId();
+        int userId = postRep.getUser().getId();
+        String userName = postRep.getUser().getName();
+        UserSimple userSimple = new UserSimple(userId, userName);
+
+        PostFullDTO postFullDTO = new PostFullDTO();
+        postFullDTO.setId(postId);
+        postFullDTO.setTime(getStringTime(postRep.getTime()));
+        postFullDTO.setUser(userSimple);
+        postFullDTO.setTitle(postRep.getTitle());
+        postFullDTO.setAnnounce(getAnnounce(postRep.getText()));
+        postFullDTO.setLikeCount(postVoteRepository.getCountLikesByPostId(postId));
+        postFullDTO.setDislikeCount(postVoteRepository.getCountDislikesByPostId(postId));
+        postFullDTO.setCommentCount(postCommentRepository.getCountCommentsByPostId(postId));
+        postFullDTO.setViewCount(postRep.getViewCount());
+        postFullDTO.setComments(getCommentsByPostId(postId));
+        postFullDTO.setTags(getTagsByPostId(postId));
+
+        return postFullDTO;
+    }
 
     @GetMapping(value = "/api/tag")
     public ResponseEntity getTag() {
         return ResponseEntity.status(HttpStatus.OK).body(null);
+    }
+
+    private List<String> getTagsByPostId(int postId) {
+        List<Tag2Post> tag2PostListRep = tag2PostRepository.findAllTag2PostByPostId(postId);
+        List<String> tags = new ArrayList<>();
+        for (Tag2Post tag2PostRep : tag2PostListRep) {
+            tags.add(tag2PostRep.getTag().getName());
+        }
+        return tags;
+    }
+
+    private List<CommentDTO> getCommentsByPostId(int postId) {
+        List<PostComment> postCommentListRep = postCommentRepository.findAllPostCommentByPostId(postId);
+        List<CommentDTO> commentDTOList = new ArrayList<>();
+
+        for(PostComment postCommentRep : postCommentListRep) {
+            int userId = postCommentRep.getUser().getId();
+            String userName = postCommentRep.getUser().getName();
+            String userPhoto = postCommentRep.getUser().getPhoto();
+            UserWithPhoto userWithPhoto = new UserWithPhoto(userId, userName, userPhoto);
+
+            CommentDTO commentDTO = new CommentDTO();
+            commentDTO.setId(postCommentRep.getId());
+            commentDTO.setTime(getStringTime(postCommentRep.getTime()));
+            commentDTO.setText(postCommentRep.getText());
+            commentDTO.setUser(userWithPhoto);
+
+            //===========================================================
+            commentDTOList.add(commentDTO);
+        }
+
+        return commentDTOList;
     }
 
     private String getAnnounce(String text) {
@@ -183,17 +205,6 @@ public class ApiPostController {
             announce = announce.substring(0, maxSizeAnnounce);
         }
         return announce;
-    }
-
-    private void countLikesAndDislikes(int postId, PostInfoDTO postDTO) {
-        List<PostVote> postVoteListRep = postVoteRepository.findAllPostVotesByPostId(postId);
-        for (PostVote postVoteRep : postVoteListRep) {
-            if (postVoteRep.getValue() > 0) {
-                postDTO.increaseLikeCount();
-            } else {
-                postDTO.increaseDislikeCount();
-            }
-        }
     }
 
     private static String getStringTime(LocalDateTime localDateTime) {

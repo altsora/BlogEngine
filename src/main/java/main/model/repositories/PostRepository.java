@@ -1,6 +1,6 @@
 package main.model.repositories;
 
-import main.model.ModerationStatusType;
+import main.model.entities.enums.ModerationStatusType;
 import main.model.entities.Post;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
