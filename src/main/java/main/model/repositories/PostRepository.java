@@ -97,4 +97,19 @@ public interface PostRepository extends JpaRepository<Post, Long> {
             @Param("month") int month,
             @Param("dayOfMonth") int dayOfMonth
     );
+
+    @Query("SELECT p FROM Post p " +
+            "JOIN Tag2Post tp ON p.id = tp.post.id " +
+            "JOIN Tag t ON t.id = tp.tag.id " +
+            "WHERE " +
+            "   p.isActive = :isActive AND " +
+            "   p.moderationStatus = :moderationStatus AND " +
+            "   (now() - p.time) >= 0 AND " +
+            "   t.name = :tag " +
+            "ORDER BY p.time DESC")
+    List<Post> findAllPostByTag(
+            @Param("isActive") byte isActive,
+            @Param("moderationStatus") ModerationStatusType moderationStatusType,
+            @Param("tag") String tag
+    );
 }

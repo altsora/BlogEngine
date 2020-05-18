@@ -9,6 +9,6 @@ import java.util.List;
 
 public interface Tag2PostRepository extends JpaRepository<Tag2Post, Long> {
 
-    @Query("SELECT tp FROM Tag2Post tp WHERE tp.post.id = :postId")
+    @Query("SELECT tp FROM Tag2Post tp WHERE tp.post.id = :postId ORDER BY tp.tag.id")
     List<Tag2Post> findAllTag2PostByPostId(@Param("postId") Integer postId);
 }
