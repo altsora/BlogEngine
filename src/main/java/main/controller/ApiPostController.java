@@ -7,6 +7,9 @@ import main.model.entities.Tag2Post;
 import main.model.repositories.*;
 import main.model.responses.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -41,28 +44,27 @@ public class ApiPostController {
             @RequestParam(value = "mode") String mode
     ) {
         List<Post> postListRep;
+        int pageNumber = offset / limit;
         switch (mode) {
             case "popular":
-                postListRep = postRepository.findAllPostPopular((byte) 1, ModerationStatusType.ACCEPTED);
-                break;
-            case "early":
-                postListRep = postRepository.findAllPostEarly((byte) 1, ModerationStatusType.ACCEPTED);
+                Pageable sortedByCountComment = PageRequest.of(pageNumber, limit, Sort.by("countComments").descending());
+                postListRep = postRepository.findAllPostPopular((byte) 1, ModerationStatusType.ACCEPTED, sortedByCountComment);
                 break;
             case "best":
-                postListRep = postRepository.findAllPostBest((byte) 1, ModerationStatusType.ACCEPTED);
+                Pageable sortedByCountLikes = PageRequest.of(pageNumber, limit, Sort.by("countLikes").descending());
+                postListRep = postRepository.findAllPostBest((byte) 1, ModerationStatusType.ACCEPTED, sortedByCountLikes);
+                break;
+            case "early":
+                Pageable sortedByPostTimeAsc = PageRequest.of(pageNumber, limit, Sort.by("time"));
+                postListRep = postRepository.findAllPostSortedByDate((byte) 1, ModerationStatusType.ACCEPTED, sortedByPostTimeAsc);
                 break;
             default:
-                postListRep = postRepository.findAllPostRecent((byte) 1, ModerationStatusType.ACCEPTED);
+                Pageable sortedByPostTimeDesc = PageRequest.of(pageNumber, limit, Sort.by("time").descending());
+                postListRep = postRepository.findAllPostSortedByDate((byte) 1, ModerationStatusType.ACCEPTED, sortedByPostTimeDesc);
         }
 
-        long allPostsCount = postListRep.size();
-        long minCountPostsOnPage = Math.min(limit, allPostsCount);
         List<PostInfoDTO> posts = new ArrayList<>();
-        for (int i = offset; i < minCountPostsOnPage + offset; i++) {
-            if (i == allPostsCount) {
-                break;
-            }
-            Post postRep = postListRep.get(i);
+        for (Post postRep : postListRep) {
             int postId = postRep.getId();
             int userId = postRep.getUser().getId();
             String userName = postRep.getUser().getName();
@@ -83,7 +85,8 @@ public class ApiPostController {
         }
 
         CollectionPostsResponseDTO<PostInfoDTO> collectionPostsResponseDTO = new CollectionPostsResponseDTO<>();
-        collectionPostsResponseDTO.setCount(allPostsCount);
+        int count = postRepository.getTotalNumberOfPosts((byte) 1, ModerationStatusType.ACCEPTED);
+        collectionPostsResponseDTO.setCount(count);
         collectionPostsResponseDTO.setPosts(posts);
 
         return collectionPostsResponseDTO;
@@ -96,18 +99,14 @@ public class ApiPostController {
             @RequestParam(value = "limit") int limit,
             @RequestParam(value = "query") String query
     ) {
+        int pageNumber = offset / limit;
+        Pageable sortedByPostTimeAsc = PageRequest.of(pageNumber, limit, Sort.by("time"));
         List<Post> postListRep = (query.equals("")) ?
-                postRepository.findAllPostRecent((byte)1, ModerationStatusType.ACCEPTED) :
-                postRepository.findAllPostRecentByQuery((byte)1, ModerationStatusType.ACCEPTED, query);
+                postRepository.findAllPostRecent((byte)1, ModerationStatusType.ACCEPTED, sortedByPostTimeAsc) :
+                postRepository.findAllPostByQuery((byte)1, ModerationStatusType.ACCEPTED, query, sortedByPostTimeAsc);
 
         List<PostInfoDTO> posts = new ArrayList<>();
-        long allPostsCount = postListRep.size();
-        long minCountPostsOnPage = Math.min(limit, allPostsCount);
-        for (int i = offset; i < minCountPostsOnPage + offset; i++) {
-            if (i == allPostsCount) {
-                break;
-            }
-            Post postRep = postListRep.get(i);
+        for (Post postRep : postListRep) {
             int postId = postRep.getId();
             int userId = postRep.getUser().getId();
             String userName = postRep.getUser().getName();
@@ -129,10 +128,13 @@ public class ApiPostController {
         }
 
         CollectionPostsResponseDTO<PostInfoDTO> collectionPostsResponseDTO = new CollectionPostsResponseDTO<>();
-        collectionPostsResponseDTO.setCount(allPostsCount);
+        //TODO: Проверить запрос
+        int count = postRepository.getTotalNumberOfPosts((byte) 1, ModerationStatusType.ACCEPTED);
+        collectionPostsResponseDTO.setCount(count);
         collectionPostsResponseDTO.setPosts(posts);
 
         return collectionPostsResponseDTO;
+
     }
 
     @GetMapping(value = "/api/post/{id}")
@@ -167,23 +169,20 @@ public class ApiPostController {
             @RequestParam(value = "limit") int limit,
             @RequestParam(value = "date") String date
     ) {
-        if (!date.matches("\\d{4}-\\d{1,2}-\\d{1,2}")) {
-            return new CollectionPostsResponseDTO();
-        }
         String[] var = date.split("-");
         int year = Integer.parseInt(var[0]);
         int month = Integer.parseInt(var[1]);
         int dayOfMonth = Integer.parseInt(var[2]);
-        List<Post> postListRep = postRepository.findAllPostByDate((byte)1, ModerationStatusType.ACCEPTED, year, month, dayOfMonth);
+
+        int pageNumber = offset / limit;
+        Pageable sortedByPostTimeAsc = PageRequest.of(pageNumber, limit, Sort.by("time"));
+        List<Post> postListRep = postRepository.findAllPostByDate(
+                (byte)1, ModerationStatusType.ACCEPTED,
+                year, month, dayOfMonth, sortedByPostTimeAsc
+        );
 
         List<PostInfoDTO> posts = new ArrayList<>();
-        long allPostsCount = postListRep.size();
-        long minCountPostsOnPage = Math.min(limit, allPostsCount);
-        for (int i = offset; i < minCountPostsOnPage + offset; i++) {
-            if (i == allPostsCount) {
-                break;
-            }
-            Post postRep = postListRep.get(i);
+        for (Post postRep : postListRep) {
             int postId = postRep.getId();
             int userId = postRep.getUser().getId();
             String userName = postRep.getUser().getName();
@@ -205,7 +204,8 @@ public class ApiPostController {
         }
 
         CollectionPostsResponseDTO<PostInfoDTO> collectionPostsResponseDTO = new CollectionPostsResponseDTO<>();
-        collectionPostsResponseDTO.setCount(allPostsCount);
+        int count = postRepository.getTotalNumberOfPostsByDate((byte) 1, ModerationStatusType.ACCEPTED, year, month, dayOfMonth);
+        collectionPostsResponseDTO.setCount(count);
         collectionPostsResponseDTO.setPosts(posts);
 
         return collectionPostsResponseDTO;
@@ -218,16 +218,11 @@ public class ApiPostController {
             @RequestParam(value = "limit") int limit,
             @RequestParam(value = "tag") String tag
     ) {
-        List<Post> postListRep = postRepository.findAllPostByTag((byte) 1, ModerationStatusType.ACCEPTED, tag);
-
+        int pageNumber = offset / limit;
+        Pageable sortedByPostTimeAsc = PageRequest.of(pageNumber, limit, Sort.by("time"));
+        List<Post> postListRep = postRepository.findAllPostByTag((byte) 1, ModerationStatusType.ACCEPTED, tag, sortedByPostTimeAsc);
         List<PostInfoDTO> posts = new ArrayList<>();
-        long allPostsCount = postListRep.size();
-        long minCountPostsOnPage = Math.min(limit, allPostsCount);
-        for (int i = offset; i < minCountPostsOnPage + offset; i++) {
-            if (i == allPostsCount) {
-                break;
-            }
-            Post postRep = postListRep.get(i);
+        for (Post postRep : postListRep) {
             int postId = postRep.getId();
             int userId = postRep.getUser().getId();
             String userName = postRep.getUser().getName();
@@ -249,11 +244,13 @@ public class ApiPostController {
         }
 
         CollectionPostsResponseDTO<PostInfoDTO> collectionPostsResponseDTO = new CollectionPostsResponseDTO<>();
-        collectionPostsResponseDTO.setCount(allPostsCount);
+        int count = postRepository.getTotalNumberOfPostsByTag((byte) 1, ModerationStatusType.ACCEPTED, tag);
+        collectionPostsResponseDTO.setCount(count);
         collectionPostsResponseDTO.setPosts(posts);
 
         return collectionPostsResponseDTO;
     }
+
     @GetMapping(value = "/api/tag")
     public ResponseEntity getTag() {
         return ResponseEntity.status(HttpStatus.OK).body(null);
@@ -272,7 +269,7 @@ public class ApiPostController {
         List<PostComment> postCommentListRep = postCommentRepository.findAllPostCommentByPostId(postId);
         List<CommentDTO> commentDTOList = new ArrayList<>();
 
-        for(PostComment postCommentRep : postCommentListRep) {
+        for (PostComment postCommentRep : postCommentListRep) {
             int userId = postCommentRep.getUser().getId();
             String userName = postCommentRep.getUser().getName();
             String userPhoto = postCommentRep.getUser().getPhoto();
