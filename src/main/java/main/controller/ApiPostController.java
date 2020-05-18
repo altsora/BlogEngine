@@ -3,7 +3,6 @@ package main.controller;
 import main.model.entities.enums.ModerationStatusType;
 import main.model.entities.Post;
 import main.model.entities.PostComment;
-import main.model.entities.PostVote;
 import main.model.entities.Tag2Post;
 import main.model.repositories.*;
 import main.model.responses.*;
@@ -161,6 +160,57 @@ public class ApiPostController {
         return postFullDTO;
     }
 
+    @GetMapping(value = "/api/post/byDate")
+    @ResponseBody
+    public CollectionPostsResponseDTO getPostsByDate(
+            @RequestParam(value = "offset") int offset,
+            @RequestParam(value = "limit") int limit,
+            @RequestParam(value = "date") String date
+    ) {
+        if (!date.matches("\\d{4}-\\d{1,2}-\\d{1,2}")) {
+            return new CollectionPostsResponseDTO();
+        }
+        String[] var = date.split("-");
+        int year = Integer.parseInt(var[0]);
+        int month = Integer.parseInt(var[1]);
+        int dayOfMonth = Integer.parseInt(var[2]);
+        List<Post> postListRep = postRepository.findAllPostByDate((byte)1, ModerationStatusType.ACCEPTED, year, month, dayOfMonth);
+
+        List<PostInfoDTO> posts = new ArrayList<>();
+        long allPostsCount = postListRep.size();
+        long minCountPostsOnPage = Math.min(limit, allPostsCount);
+        for (int i = offset; i < minCountPostsOnPage + offset; i++) {
+            if (i == allPostsCount) {
+                break;
+            }
+            Post postRep = postListRep.get(i);
+            int postId = postRep.getId();
+            int userId = postRep.getUser().getId();
+            String userName = postRep.getUser().getName();
+            UserSimple user = new UserSimple(userId, userName);
+
+            PostInfoDTO postInfoDTO = new PostInfoDTO();
+            postInfoDTO.setId(postId);
+            postInfoDTO.setTime(getStringTime(postRep.getTime()));
+            postInfoDTO.setUser(user);
+            postInfoDTO.setTitle(postRep.getTitle());
+            postInfoDTO.setAnnounce(getAnnounce(postRep.getText()));
+            postInfoDTO.setLikeCount(postVoteRepository.getCountLikesByPostId(postId));
+            postInfoDTO.setDislikeCount(postVoteRepository.getCountDislikesByPostId(postId));
+            postInfoDTO.setCommentCount(postCommentRepository.getCountCommentsByPostId(postId));
+            postInfoDTO.setViewCount(postRep.getViewCount());
+
+            //===========================================================
+            posts.add(postInfoDTO);
+        }
+
+        CollectionPostsResponseDTO<PostInfoDTO> collectionPostsResponseDTO = new CollectionPostsResponseDTO<>();
+        collectionPostsResponseDTO.setCount(allPostsCount);
+        collectionPostsResponseDTO.setPosts(posts);
+
+        return collectionPostsResponseDTO;
+    }
+    
     @GetMapping(value = "/api/tag")
     public ResponseEntity getTag() {
         return ResponseEntity.status(HttpStatus.OK).body(null);

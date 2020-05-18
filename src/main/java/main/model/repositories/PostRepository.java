@@ -82,4 +82,19 @@ public interface PostRepository extends JpaRepository<Post, Long> {
             @Param("isActive") byte isActive,
             @Param("moderationStatus") ModerationStatusType moderationStatusType
     );
+
+    @Query("SELECT p FROM Post p " +
+            "WHERE " +
+            "   p.isActive = :isActive AND " +
+            "   p.moderationStatus = :moderationStatus AND " +
+            "   YEAR(p.time) = :year AND " +
+            "   MONTH(p.time) = :month AND " +
+            "   DAYOFMONTH(p.time) = :dayOfMonth")
+    List<Post> findAllPostByDate(
+            @Param("isActive") byte isActive,
+            @Param("moderationStatus") ModerationStatusType moderationStatusType,
+            @Param("year") int year,
+            @Param("month") int month,
+            @Param("dayOfMonth") int dayOfMonth
+    );
 }
