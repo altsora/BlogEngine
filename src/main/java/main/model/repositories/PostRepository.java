@@ -65,32 +65,6 @@ public interface PostRepository extends JpaRepository<Post, Long> {
 
     //=============================================================================
 
-    @Query("SELECT p FROM Post p " +
-            "WHERE " +
-            "   p.isActive = :isActive AND " +
-            "   p.moderationStatus = :moderationStatus AND " +
-            "   p.time <= now() ")
-    List<Post> findAllPostRecent(
-            @Param("isActive") byte isActive,
-            @Param("moderationStatus") ModerationStatusType moderationStatusType,
-            Pageable pageable
-    );
-
-    //=============================================================================
-
-    @Query("SELECT p FROM Post p " +
-            "WHERE " +
-            "   p.isActive = :isActive AND " +
-            "   p.moderationStatus = :moderationStatus AND " +
-            "   p.time <= now() ")
-    List<Post> findAllPostEarly(
-            @Param("isActive") byte isActive,
-            @Param("moderationStatus") ModerationStatusType moderationStatusType,
-            Pageable pageable
-    );
-
-    //=============================================================================
-
     @Query("SELECT p, COUNT(pc) AS countComments " +
             "FROM Post p LEFT JOIN PostComment pc " +
             "ON pc.post.id = p.id " +

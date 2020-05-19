@@ -6,10 +6,10 @@ import lombok.ToString;
 @Data
 @ToString
 public class BlogDTO {
-    private String title = "DevPub";
-    private String subtitle = "Рассказы разработчиков";
-    private String phone = "+7 903 666-44-55";
-    private String email = "mail@mail.ru";
-    private String copyright = "Дмитрий Сергеев";
-    private String copyrightFrom = "2005";
+    private String title;
+    private String subtitle;
+    private String phone;
+    private String email;
+    private String copyright;
+    private String copyrightFrom;
 }

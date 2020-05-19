@@ -1,5 +1,6 @@
 package main.controller;
 
+import main.model.entities.Tag;
 import main.model.entities.enums.ModerationStatusType;
 import main.model.entities.Post;
 import main.model.entities.PostComment;
@@ -10,8 +11,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -35,6 +34,9 @@ public class ApiPostController {
 
     @Autowired
     private Tag2PostRepository tag2PostRepository;
+
+    @Autowired
+    private TagRepository tagRepository;
 
     @GetMapping(value = "/api/post")
     @ResponseBody
@@ -101,9 +103,10 @@ public class ApiPostController {
     ) {
         int pageNumber = offset / limit;
         Pageable sortedByPostTimeAsc = PageRequest.of(pageNumber, limit, Sort.by("time"));
+        Pageable sortedByPostTimeDesc = PageRequest.of(pageNumber, limit, Sort.by("time").descending());
         List<Post> postListRep = (query.equals("")) ?
-                postRepository.findAllPostRecent((byte)1, ModerationStatusType.ACCEPTED, sortedByPostTimeAsc) :
-                postRepository.findAllPostByQuery((byte)1, ModerationStatusType.ACCEPTED, query, sortedByPostTimeAsc);
+                postRepository.findAllPostSortedByDate((byte) 1, ModerationStatusType.ACCEPTED, sortedByPostTimeDesc) :
+                postRepository.findAllPostByQuery((byte) 1, ModerationStatusType.ACCEPTED, query, sortedByPostTimeAsc);
 
         List<PostInfoDTO> posts = new ArrayList<>();
         for (Post postRep : postListRep) {
@@ -164,7 +167,7 @@ public class ApiPostController {
 
     @GetMapping(value = "/api/post/byDate")
     @ResponseBody
-    public CollectionPostsResponseDTO getPostsByDate(
+    public CollectionPostsResponseDTO<PostInfoDTO> getPostsByDate(
             @RequestParam(value = "offset") int offset,
             @RequestParam(value = "limit") int limit,
             @RequestParam(value = "date") String date
@@ -177,7 +180,7 @@ public class ApiPostController {
         int pageNumber = offset / limit;
         Pageable sortedByPostTimeAsc = PageRequest.of(pageNumber, limit, Sort.by("time"));
         List<Post> postListRep = postRepository.findAllPostByDate(
-                (byte)1, ModerationStatusType.ACCEPTED,
+                (byte) 1, ModerationStatusType.ACCEPTED,
                 year, month, dayOfMonth, sortedByPostTimeAsc
         );
 
@@ -213,7 +216,7 @@ public class ApiPostController {
 
     @GetMapping(value = "/api/post/byTag")
     @ResponseBody
-    public CollectionPostsResponseDTO getPostsByTag(
+    public CollectionPostsResponseDTO<PostInfoDTO> getPostsByTag(
             @RequestParam(value = "offset") int offset,
             @RequestParam(value = "limit") int limit,
             @RequestParam(value = "tag") String tag
@@ -251,9 +254,36 @@ public class ApiPostController {
         return collectionPostsResponseDTO;
     }
 
+
     @GetMapping(value = "/api/tag")
-    public ResponseEntity getTag() {
-        return ResponseEntity.status(HttpStatus.OK).body(null);
+    @ResponseBody
+    public CollectionTagsResponseDTO getTagList(@RequestParam(value = "query", required = false) String query) {
+        List<Tag> tagListRep = (query == null || query.equals("")) ?
+                tagRepository.findAll() :
+                tagRepository.findAllTagsByQuery(query);
+        List<Double> weights = new ArrayList<>();
+        int totalNumberOfPosts = postRepository.getTotalNumberOfPosts((byte) 1, ModerationStatusType.ACCEPTED);
+        double maxWeight = -1;
+        for (Tag tagRep : tagListRep) {
+            int countPosts = postRepository.getTotalNumberOfPostsByTag((byte) 1, ModerationStatusType.ACCEPTED, tagRep.getName());
+            double weight = (double)countPosts / totalNumberOfPosts;
+            weights.add(weight);
+            if (weight > maxWeight) {
+                maxWeight = weight;
+            }
+        }
+
+        List<TagDTO> tags = new ArrayList<>();
+        for (int i = 0; i < tagListRep.size(); i++) {
+            String tagName = tagListRep.get(i).getName();
+            double normalizedWeight = weights.get(i) / maxWeight;
+            TagDTO tagDTO = new TagDTO(tagName, normalizedWeight);
+            tags.add(tagDTO);
+        }
+
+        CollectionTagsResponseDTO collectionTagsResponseDTO = new CollectionTagsResponseDTO();
+        collectionTagsResponseDTO.setTags(tags);
+        return collectionTagsResponseDTO;
     }
 
     private List<String> getTagsByPostId(int postId) {
@@ -298,23 +328,23 @@ public class ApiPostController {
     }
 
     private static String getStringTime(LocalDateTime localDateTime) {
-        DateTimeFormatter formatter1 = DateTimeFormatter.ofPattern("HH:mm");
-        DateTimeFormatter formatter2 = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
+        DateTimeFormatter simpleFormat = DateTimeFormatter.ofPattern("HH:mm");
+        DateTimeFormatter fullFormat = DateTimeFormatter.ofPattern("d MMM yyyy, EEE, HH:mm");
         LocalDateTime today = LocalDateTime.now();
         LocalDateTime yesterday = today.minusDays(1);
 
         if (localDateTime.getYear() == today.getYear() &&
                 localDateTime.getMonth() == today.getMonth() &&
                 localDateTime.getDayOfMonth() == today.getDayOfMonth()) {
-            return "Сегодня, " + formatter1.format(localDateTime);
+            return "Сегодня, " + simpleFormat.format(localDateTime);
         }
 
         if (localDateTime.getYear() == yesterday.getYear() &&
                 localDateTime.getMonth() == yesterday.getMonth() &&
                 localDateTime.getDayOfMonth() == yesterday.getDayOfMonth()) {
-            return "Вчера, " + formatter1.format(localDateTime);
+            return "Вчера, " + simpleFormat.format(localDateTime);
         }
 
-        return formatter2.format(localDateTime);
+        return fullFormat.format(localDateTime);
     }
 }
