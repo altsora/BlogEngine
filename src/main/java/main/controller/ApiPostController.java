@@ -8,6 +8,7 @@ import main.model.entities.PostComment;
 import main.model.entities.Tag2Post;
 import main.model.repositories.*;
 import main.model.responses.*;
+import main.model.services.PostCommentService;
 import main.model.services.PostService;
 import main.model.services.PostVoteService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,9 +24,6 @@ import java.util.List;
 public class ApiPostController {
 
     @Autowired
-    private PostCommentRepository postCommentRepository;
-
-    @Autowired
     private Tag2PostRepository tag2PostRepository;
 
     @Autowired
@@ -36,6 +34,9 @@ public class ApiPostController {
 
     @Autowired
     private PostVoteService postVoteService;
+
+    @Autowired
+    private PostCommentService postCommentService;
 
     @GetMapping(value = "/api/post")
     @ResponseBody
@@ -110,7 +111,7 @@ public class ApiPostController {
         postFullDTO.setAnnounce(getAnnounce(postRep.getText()));
         postFullDTO.setLikeCount(postVoteService.getCountLikesByPostId(postId));
         postFullDTO.setDislikeCount(postVoteService.getCountDislikesByPostId(postId));
-        postFullDTO.setCommentCount(postCommentRepository.getCountCommentsByPostId(postId));
+        postFullDTO.setCommentCount(postCommentService.getCountCommentsByPostId(postId));
         postFullDTO.setViewCount(postRep.getViewCount());
         postFullDTO.setComments(getCommentsByPostId(postId));
         postFullDTO.setTags(getTagsByPostId(postId));
@@ -203,7 +204,7 @@ public class ApiPostController {
                 PostInfoDTO postInfoDTO = new PostInfoDTO(postSimpleDTO);
                 postInfoDTO.setLikeCount(postVoteService.getCountLikesByPostId(postId));
                 postInfoDTO.setDislikeCount(postVoteService.getCountDislikesByPostId(postId));
-                postInfoDTO.setCommentCount(postCommentRepository.getCountCommentsByPostId(postId));
+                postInfoDTO.setCommentCount(postCommentService.getCountCommentsByPostId(postId));
                 postInfoDTO.setViewCount(postRep.getViewCount());
 
                 if (classDTO.getSuperclass() == PostInfoDTO.class) {
@@ -230,7 +231,7 @@ public class ApiPostController {
     }
 
     private List<CommentDTO> getCommentsByPostId(int postId) {
-        List<PostComment> postCommentListRep = postCommentRepository.findAllPostCommentByPostId(postId);
+        List<PostComment> postCommentListRep = postCommentService.findAllPostCommentByPostId(postId);
         List<CommentDTO> commentDTOList = new ArrayList<>();
 
         for (PostComment postCommentRep : postCommentListRep) {

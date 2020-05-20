@@ -7,9 +7,12 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class PostVoteServiceImpl implements PostVoteService {
+    private PostVoteRepository postVoteRepository;
 
     @Autowired
-    private PostVoteRepository postVoteRepository;
+    public PostVoteServiceImpl(PostVoteRepository postVoteRepository) {
+        this.postVoteRepository = postVoteRepository;
+    }
 
     @Override
     public int getCountLikesByPostId(int postId) {

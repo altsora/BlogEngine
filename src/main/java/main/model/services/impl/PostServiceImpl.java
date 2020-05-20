@@ -15,9 +15,12 @@ import java.util.List;
 
 @Service
 public class PostServiceImpl implements PostService {
+    private PostRepository postRepository;
 
     @Autowired
-    private PostRepository postRepository;
+    public PostServiceImpl(PostRepository postRepository) {
+        this.postRepository = postRepository;
+    }
 
     @Override
     public List<Post> findAllPostPopular(ActivesType activesType, ModerationStatusType moderationStatusType, int offset, int limit) {
