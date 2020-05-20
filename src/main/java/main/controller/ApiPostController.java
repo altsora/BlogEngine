@@ -1,15 +1,16 @@
 package main.controller;
 
 import main.model.entities.Tag;
+import main.model.entities.enums.ActivesType;
 import main.model.entities.enums.ModerationStatusType;
 import main.model.entities.Post;
 import main.model.entities.PostComment;
 import main.model.entities.Tag2Post;
 import main.model.repositories.*;
 import main.model.responses.*;
+import main.model.services.PostService;
+import main.model.services.PostVoteService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,14 +21,6 @@ import java.util.List;
 
 @RestController
 public class ApiPostController {
-    @Autowired
-    private PostRepository postRepository;
-
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private PostVoteRepository postVoteRepository;
 
     @Autowired
     private PostCommentRepository postCommentRepository;
@@ -38,56 +31,39 @@ public class ApiPostController {
     @Autowired
     private TagRepository tagRepository;
 
+    @Autowired
+    private PostService postService;
+
+    @Autowired
+    private PostVoteService postVoteService;
+
     @GetMapping(value = "/api/post")
     @ResponseBody
-    public CollectionPostsResponseDTO<PostInfoDTO> getAllPosts(
+    public CollectionPostsResponseDTO<ResponseDTO> getAllPosts(
             @RequestParam(value = "offset") int offset,
             @RequestParam(value = "limit") int limit,
             @RequestParam(value = "mode") String mode
     ) {
+
         List<Post> postListRep;
-        int pageNumber = offset / limit;
         switch (mode) {
             case "popular":
-                Pageable sortedByCountComment = PageRequest.of(pageNumber, limit, Sort.by("countComments").descending());
-                postListRep = postRepository.findAllPostPopular((byte) 1, ModerationStatusType.ACCEPTED, sortedByCountComment);
+                postListRep = postService.findAllPostPopular(ActivesType.ACTIVE, ModerationStatusType.ACCEPTED, offset, limit);
                 break;
             case "best":
-                Pageable sortedByCountLikes = PageRequest.of(pageNumber, limit, Sort.by("countLikes").descending());
-                postListRep = postRepository.findAllPostBest((byte) 1, ModerationStatusType.ACCEPTED, sortedByCountLikes);
+                postListRep = postService.findAllPostBest(ActivesType.ACTIVE, ModerationStatusType.ACCEPTED, offset, limit);
                 break;
             case "early":
-                Pageable sortedByPostTimeAsc = PageRequest.of(pageNumber, limit, Sort.by("time"));
-                postListRep = postRepository.findAllPostSortedByDate((byte) 1, ModerationStatusType.ACCEPTED, sortedByPostTimeAsc);
+                postListRep = postService.findAllPostSortedByDate(ActivesType.ACTIVE, ModerationStatusType.ACCEPTED, offset, limit, Sort.Direction.ASC);
                 break;
             default:
-                Pageable sortedByPostTimeDesc = PageRequest.of(pageNumber, limit, Sort.by("time").descending());
-                postListRep = postRepository.findAllPostSortedByDate((byte) 1, ModerationStatusType.ACCEPTED, sortedByPostTimeDesc);
+                postListRep = postService.findAllPostSortedByDate(ActivesType.ACTIVE, ModerationStatusType.ACCEPTED, offset, limit, Sort.Direction.DESC);
         }
 
-        List<PostInfoDTO> posts = new ArrayList<>();
-        for (Post postRep : postListRep) {
-            int postId = postRep.getId();
-            int userId = postRep.getUser().getId();
-            String userName = postRep.getUser().getName();
-            UserSimple user = new UserSimple(userId, userName);
+        List<ResponseDTO> posts = getPostsDTO(postListRep, PostInfoDTO.class);
+        int count = postService.getTotalNumberOfPosts(ActivesType.ACTIVE, ModerationStatusType.ACCEPTED);
 
-            PostInfoDTO postInfoDTO = new PostInfoDTO();
-            postInfoDTO.setId(postId);
-            postInfoDTO.setTime(getStringTime(postRep.getTime()));
-            postInfoDTO.setUser(user);
-            postInfoDTO.setTitle(postRep.getTitle());
-            postInfoDTO.setAnnounce(getAnnounce(postRep.getText()));
-            postInfoDTO.setLikeCount(postVoteRepository.getCountLikesByPostId(postId));
-            postInfoDTO.setDislikeCount(postVoteRepository.getCountDislikesByPostId(postId));
-            postInfoDTO.setCommentCount(postCommentRepository.getCountCommentsByPostId(postId));
-            postInfoDTO.setViewCount(postRep.getViewCount());
-            //===========================================================
-            posts.add(postInfoDTO);
-        }
-
-        CollectionPostsResponseDTO<PostInfoDTO> collectionPostsResponseDTO = new CollectionPostsResponseDTO<>();
-        int count = postRepository.getTotalNumberOfPosts((byte) 1, ModerationStatusType.ACCEPTED);
+        CollectionPostsResponseDTO<ResponseDTO> collectionPostsResponseDTO = new CollectionPostsResponseDTO<>();
         collectionPostsResponseDTO.setCount(count);
         collectionPostsResponseDTO.setPosts(posts);
 
@@ -101,38 +77,15 @@ public class ApiPostController {
             @RequestParam(value = "limit") int limit,
             @RequestParam(value = "query") String query
     ) {
-        int pageNumber = offset / limit;
-        Pageable sortedByPostTimeAsc = PageRequest.of(pageNumber, limit, Sort.by("time"));
-        Pageable sortedByPostTimeDesc = PageRequest.of(pageNumber, limit, Sort.by("time").descending());
-        List<Post> postListRep = (query.equals("")) ?
-                postRepository.findAllPostSortedByDate((byte) 1, ModerationStatusType.ACCEPTED, sortedByPostTimeDesc) :
-                postRepository.findAllPostByQuery((byte) 1, ModerationStatusType.ACCEPTED, query, sortedByPostTimeAsc);
+        List<Post> postListRep = query.equals("") ?
+                postService.findAllPostSortedByDate(ActivesType.ACTIVE, ModerationStatusType.ACCEPTED, offset, limit, Sort.Direction.DESC) :
+                postService.findAllPostByQuery(ActivesType.ACTIVE, ModerationStatusType.ACCEPTED, offset, limit, query);
+        List<ResponseDTO> posts = getPostsDTO(postListRep, PostInfoDTO.class);
+        int count = query.equals("") ?
+                postService.getTotalNumberOfPosts(ActivesType.ACTIVE, ModerationStatusType.ACCEPTED) :
+                postService.getTotalNumberOfPostsByQuery(ActivesType.ACTIVE, ModerationStatusType.ACCEPTED, query);
 
-        List<PostInfoDTO> posts = new ArrayList<>();
-        for (Post postRep : postListRep) {
-            int postId = postRep.getId();
-            int userId = postRep.getUser().getId();
-            String userName = postRep.getUser().getName();
-            UserSimple user = new UserSimple(userId, userName);
-
-            PostInfoDTO postInfoDTO = new PostInfoDTO();
-            postInfoDTO.setId(postId);
-            postInfoDTO.setTime(getStringTime(postRep.getTime()));
-            postInfoDTO.setUser(user);
-            postInfoDTO.setTitle(postRep.getTitle());
-            postInfoDTO.setAnnounce(getAnnounce(postRep.getText()));
-            postInfoDTO.setLikeCount(postVoteRepository.getCountLikesByPostId(postId));
-            postInfoDTO.setDislikeCount(postVoteRepository.getCountDislikesByPostId(postId));
-            postInfoDTO.setCommentCount(postCommentRepository.getCountCommentsByPostId(postId));
-            postInfoDTO.setViewCount(postRep.getViewCount());
-
-            //===========================================================
-            posts.add(postInfoDTO);
-        }
-
-        CollectionPostsResponseDTO<PostInfoDTO> collectionPostsResponseDTO = new CollectionPostsResponseDTO<>();
-        //TODO: Проверить запрос
-        int count = postRepository.getTotalNumberOfPosts((byte) 1, ModerationStatusType.ACCEPTED);
+        CollectionPostsResponseDTO<ResponseDTO> collectionPostsResponseDTO = new CollectionPostsResponseDTO<>();
         collectionPostsResponseDTO.setCount(count);
         collectionPostsResponseDTO.setPosts(posts);
 
@@ -143,7 +96,7 @@ public class ApiPostController {
     @GetMapping(value = "/api/post/{id}")
     @ResponseBody
     public PostFullDTO getPostById(@PathVariable(value = "id") int id) {
-        Post postRep = postRepository.findPostById(id, (byte) 1, ModerationStatusType.ACCEPTED);
+        Post postRep = postService.findPostById(id, ActivesType.ACTIVE, ModerationStatusType.ACCEPTED);
         int postId = postRep.getId();
         int userId = postRep.getUser().getId();
         String userName = postRep.getUser().getName();
@@ -155,8 +108,8 @@ public class ApiPostController {
         postFullDTO.setUser(userSimple);
         postFullDTO.setTitle(postRep.getTitle());
         postFullDTO.setAnnounce(getAnnounce(postRep.getText()));
-        postFullDTO.setLikeCount(postVoteRepository.getCountLikesByPostId(postId));
-        postFullDTO.setDislikeCount(postVoteRepository.getCountDislikesByPostId(postId));
+        postFullDTO.setLikeCount(postVoteService.getCountLikesByPostId(postId));
+        postFullDTO.setDislikeCount(postVoteService.getCountDislikesByPostId(postId));
         postFullDTO.setCommentCount(postCommentRepository.getCountCommentsByPostId(postId));
         postFullDTO.setViewCount(postRep.getViewCount());
         postFullDTO.setComments(getCommentsByPostId(postId));
@@ -167,47 +120,16 @@ public class ApiPostController {
 
     @GetMapping(value = "/api/post/byDate")
     @ResponseBody
-    public CollectionPostsResponseDTO<PostInfoDTO> getPostsByDate(
+    public CollectionPostsResponseDTO<ResponseDTO> getPostsByDate(
             @RequestParam(value = "offset") int offset,
             @RequestParam(value = "limit") int limit,
             @RequestParam(value = "date") String date
     ) {
-        String[] var = date.split("-");
-        int year = Integer.parseInt(var[0]);
-        int month = Integer.parseInt(var[1]);
-        int dayOfMonth = Integer.parseInt(var[2]);
+        List<Post> postListRep = postService.findAllPostByDate(ActivesType.ACTIVE, ModerationStatusType.ACCEPTED, offset, limit, date);
+        List<ResponseDTO> posts = getPostsDTO(postListRep, PostInfoDTO.class);
+        int count = postService.getTotalNumberOfPostsByDate(ActivesType.ACTIVE, ModerationStatusType.ACCEPTED, date);
 
-        int pageNumber = offset / limit;
-        Pageable sortedByPostTimeAsc = PageRequest.of(pageNumber, limit, Sort.by("time"));
-        List<Post> postListRep = postRepository.findAllPostByDate(
-                (byte) 1, ModerationStatusType.ACCEPTED,
-                year, month, dayOfMonth, sortedByPostTimeAsc
-        );
-
-        List<PostInfoDTO> posts = new ArrayList<>();
-        for (Post postRep : postListRep) {
-            int postId = postRep.getId();
-            int userId = postRep.getUser().getId();
-            String userName = postRep.getUser().getName();
-            UserSimple user = new UserSimple(userId, userName);
-
-            PostInfoDTO postInfoDTO = new PostInfoDTO();
-            postInfoDTO.setId(postId);
-            postInfoDTO.setTime(getStringTime(postRep.getTime()));
-            postInfoDTO.setUser(user);
-            postInfoDTO.setTitle(postRep.getTitle());
-            postInfoDTO.setAnnounce(getAnnounce(postRep.getText()));
-            postInfoDTO.setLikeCount(postVoteRepository.getCountLikesByPostId(postId));
-            postInfoDTO.setDislikeCount(postVoteRepository.getCountDislikesByPostId(postId));
-            postInfoDTO.setCommentCount(postCommentRepository.getCountCommentsByPostId(postId));
-            postInfoDTO.setViewCount(postRep.getViewCount());
-
-            //===========================================================
-            posts.add(postInfoDTO);
-        }
-
-        CollectionPostsResponseDTO<PostInfoDTO> collectionPostsResponseDTO = new CollectionPostsResponseDTO<>();
-        int count = postRepository.getTotalNumberOfPostsByDate((byte) 1, ModerationStatusType.ACCEPTED, year, month, dayOfMonth);
+        CollectionPostsResponseDTO<ResponseDTO> collectionPostsResponseDTO = new CollectionPostsResponseDTO<>();
         collectionPostsResponseDTO.setCount(count);
         collectionPostsResponseDTO.setPosts(posts);
 
@@ -216,38 +138,16 @@ public class ApiPostController {
 
     @GetMapping(value = "/api/post/byTag")
     @ResponseBody
-    public CollectionPostsResponseDTO<PostInfoDTO> getPostsByTag(
+    public CollectionPostsResponseDTO<ResponseDTO> getPostsByTag(
             @RequestParam(value = "offset") int offset,
             @RequestParam(value = "limit") int limit,
             @RequestParam(value = "tag") String tag
     ) {
-        int pageNumber = offset / limit;
-        Pageable sortedByPostTimeAsc = PageRequest.of(pageNumber, limit, Sort.by("time"));
-        List<Post> postListRep = postRepository.findAllPostByTag((byte) 1, ModerationStatusType.ACCEPTED, tag, sortedByPostTimeAsc);
-        List<PostInfoDTO> posts = new ArrayList<>();
-        for (Post postRep : postListRep) {
-            int postId = postRep.getId();
-            int userId = postRep.getUser().getId();
-            String userName = postRep.getUser().getName();
-            UserSimple user = new UserSimple(userId, userName);
+        List<Post> postListRep = postService.findAllPostByTag(ActivesType.ACTIVE, ModerationStatusType.ACCEPTED, offset, limit, tag);
+        List<ResponseDTO> posts = getPostsDTO(postListRep, PostInfoDTO.class);
+        int count = postService.getTotalNumberOfPostsByTag(ActivesType.ACTIVE, ModerationStatusType.ACCEPTED, tag);
 
-            PostInfoDTO postInfoDTO = new PostInfoDTO();
-            postInfoDTO.setId(postId);
-            postInfoDTO.setTime(getStringTime(postRep.getTime()));
-            postInfoDTO.setUser(user);
-            postInfoDTO.setTitle(postRep.getTitle());
-            postInfoDTO.setAnnounce(getAnnounce(postRep.getText()));
-            postInfoDTO.setLikeCount(postVoteRepository.getCountLikesByPostId(postId));
-            postInfoDTO.setDislikeCount(postVoteRepository.getCountDislikesByPostId(postId));
-            postInfoDTO.setCommentCount(postCommentRepository.getCountCommentsByPostId(postId));
-            postInfoDTO.setViewCount(postRep.getViewCount());
-
-            //===========================================================
-            posts.add(postInfoDTO);
-        }
-
-        CollectionPostsResponseDTO<PostInfoDTO> collectionPostsResponseDTO = new CollectionPostsResponseDTO<>();
-        int count = postRepository.getTotalNumberOfPostsByTag((byte) 1, ModerationStatusType.ACCEPTED, tag);
+        CollectionPostsResponseDTO<ResponseDTO> collectionPostsResponseDTO = new CollectionPostsResponseDTO<>();
         collectionPostsResponseDTO.setCount(count);
         collectionPostsResponseDTO.setPosts(posts);
 
@@ -262,11 +162,11 @@ public class ApiPostController {
                 tagRepository.findAll() :
                 tagRepository.findAllTagsByQuery(query);
         List<Double> weights = new ArrayList<>();
-        int totalNumberOfPosts = postRepository.getTotalNumberOfPosts((byte) 1, ModerationStatusType.ACCEPTED);
+        int totalNumberOfPosts = postService.getTotalNumberOfPosts(ActivesType.ACTIVE, ModerationStatusType.ACCEPTED);
         double maxWeight = -1;
         for (Tag tagRep : tagListRep) {
-            int countPosts = postRepository.getTotalNumberOfPostsByTag((byte) 1, ModerationStatusType.ACCEPTED, tagRep.getName());
-            double weight = (double)countPosts / totalNumberOfPosts;
+            int countPosts = postService.getTotalNumberOfPostsByTag(ActivesType.ACTIVE, ModerationStatusType.ACCEPTED, tagRep.getName());
+            double weight = (double) countPosts / totalNumberOfPosts;
             weights.add(weight);
             if (weight > maxWeight) {
                 maxWeight = weight;
@@ -284,6 +184,40 @@ public class ApiPostController {
         CollectionTagsResponseDTO collectionTagsResponseDTO = new CollectionTagsResponseDTO();
         collectionTagsResponseDTO.setTags(tags);
         return collectionTagsResponseDTO;
+    }
+
+    private <T extends ResponseDTO> List<ResponseDTO> getPostsDTO(List<Post> postListRep, Class<T> classDTO) {
+        List<ResponseDTO> posts = new ArrayList<>();
+        for (Post postRep : postListRep) {
+            int postId = postRep.getId();
+            int userId = postRep.getUser().getId();
+            String userName = postRep.getUser().getName();
+            UserSimple user = new UserSimple(userId, userName);
+            PostSimpleDTO postSimpleDTO = new PostSimpleDTO();
+            postSimpleDTO.setId(postId);
+            postSimpleDTO.setTime(getStringTime(postRep.getTime()));
+            postSimpleDTO.setUser(user);
+            postSimpleDTO.setTitle(postRep.getTitle());
+            postSimpleDTO.setAnnounce(getAnnounce(postRep.getText()));
+            if (classDTO.getSuperclass() == PostSimpleDTO.class || classDTO.getSuperclass() == PostInfoDTO.class) {
+                PostInfoDTO postInfoDTO = new PostInfoDTO(postSimpleDTO);
+                postInfoDTO.setLikeCount(postVoteService.getCountLikesByPostId(postId));
+                postInfoDTO.setDislikeCount(postVoteService.getCountDislikesByPostId(postId));
+                postInfoDTO.setCommentCount(postCommentRepository.getCountCommentsByPostId(postId));
+                postInfoDTO.setViewCount(postRep.getViewCount());
+
+                if (classDTO.getSuperclass() == PostInfoDTO.class) {
+                    PostFullDTO postFullDTO = new PostFullDTO(postSimpleDTO, postInfoDTO);
+                    postFullDTO.setComments(getCommentsByPostId(postId));
+                    postFullDTO.setTags(getTagsByPostId(postId));
+                } else {
+                    posts.add(postInfoDTO);
+                }
+            } else {
+                posts.add(postSimpleDTO);
+            }
+        }
+        return posts;
     }
 
     private List<String> getTagsByPostId(int postId) {

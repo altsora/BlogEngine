@@ -10,6 +10,11 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 
 public interface PostRepository extends JpaRepository<Post, Long> {
+    String COUNT_COMMENTS = "countComments";
+    String COUNT_LIKES = "countLikes";
+    String POST_TIME = "time";
+
+    //=============================================================================
 
     @Query("SELECT COUNT(p) FROM Post p " +
             "WHERE " +
@@ -50,6 +55,18 @@ public interface PostRepository extends JpaRepository<Post, Long> {
             @Param("dayOfMonth") int dayOfMonth
     );
 
+    @Query("SELECT COUNT(p) FROM Post p " +
+            "WHERE " +
+            "   p.isActive = :isActive AND " +
+            "   p.moderationStatus = :moderationStatus AND " +
+            "   p.time <= now() AND " +
+            "   p.title LIKE %:query% OR p.text LIKE %:query% ")
+    int getTotalNumberOfPostsByQuery(
+            @Param("isActive") byte isActive,
+            @Param("moderationStatus") ModerationStatusType moderationStatusType,
+            @Param("query") String query
+    );
+
     //=============================================================================
 
     @Query("SELECT p FROM Post p " +
@@ -65,7 +82,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
 
     //=============================================================================
 
-    @Query("SELECT p, COUNT(pc) AS countComments " +
+    @Query("SELECT p, COUNT(pc) AS " + COUNT_COMMENTS + " " +
             "FROM Post p LEFT JOIN PostComment pc " +
             "ON pc.post.id = p.id " +
             "WHERE " +
@@ -81,7 +98,9 @@ public interface PostRepository extends JpaRepository<Post, Long> {
 
     //=============================================================================
 
-    @Query("SELECT p, (SELECT COUNT(pv) AS countLikes FROM PostVote pv WHERE pv.post.id = p.id AND pv.value = 1) AS countLikes " +
+    @Query("SELECT p, " +
+            "   (SELECT COUNT(pv) AS countLikes FROM PostVote pv WHERE pv.post.id = p.id AND pv.value = 1) " +
+            "   AS " + COUNT_LIKES + " " +
             "FROM Post p LEFT JOIN PostVote pv " +
             "ON pv.post.id = p.id " +
             "WHERE " +
@@ -119,7 +138,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
             "   p.moderationStatus = :moderationStatus AND " +
             "   p.time <= now()")
     Post findPostById(
-            @Param("postId") Integer postId,
+            @Param("postId") int postId,
             @Param("isActive") byte isActive,
             @Param("moderationStatus") ModerationStatusType moderationStatusType
     );

@@ -11,4 +11,12 @@ public class PostSimpleDTO implements ResponseDTO {
     private UserSimple user;
     private String title;
     private String announce;
+
+    public PostSimpleDTO(PostSimpleDTO postSimpleDTO) {
+        this.id = postSimpleDTO.id;
+        this.time = postSimpleDTO.time;
+        this.user = postSimpleDTO.user;
+        this.title = postSimpleDTO.title;
+        this.announce = postSimpleDTO.announce;
+    }
 }
