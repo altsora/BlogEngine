@@ -6,10 +6,12 @@ import main.model.entities.enums.ModerationStatusType;
 import main.model.entities.Post;
 import main.model.entities.PostComment;
 import main.model.entities.Tag2Post;
-import main.model.responses.*;
-import main.model.services.*;
+import main.responses.*;
+import main.services.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -40,12 +42,11 @@ public class ApiPostController {
 
     @GetMapping(value = "/api/post")
     @ResponseBody
-    public CollectionPostsResponseDTO<ResponseDTO> getAllPosts(
+    public ResponseEntity<CollectionPostsResponseDTO<ResponseDTO>> getAllPosts(
             @RequestParam(value = "offset") int offset,
             @RequestParam(value = "limit") int limit,
             @RequestParam(value = "mode") String mode
     ) {
-
         List<Post> postListRep;
         switch (mode) {
             case "popular":
@@ -64,12 +65,12 @@ public class ApiPostController {
         List<ResponseDTO> posts = getPostsDTO(postListRep, PostInfoDTO.class);
         int count = postService.getTotalNumberOfPosts(ActivesType.ACTIVE, ModerationStatusType.ACCEPTED);
 
-        return new CollectionPostsResponseDTO<>(count, posts);
+        return new ResponseEntity<>(new CollectionPostsResponseDTO<>(count, posts), HttpStatus.OK);
     }
 
     @GetMapping(value = "/api/post/search")
     @ResponseBody
-    public CollectionPostsResponseDTO<ResponseDTO> searchPost(
+    public ResponseEntity<CollectionPostsResponseDTO<ResponseDTO>> searchPost(
             @RequestParam(value = "offset") int offset,
             @RequestParam(value = "limit") int limit,
             @RequestParam(value = "query") String query
@@ -82,22 +83,22 @@ public class ApiPostController {
                 postService.getTotalNumberOfPosts(ActivesType.ACTIVE, ModerationStatusType.ACCEPTED) :
                 postService.getTotalNumberOfPostsByQuery(ActivesType.ACTIVE, ModerationStatusType.ACCEPTED, query);
 
-        return new CollectionPostsResponseDTO<>(count, posts);
+        return new ResponseEntity<>(new CollectionPostsResponseDTO<>(count, posts), HttpStatus.OK);
     }
 
     @GetMapping(value = "/api/post/{id}")
     @ResponseBody
-    public PostFullDTO getPostById(@PathVariable(value = "id") int id) {
+    public ResponseEntity<PostFullDTO> getPostById(@PathVariable(value = "id") int id) {
         Post postRep = postService.findPostById(id, ActivesType.ACTIVE, ModerationStatusType.ACCEPTED);
         int postId = postRep.getId();
         int userId = postRep.getUser().getId();
         String userName = postRep.getUser().getName();
-        UserSimple userSimple = new UserSimple(userId, userName);
+        UserSimpleDTO userSimpleDTO = new UserSimpleDTO(userId, userName);
 
         PostFullDTO postFullDTO = new PostFullDTO();
         postFullDTO.setId(postId);
         postFullDTO.setTime(getStringTime(postRep.getTime()));
-        postFullDTO.setUser(userSimple);
+        postFullDTO.setUser(userSimpleDTO);
         postFullDTO.setTitle(postRep.getTitle());
         postFullDTO.setAnnounce(getAnnounce(postRep.getText()));
         postFullDTO.setLikeCount(postVoteService.getCountLikesByPostId(postId));
@@ -107,12 +108,12 @@ public class ApiPostController {
         postFullDTO.setComments(getCommentsByPostId(postId));
         postFullDTO.setTags(getTagsByPostId(postId));
 
-        return postFullDTO;
+        return new ResponseEntity<>(postFullDTO, HttpStatus.OK);
     }
 
     @GetMapping(value = "/api/post/byDate")
     @ResponseBody
-    public CollectionPostsResponseDTO<ResponseDTO> getPostsByDate(
+    public ResponseEntity<CollectionPostsResponseDTO<ResponseDTO>> getPostsByDate(
             @RequestParam(value = "offset") int offset,
             @RequestParam(value = "limit") int limit,
             @RequestParam(value = "date") String date
@@ -121,16 +122,12 @@ public class ApiPostController {
         List<ResponseDTO> posts = getPostsDTO(postListRep, PostInfoDTO.class);
         int count = postService.getTotalNumberOfPostsByDate(ActivesType.ACTIVE, ModerationStatusType.ACCEPTED, date);
 
-        CollectionPostsResponseDTO<ResponseDTO> collectionPostsResponseDTO = new CollectionPostsResponseDTO<>();
-        collectionPostsResponseDTO.setCount(count);
-        collectionPostsResponseDTO.setPosts(posts);
-
-        return collectionPostsResponseDTO;
+        return new ResponseEntity<>(new CollectionPostsResponseDTO<>(count, posts), HttpStatus.OK);
     }
 
     @GetMapping(value = "/api/post/byTag")
     @ResponseBody
-    public CollectionPostsResponseDTO<ResponseDTO> getPostsByTag(
+    public ResponseEntity<CollectionPostsResponseDTO<ResponseDTO>> getPostsByTag(
             @RequestParam(value = "offset") int offset,
             @RequestParam(value = "limit") int limit,
             @RequestParam(value = "tag") String tag
@@ -139,12 +136,12 @@ public class ApiPostController {
         List<ResponseDTO> posts = getPostsDTO(postListRep, PostInfoDTO.class);
         int count = postService.getTotalNumberOfPostsByTag(ActivesType.ACTIVE, ModerationStatusType.ACCEPTED, tag);
 
-        return new CollectionPostsResponseDTO<>(count, posts);
+        return new ResponseEntity<>(new CollectionPostsResponseDTO<>(count, posts), HttpStatus.OK);
     }
 
     @GetMapping(value = "/api/tag")
     @ResponseBody
-    public CollectionTagsResponseDTO getTagList(@RequestParam(value = "query", required = false) String query) {
+    public ResponseEntity<CollectionTagsResponseDTO> getTagList(@RequestParam(value = "query", required = false) String query) {
         List<Tag> tagListRep = (query == null || query.equals("")) ?
                 tagService.findAll() :
                 tagService.findAllTagsByQuery(query);
@@ -170,8 +167,10 @@ public class ApiPostController {
 
         CollectionTagsResponseDTO collectionTagsResponseDTO = new CollectionTagsResponseDTO();
         collectionTagsResponseDTO.setTags(tags);
-        return collectionTagsResponseDTO;
+        return new ResponseEntity<>(collectionTagsResponseDTO, HttpStatus.OK);
     }
+
+    //==================================================================================================================
 
     private <T extends ResponseDTO> List<ResponseDTO> getPostsDTO(List<Post> postListRep, Class<T> postDTO) {
         List<ResponseDTO> posts = new ArrayList<>();
@@ -179,7 +178,7 @@ public class ApiPostController {
             int postId = postRep.getId();
             int userId = postRep.getUser().getId();
             String userName = postRep.getUser().getName();
-            UserSimple user = new UserSimple(userId, userName);
+            UserSimpleDTO user = new UserSimpleDTO(userId, userName);
             PostSimpleDTO postSimpleDTO = new PostSimpleDTO();
             postSimpleDTO.setId(postId);
             postSimpleDTO.setTime(getStringTime(postRep.getTime()));
@@ -224,7 +223,7 @@ public class ApiPostController {
             int userId = postCommentRep.getUser().getId();
             String userName = postCommentRep.getUser().getName();
             String userPhoto = postCommentRep.getUser().getPhoto();
-            UserWithPhoto userWithPhoto = new UserWithPhoto(userId, userName, userPhoto);
+            UserWithPhotoDTO userWithPhoto = new UserWithPhotoDTO(userId, userName, userPhoto);
 
             CommentDTO commentDTO = new CommentDTO();
             commentDTO.setId(postCommentRep.getId());
