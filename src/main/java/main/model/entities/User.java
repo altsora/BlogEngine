@@ -5,11 +5,11 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
+import org.hibernate.annotations.Type;
 
 import javax.persistence.*;
 import java.io.Serializable;
 import java.time.LocalDateTime;
-import java.util.Date;
 import java.util.Set;
 
 @Entity
@@ -46,6 +46,7 @@ public class User implements Serializable {
         return isModerator;
     }
 
+//    @Type(type = "org.hibernate.type.LocalDateTimeType")
     @Column(name = "reg_time", nullable = false)
     public LocalDateTime getRegTime() {
         return regTime;

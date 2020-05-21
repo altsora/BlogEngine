@@ -9,5 +9,5 @@ public class CommentDTO {
     private int id;
     private String time;
     private String text;
-    private UserWithPhoto user;
+    private UserWithPhotoDTO user;
 }

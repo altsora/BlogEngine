@@ -45,7 +45,6 @@ public class ApiPostController {
             @RequestParam(value = "limit") int limit,
             @RequestParam(value = "mode") String mode
     ) {
-
         List<Post> postListRep;
         switch (mode) {
             case "popular":
@@ -92,12 +91,12 @@ public class ApiPostController {
         int postId = postRep.getId();
         int userId = postRep.getUser().getId();
         String userName = postRep.getUser().getName();
-        UserSimple userSimple = new UserSimple(userId, userName);
+        UserSimpleDTO userSimpleDTO = new UserSimpleDTO(userId, userName);
 
         PostFullDTO postFullDTO = new PostFullDTO();
         postFullDTO.setId(postId);
         postFullDTO.setTime(getStringTime(postRep.getTime()));
-        postFullDTO.setUser(userSimple);
+        postFullDTO.setUser(userSimpleDTO);
         postFullDTO.setTitle(postRep.getTitle());
         postFullDTO.setAnnounce(getAnnounce(postRep.getText()));
         postFullDTO.setLikeCount(postVoteService.getCountLikesByPostId(postId));
@@ -179,7 +178,7 @@ public class ApiPostController {
             int postId = postRep.getId();
             int userId = postRep.getUser().getId();
             String userName = postRep.getUser().getName();
-            UserSimple user = new UserSimple(userId, userName);
+            UserSimpleDTO user = new UserSimpleDTO(userId, userName);
             PostSimpleDTO postSimpleDTO = new PostSimpleDTO();
             postSimpleDTO.setId(postId);
             postSimpleDTO.setTime(getStringTime(postRep.getTime()));
@@ -224,7 +223,7 @@ public class ApiPostController {
             int userId = postCommentRep.getUser().getId();
             String userName = postCommentRep.getUser().getName();
             String userPhoto = postCommentRep.getUser().getPhoto();
-            UserWithPhoto userWithPhoto = new UserWithPhoto(userId, userName, userPhoto);
+            UserWithPhotoDTO userWithPhoto = new UserWithPhotoDTO(userId, userName, userPhoto);
 
             CommentDTO commentDTO = new CommentDTO();
             commentDTO.setId(postCommentRep.getId());

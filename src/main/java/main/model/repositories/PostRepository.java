@@ -3,10 +3,12 @@ package main.model.repositories;
 import main.model.entities.enums.ModerationStatusType;
 import main.model.entities.Post;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import javax.persistence.Tuple;
 import java.util.List;
 
 public interface PostRepository extends JpaRepository<Post, Long> {
@@ -69,6 +71,36 @@ public interface PostRepository extends JpaRepository<Post, Long> {
 
     //=============================================================================
 
+    @Query("SELECT p.time, COUNT(p) " +
+            "FROM Post p " +
+            "WHERE " +
+            "   p.isActive = :isActive AND " +
+            "   p.moderationStatus = :moderationStatus AND " +
+            "   p.time <= now() AND " +
+            "   YEAR(p.time) = :year " +
+            "GROUP BY YEAR(p.time), MONTH(p.time), DAYOFMONTH(p.time)")
+    List<Tuple> getDateAndCountPosts(
+            @Param("isActive") byte isActive,
+            @Param("moderationStatus") ModerationStatusType moderationStatusType,
+            @Param("year") int year,
+            Sort sort
+    );
+
+    @Query("SELECT YEAR(p.time) AS yearPost " +
+            "FROM Post p " +
+            "WHERE " +
+            "   p.isActive = :isActive AND " +
+            "   p.moderationStatus = :moderationStatus AND " +
+            "   p.time <= now() " +
+            "GROUP BY yearPost")
+    List<Integer> findAllYearsOfPublication(
+            @Param("isActive") byte isActive,
+            @Param("moderationStatus") ModerationStatusType moderationStatusType,
+            Sort sort
+    );
+
+    //=============================================================================
+
     @Query("SELECT p FROM Post p " +
             "WHERE " +
             "   p.isActive = :isActive AND " +
@@ -79,8 +111,6 @@ public interface PostRepository extends JpaRepository<Post, Long> {
             @Param("moderationStatus") ModerationStatusType moderationStatusType,
             Pageable pageable
     );
-
-    //=============================================================================
 
     @Query("SELECT p, COUNT(pc) AS " + COUNT_COMMENTS + " " +
             "FROM Post p LEFT JOIN PostComment pc " +
@@ -96,7 +126,6 @@ public interface PostRepository extends JpaRepository<Post, Long> {
             Pageable pageable
     );
 
-    //=============================================================================
 
     @Query("SELECT p, " +
             "   (SELECT COUNT(pv) AS countLikes FROM PostVote pv WHERE pv.post.id = p.id AND pv.value = 1) " +

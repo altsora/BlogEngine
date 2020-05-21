@@ -6,6 +6,7 @@ import main.model.entities.enums.ModerationStatusType;
 import org.springframework.data.domain.Sort;
 
 import java.util.List;
+import java.util.Map;
 
 public interface PostService {
 
@@ -15,6 +16,9 @@ public interface PostService {
     List<Post> findAllPostByQuery(ActivesType activesType, ModerationStatusType moderationStatusType, int offset, int limit, String query);
     List<Post> findAllPostByDate(ActivesType activesType, ModerationStatusType moderationStatusType, int offset, int limit, String date);
     List<Post> findAllPostByTag(ActivesType activesType, ModerationStatusType moderationStatusType, int offset, int limit, String tag);
+    List<Integer> findAllYearsOfPublication(ActivesType activesType, ModerationStatusType moderationStatusType);
+
+    Map<String, Long> getDateAndCountPosts(ActivesType activesType, ModerationStatusType moderationStatusType, int year);
 
     int getTotalNumberOfPosts(ActivesType activesType, ModerationStatusType moderationStatusType);
     int getTotalNumberOfPostsByQuery(ActivesType activesType, ModerationStatusType moderationStatusType, String query);

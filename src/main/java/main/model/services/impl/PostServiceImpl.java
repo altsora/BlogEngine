@@ -11,7 +11,12 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import javax.persistence.Tuple;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class PostServiceImpl implements PostService {
@@ -78,6 +83,33 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
+    public List<Integer> findAllYearsOfPublication(ActivesType activesType, ModerationStatusType moderationStatusType) {
+        byte isActive = activesType == ActivesType.ACTIVE ? (byte) 1 : 0;
+        Sort sort = Sort.by(Sort.Direction.DESC, PostRepository.POST_TIME);
+        return postRepository.findAllYearsOfPublication(isActive, moderationStatusType, sort);
+    }
+
+    @Override
+    public Map<String, Long> getDateAndCountPosts(ActivesType activesType, ModerationStatusType moderationStatusType, int year) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyy-MM-dd");
+        Map<String, Long> result = new HashMap<>();
+        byte isActive = activesType == ActivesType.ACTIVE ? (byte) 1 : 0;
+        List<Tuple> datesAndCountPosts = postRepository.getDateAndCountPosts(isActive, moderationStatusType, year, Sort.by(Sort.Direction.ASC, PostRepository.POST_TIME));
+        for (Tuple tuple : datesAndCountPosts) {
+            Object[] pair = tuple.toArray();
+            try {
+                LocalDateTime localDateTime = (LocalDateTime) pair[0];
+                String date = formatter.format(localDateTime);
+                Long count = (Long) pair[1];
+                result.put(date, count);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        return result;
+    }
+
+    @Override
     public int getTotalNumberOfPostsByDate(ActivesType activesType, ModerationStatusType moderationStatusType, String date) {
         String[] var = date.split("-");
         int year = Integer.parseInt(var[0]);
@@ -86,7 +118,6 @@ public class PostServiceImpl implements PostService {
         byte isActive = activesType == ActivesType.ACTIVE ? (byte) 1 : 0;
         return postRepository.getTotalNumberOfPostsByDate(isActive, moderationStatusType, year, month, dayOfMonth);
     }
-
 
     @Override
     public int getTotalNumberOfPosts(ActivesType activesType, ModerationStatusType moderationStatusType) {
@@ -105,8 +136,6 @@ public class PostServiceImpl implements PostService {
         byte isActive = activesType == ActivesType.ACTIVE ? (byte) 1 : 0;
         return postRepository.getTotalNumberOfPostsByTag(isActive, moderationStatusType, tag);
     }
-
-
 
     @Override
     public Post findPostById(int postId, ActivesType activesType, ModerationStatusType moderationStatusType) {

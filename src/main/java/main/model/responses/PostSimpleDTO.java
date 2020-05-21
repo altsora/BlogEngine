@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 public class PostSimpleDTO implements ResponseDTO {
     private int id;
     private String time;
-    private UserSimple user;
+    private UserSimpleDTO user;
     private String title;
     private String announce;
 
