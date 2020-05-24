@@ -4,6 +4,8 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
+import main.model.entities.enums.SettingsCodeType;
+import main.model.entities.enums.SettingsValueType;
 
 import javax.persistence.*;
 import java.io.Serializable;
@@ -17,9 +19,9 @@ import java.io.Serializable;
 public class GlobalSettings implements Serializable {
 
     private int id;
-    private String code;
+    private SettingsCodeType code;
     private String name;
-    private String value;
+    private SettingsValueType value;
 
     //==============================================================================
 
@@ -29,8 +31,9 @@ public class GlobalSettings implements Serializable {
         return id;
     }
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "code", nullable = false)
-    public String getCode() {
+    public SettingsCodeType getCode() {
         return code;
     }
 
@@ -39,8 +42,9 @@ public class GlobalSettings implements Serializable {
         return name;
     }
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "value", nullable = false)
-    public String getValue() {
+    public SettingsValueType getValue() {
         return value;
     }
 
