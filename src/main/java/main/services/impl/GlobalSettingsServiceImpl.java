@@ -1,9 +1,13 @@
 package main.services.impl;
 
+import main.model.entities.GlobalSetting;
+import main.model.entities.enums.SettingsCodeType;
 import main.repositories.GlobalSettingsRepository;
 import main.services.GlobalSettingsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 public class GlobalSettingsServiceImpl implements GlobalSettingsService {
@@ -15,17 +19,27 @@ public class GlobalSettingsServiceImpl implements GlobalSettingsService {
     }
 
     @Override
-    public boolean allowedMultiUserMode() {
-        return globalSettingsRepository.allowedMultiUserMode() != null;
+    public boolean settingMultiUserModeIsEnabled() {
+        return globalSettingsRepository.settingMultiUserModeIsEnabled() != null;
     }
 
     @Override
-    public boolean allowedPostPreModeration() {
-        return globalSettingsRepository.allowedPostPreModeration() != null;
+    public boolean settingPostPreModerationIsEnabled() {
+        return globalSettingsRepository.settingPostPreModerationIsEnabled() != null;
     }
 
     @Override
-    public boolean allowedStatisticsIsPublic() {
-        return globalSettingsRepository.allowedStatisticsIsPublic() != null;
+    public boolean settingStatisticsIsPublicIsEnabled() {
+        return globalSettingsRepository.settingStatisticsIsPublicIsEnabled() != null;
+    }
+
+    @Override
+    public GlobalSetting getSettingByCode(SettingsCodeType settingsCodeType) {
+        return globalSettingsRepository.getSettingByCode(settingsCodeType);
+    }
+
+    @Override
+    public List<GlobalSetting> findAll() {
+        return globalSettingsRepository.findAll();
     }
 }

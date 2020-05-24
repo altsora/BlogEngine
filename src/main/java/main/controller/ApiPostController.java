@@ -63,7 +63,7 @@ public class ApiPostController {
         }
 
         List<ResponseDTO> posts = getPostsDTO(postListRep, PostInfoDTO.class);
-        int count = postService.getTotalNumberOfPosts(ActivesType.ACTIVE, ModerationStatusType.ACCEPTED);
+        int count = postService.getTotalCountOfPosts(ActivesType.ACTIVE, ModerationStatusType.ACCEPTED);
 
         return new ResponseEntity<>(new CollectionPostsResponseDTO<>(count, posts), HttpStatus.OK);
     }
@@ -80,8 +80,8 @@ public class ApiPostController {
                 postService.findAllPostByQuery(ActivesType.ACTIVE, ModerationStatusType.ACCEPTED, offset, limit, query);
         List<ResponseDTO> posts = getPostsDTO(postListRep, PostInfoDTO.class);
         int count = query.equals("") ?
-                postService.getTotalNumberOfPosts(ActivesType.ACTIVE, ModerationStatusType.ACCEPTED) :
-                postService.getTotalNumberOfPostsByQuery(ActivesType.ACTIVE, ModerationStatusType.ACCEPTED, query);
+                postService.getTotalCountOfPosts(ActivesType.ACTIVE, ModerationStatusType.ACCEPTED) :
+                postService.getTotalCountOfPostsByQuery(ActivesType.ACTIVE, ModerationStatusType.ACCEPTED, query);
 
         return new ResponseEntity<>(new CollectionPostsResponseDTO<>(count, posts), HttpStatus.OK);
     }
@@ -120,7 +120,7 @@ public class ApiPostController {
     ) {
         List<Post> postListRep = postService.findAllPostByDate(ActivesType.ACTIVE, ModerationStatusType.ACCEPTED, offset, limit, date);
         List<ResponseDTO> posts = getPostsDTO(postListRep, PostInfoDTO.class);
-        int count = postService.getTotalNumberOfPostsByDate(ActivesType.ACTIVE, ModerationStatusType.ACCEPTED, date);
+        int count = postService.getTotalCountOfPostsByDate(ActivesType.ACTIVE, ModerationStatusType.ACCEPTED, date);
 
         return new ResponseEntity<>(new CollectionPostsResponseDTO<>(count, posts), HttpStatus.OK);
     }
@@ -134,7 +134,7 @@ public class ApiPostController {
     ) {
         List<Post> postListRep = postService.findAllPostByTag(ActivesType.ACTIVE, ModerationStatusType.ACCEPTED, offset, limit, tag);
         List<ResponseDTO> posts = getPostsDTO(postListRep, PostInfoDTO.class);
-        int count = postService.getTotalNumberOfPostsByTag(ActivesType.ACTIVE, ModerationStatusType.ACCEPTED, tag);
+        int count = postService.getTotalCountOfPostsByTag(ActivesType.ACTIVE, ModerationStatusType.ACCEPTED, tag);
 
         return new ResponseEntity<>(new CollectionPostsResponseDTO<>(count, posts), HttpStatus.OK);
     }
@@ -146,10 +146,10 @@ public class ApiPostController {
                 tagService.findAll() :
                 tagService.findAllTagsByQuery(query);
         List<Double> weights = new ArrayList<>();
-        int totalNumberOfPosts = postService.getTotalNumberOfPosts(ActivesType.ACTIVE, ModerationStatusType.ACCEPTED);
+        int totalNumberOfPosts = postService.getTotalCountOfPosts(ActivesType.ACTIVE, ModerationStatusType.ACCEPTED);
         double maxWeight = -1;
         for (Tag tagRep : tagListRep) {
-            int countPosts = postService.getTotalNumberOfPostsByTag(ActivesType.ACTIVE, ModerationStatusType.ACCEPTED, tagRep.getName());
+            int countPosts = postService.getTotalCountOfPostsByTag(ActivesType.ACTIVE, ModerationStatusType.ACCEPTED, tagRep.getName());
             double weight = (double) countPosts / totalNumberOfPosts;
             weights.add(weight);
             if (weight > maxWeight) {

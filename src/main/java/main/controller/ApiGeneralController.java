@@ -1,10 +1,15 @@
 package main.controller;
 
+import main.model.entities.GlobalSetting;
 import main.model.entities.enums.ActivesType;
 import main.model.entities.enums.ModerationStatusType;
+import main.model.entities.enums.SettingsValueType;
 import main.responses.BlogDTO;
 import main.responses.CalendarResponseDTO;
+import main.services.GlobalSettingsService;
 import main.services.PostService;
+import main.services.PostVoteService;
+import main.servlet.AuthorizeServlet;
 import org.json.simple.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -15,17 +20,27 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 
 @RestController
 public class ApiGeneralController {
+    private AuthorizeServlet authorizeServlet;
+    private GlobalSettingsService globalSettingsService;
     private PostService postService;
+    private PostVoteService postVoteService;
 
     @Autowired
-    public ApiGeneralController(PostService postService) {
+    public ApiGeneralController(AuthorizeServlet authorizeServlet, GlobalSettingsService globalSettingsService,
+                                PostService postService, PostVoteService postVoteService) {
+        this.authorizeServlet = authorizeServlet;
+        this.globalSettingsService = globalSettingsService;
         this.postService = postService;
+        this.postVoteService = postVoteService;
     }
+
+
 
     @GetMapping(value = "/api/init")
     @ResponseBody
@@ -42,7 +57,14 @@ public class ApiGeneralController {
 
     @GetMapping(value = "/api/settings")
     public ResponseEntity getSettings() {
-        return ResponseEntity.status(HttpStatus.OK).body(null);
+        JSONObject answer = new JSONObject();
+        List<GlobalSetting> globalSettings = globalSettingsService.findAll();
+        for (GlobalSetting setting : globalSettings) {
+            boolean enable = setting.getValue() == SettingsValueType.YES;
+            String code = setting.getCode().name();
+            answer.put(code, enable);
+        }
+        return new ResponseEntity(answer, HttpStatus.OK);
     }
 
     @GetMapping(value = "/api/calendar")
@@ -55,5 +77,50 @@ public class ApiGeneralController {
         List<Integer> years = postService.findAllYearsOfPublication(ActivesType.ACTIVE, ModerationStatusType.ACCEPTED);
         CalendarResponseDTO calendarResponseDTO = new CalendarResponseDTO(years, posts);
         return new ResponseEntity<>(calendarResponseDTO, HttpStatus.OK);
+    }
+
+    @GetMapping(value = "/api/statistics/all")
+    public ResponseEntity getBlogStatistics() {
+        if (globalSettingsService.settingStatisticsIsPublicIsEnabled()) {
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d MMM yyyy, EEE, HH:mm");
+            int postsCount = postService.getTotalCountOfPosts(ActivesType.ACTIVE, ModerationStatusType.ACCEPTED);
+            int likesCount = postVoteService.getTotalCountLikes();
+            int dislikesCount = postVoteService.getTotalCountDislikes();
+            int viewsCount = postService.getTotalCountView(ActivesType.ACTIVE, ModerationStatusType.ACCEPTED);
+            LocalDateTime localDateTime = postService.getDateOfTheEarliestPost(ActivesType.ACTIVE, ModerationStatusType.ACCEPTED);
+            String firstPublication = formatter.format(localDateTime);
+
+            JSONObject answer = new JSONObject();
+            answer.put("postsCount", postsCount);
+            answer.put("likesCount", likesCount);
+            answer.put("dislikesCount", dislikesCount);
+            answer.put("viewsCount", viewsCount);
+            answer.put("firstPublication", firstPublication);
+
+            return new ResponseEntity<>(answer, HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>(HttpStatus.OK);
+        }
+    }
+
+    @GetMapping(value = "/api/statistics/my")
+    public ResponseEntity getMyStatistics() {
+        int userId = authorizeServlet.getAuthorizedUserId();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d MMM yyyy, EEE, HH:mm");
+        int postsCount = postService.getTotalCountOfPostsByUserId(userId);
+        int likesCount = postVoteService.getTotalCountLikesByUserId(userId);
+        int dislikesCount = postVoteService.getTotalCountDislikesByUserId(userId);
+        int viewsCount = postService.getTotalCountViewByUserId(userId);
+        LocalDateTime localDateTime = postService.getDateOfTheEarliestPostByUserId(userId);
+        String firstPublication = formatter.format(localDateTime);
+
+        JSONObject answer = new JSONObject();
+        answer.put("postsCount", postsCount);
+        answer.put("likesCount", likesCount);
+        answer.put("dislikesCount", dislikesCount);
+        answer.put("viewsCount", viewsCount);
+        answer.put("firstPublication", firstPublication);
+
+        return new ResponseEntity<>(answer, HttpStatus.OK);
     }
 }

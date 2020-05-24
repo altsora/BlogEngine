@@ -5,6 +5,7 @@ import main.model.entities.enums.ActivesType;
 import main.model.entities.enums.ModerationStatusType;
 import org.springframework.data.domain.Sort;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -20,10 +21,16 @@ public interface PostService {
 
     Map<String, Long> getDateAndCountPosts(ActivesType activesType, ModerationStatusType moderationStatusType, int year);
 
-    int getTotalNumberOfPosts(ActivesType activesType, ModerationStatusType moderationStatusType);
-    int getTotalNumberOfPostsByQuery(ActivesType activesType, ModerationStatusType moderationStatusType, String query);
-    int getTotalNumberOfPostsByTag(ActivesType activesType, ModerationStatusType moderationStatusType, String tag);
-    int getTotalNumberOfPostsByDate(ActivesType activesType, ModerationStatusType moderationStatusType, String date);
+    int getTotalCountOfPosts(ActivesType activesType, ModerationStatusType moderationStatusType);
+    int getTotalCountOfPostsByUserId(int userId);
+    int getTotalCountOfPostsByQuery(ActivesType activesType, ModerationStatusType moderationStatusType, String query);
+    int getTotalCountOfPostsByTag(ActivesType activesType, ModerationStatusType moderationStatusType, String tag);
+    int getTotalCountOfPostsByDate(ActivesType activesType, ModerationStatusType moderationStatusType, String date);
+    int getTotalCountView(ActivesType activesType, ModerationStatusType moderationStatusType);
+    int getTotalCountViewByUserId(int userId);
 
     Post findPostById(int postId, ActivesType activesType, ModerationStatusType moderationStatusType);
+
+    LocalDateTime getDateOfTheEarliestPost(ActivesType activesType, ModerationStatusType moderationStatusType);
+    LocalDateTime getDateOfTheEarliestPostByUserId(int userId);
 }

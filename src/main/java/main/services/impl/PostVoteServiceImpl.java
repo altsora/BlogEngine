@@ -23,4 +23,24 @@ public class PostVoteServiceImpl implements PostVoteService {
     public int getCountDislikesByPostId(int postId) {
         return postVoteRepository.getCountDislikesByPostId(postId);
     }
+
+    @Override
+    public int getTotalCountLikes() {
+        return postVoteRepository.getTotalCountLikes();
+    }
+
+    @Override
+    public int getTotalCountDislikes() {
+        return postVoteRepository.getTotalCountDislikes();
+    }
+
+    @Override
+    public int getTotalCountLikesByUserId(int userId) {
+        return postVoteRepository.getTotalCountLikesByUserId(userId);
+    }
+
+    @Override
+    public int getTotalCountDislikesByUserId(int userId) {
+        return postVoteRepository.getTotalCountDislikesByUserId(userId);
+    }
 }

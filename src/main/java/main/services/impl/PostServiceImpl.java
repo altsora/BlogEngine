@@ -110,37 +110,64 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    public int getTotalNumberOfPostsByDate(ActivesType activesType, ModerationStatusType moderationStatusType, String date) {
+    public int getTotalCountOfPostsByDate(ActivesType activesType, ModerationStatusType moderationStatusType, String date) {
         String[] var = date.split("-");
         int year = Integer.parseInt(var[0]);
         int month = Integer.parseInt(var[1]);
         int dayOfMonth = Integer.parseInt(var[2]);
         byte isActive = activesType == ActivesType.ACTIVE ? (byte) 1 : 0;
-        return postRepository.getTotalNumberOfPostsByDate(isActive, moderationStatusType, year, month, dayOfMonth);
+        return postRepository.getTotalCountOfPostsByDate(isActive, moderationStatusType, year, month, dayOfMonth);
     }
 
     @Override
-    public int getTotalNumberOfPosts(ActivesType activesType, ModerationStatusType moderationStatusType) {
+    public int getTotalCountView(ActivesType activesType, ModerationStatusType moderationStatusType) {
         byte isActive = activesType == ActivesType.ACTIVE ? (byte) 1 : 0;
-        return postRepository.getTotalNumberOfPosts(isActive, moderationStatusType);
+        return postRepository.getTotalCountView(isActive, moderationStatusType);
     }
 
     @Override
-    public int getTotalNumberOfPostsByQuery(ActivesType activesType, ModerationStatusType moderationStatusType, String query) {
-        byte isActive = activesType == ActivesType.ACTIVE ? (byte) 1 : 0;
-        return postRepository.getTotalNumberOfPostsByQuery(isActive, moderationStatusType, query);
+    public int getTotalCountViewByUserId(int userId) {
+        return postRepository.getTotalCountViewByUserId(userId);
     }
 
     @Override
-    public int getTotalNumberOfPostsByTag(ActivesType activesType, ModerationStatusType moderationStatusType, String tag) {
+    public int getTotalCountOfPostsByUserId(int userId) {
+        return postRepository.getTotalCountOfPostsByUserId(userId);
+    }
+
+    @Override
+    public int getTotalCountOfPosts(ActivesType activesType, ModerationStatusType moderationStatusType) {
         byte isActive = activesType == ActivesType.ACTIVE ? (byte) 1 : 0;
-        return postRepository.getTotalNumberOfPostsByTag(isActive, moderationStatusType, tag);
+        return postRepository.getTotalCountOfPosts(isActive, moderationStatusType);
+    }
+
+    @Override
+    public int getTotalCountOfPostsByQuery(ActivesType activesType, ModerationStatusType moderationStatusType, String query) {
+        byte isActive = activesType == ActivesType.ACTIVE ? (byte) 1 : 0;
+        return postRepository.getTotalCountOfPostsByQuery(isActive, moderationStatusType, query);
+    }
+
+    @Override
+    public int getTotalCountOfPostsByTag(ActivesType activesType, ModerationStatusType moderationStatusType, String tag) {
+        byte isActive = activesType == ActivesType.ACTIVE ? (byte) 1 : 0;
+        return postRepository.getTotalCountOfPostsByTag(isActive, moderationStatusType, tag);
     }
 
     @Override
     public Post findPostById(int postId, ActivesType activesType, ModerationStatusType moderationStatusType) {
         byte isActive = activesType == ActivesType.ACTIVE ? (byte) 1 : 0;
         return postRepository.findPostById(postId, isActive, moderationStatusType);
+    }
+
+    @Override
+    public LocalDateTime getDateOfTheEarliestPost(ActivesType activesType, ModerationStatusType moderationStatusType) {
+        byte isActive = activesType == ActivesType.ACTIVE ? (byte) 1 : 0;
+        return postRepository.getDateOfTheEarliestPost(isActive, moderationStatusType);
+    }
+
+    @Override
+    public LocalDateTime getDateOfTheEarliestPostByUserId(int userId) {
+        return postRepository.getDateOfTheEarliestPostByUserId(userId);
     }
 
 

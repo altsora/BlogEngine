@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import javax.persistence.Tuple;
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface PostRepository extends JpaRepository<Post, Long> {
@@ -23,10 +24,14 @@ public interface PostRepository extends JpaRepository<Post, Long> {
             "   p.isActive = :isActive AND " +
             "   p.moderationStatus = :moderationStatus AND " +
             "   p.time <= now()")
-    int getTotalNumberOfPosts(
+    int getTotalCountOfPosts(
             @Param("isActive") byte isActive,
             @Param("moderationStatus") ModerationStatusType moderationStatusType
     );
+
+    @Query("SELECT COUNT(p) FROM Post p " +
+            "WHERE p.user.id = :userId")
+    int getTotalCountOfPostsByUserId(@Param("userId") int userId);
 
     @Query("SELECT COUNT(p) FROM Post p " +
             "LEFT JOIN Tag2Post tp ON p.id = tp.post.id " +
@@ -36,7 +41,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
             "   p.moderationStatus = :moderationStatus AND " +
             "   p.time <= now() AND " +
             "   t.name = :tag")
-    int getTotalNumberOfPostsByTag(
+    int getTotalCountOfPostsByTag(
             @Param("isActive") byte isActive,
             @Param("moderationStatus") ModerationStatusType moderationStatusType,
             @Param("tag") String tag
@@ -49,7 +54,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
             "   YEAR(p.time) = :year AND " +
             "   MONTH(p.time) = :month AND " +
             "   DAYOFMONTH(p.time) = :dayOfMonth")
-    int getTotalNumberOfPostsByDate(
+    int getTotalCountOfPostsByDate(
             @Param("isActive") byte isActive,
             @Param("moderationStatus") ModerationStatusType moderationStatusType,
             @Param("year") int year,
@@ -63,11 +68,25 @@ public interface PostRepository extends JpaRepository<Post, Long> {
             "   p.moderationStatus = :moderationStatus AND " +
             "   p.time <= now() AND " +
             "   p.title LIKE %:query% OR p.text LIKE %:query% ")
-    int getTotalNumberOfPostsByQuery(
+    int getTotalCountOfPostsByQuery(
             @Param("isActive") byte isActive,
             @Param("moderationStatus") ModerationStatusType moderationStatusType,
             @Param("query") String query
     );
+
+    @Query("SELECT SUM(p.viewCount) FROM Post p " +
+            "WHERE " +
+            "   p.isActive = :isActive AND " +
+            "   p.moderationStatus = :moderationStatus AND " +
+            "   p.time <= now()")
+    int getTotalCountView(
+            @Param("isActive") byte isActive,
+            @Param("moderationStatus") ModerationStatusType moderationStatusType
+    );
+
+    @Query("SELECT SUM(p.viewCount) FROM Post p " +
+            "WHERE p.user.id = :userId")
+    int getTotalCountViewByUserId(@Param("userId") int userId);
 
     //=============================================================================
 
@@ -206,5 +225,20 @@ public interface PostRepository extends JpaRepository<Post, Long> {
             @Param("tag") String tag,
             Pageable pageable
     );
+
+    //=============================================================================
+
+    @Query("SELECT MIN(p.time) FROM Post p " +
+            "WHERE " +
+            "   p.isActive = :isActive AND " +
+            "   p.moderationStatus = :moderationStatus"
+    )
+    LocalDateTime getDateOfTheEarliestPost(
+            @Param("isActive") byte isActive,
+            @Param("moderationStatus") ModerationStatusType moderationStatusType
+    );
+
+    @Query("SELECT MIN(p.time) FROM Post p WHERE p.user.id = :userId")
+    LocalDateTime getDateOfTheEarliestPostByUserId(@Param("userId") int userId);
 
 }
