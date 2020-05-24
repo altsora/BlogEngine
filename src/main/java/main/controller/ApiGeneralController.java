@@ -53,9 +53,7 @@ public class ApiGeneralController {
         Map<String, Long> datesAndCountPosts = postService.getDateAndCountPosts(ActivesType.ACTIVE, ModerationStatusType.ACCEPTED, year);
         JSONObject posts = new JSONObject(datesAndCountPosts);
         List<Integer> years = postService.findAllYearsOfPublication(ActivesType.ACTIVE, ModerationStatusType.ACCEPTED);
-        CalendarResponseDTO calendarResponseDTO = new CalendarResponseDTO();
-        calendarResponseDTO.setYears(years);
-        calendarResponseDTO.setPosts(posts);
+        CalendarResponseDTO calendarResponseDTO = new CalendarResponseDTO(years, posts);
         return new ResponseEntity<>(calendarResponseDTO, HttpStatus.OK);
     }
 }
