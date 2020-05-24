@@ -31,6 +31,11 @@ public interface GlobalSettingsRepository extends JpaRepository<GlobalSetting, L
             "   gs.value = 'YES'")
     GlobalSetting settingStatisticsIsPublicIsEnabled();
 
+    /**
+     * Запрос возвращает настройку по её коду.
+     * @param settingsCodeType - код настройки;
+     * @return - возвращается объект GlobalSetting по указанному коду.
+     */
     @Query("SELECT gs FROM GlobalSetting gs WHERE gs.code = :settingCode")
     GlobalSetting getSettingByCode(@Param("settingCode")SettingsCodeType settingsCodeType);
 }

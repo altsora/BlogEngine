@@ -154,9 +154,9 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    public Post findPostById(int postId, ActivesType activesType, ModerationStatusType moderationStatusType) {
+    public Post findPostByPostId(int postId, ActivesType activesType, ModerationStatusType moderationStatusType) {
         byte isActive = activesType == ActivesType.ACTIVE ? (byte) 1 : 0;
-        return postRepository.findPostById(postId, isActive, moderationStatusType);
+        return postRepository.findPostByPostId(postId, isActive, moderationStatusType);
     }
 
     @Override
@@ -170,5 +170,9 @@ public class PostServiceImpl implements PostService {
         return postRepository.getDateOfTheEarliestPostByUserId(userId);
     }
 
+    @Override
+    public boolean postByUserIdExists(int userId) {
+        return postRepository.postByUserIdExists(userId) != null;
+    }
 
 }

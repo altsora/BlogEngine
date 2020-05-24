@@ -24,7 +24,7 @@ public class ApiAuthController{
 
     @GetMapping(value = "/api/auth/check")
     public ResponseEntity<JSONObject> authCheck() {
-        JSONObject answer = new JSONObject();
+        JSONObject response = new JSONObject();
         boolean result;
         if (authorizeServlet.isUserAuthorize()) {
             int userId = authorizeServlet.getAuthorizedUserId();
@@ -38,21 +38,21 @@ public class ApiAuthController{
             userLoginDTO.setModeration(moderation);
             userLoginDTO.setModerationCount(userRep.getModifiedPosts().size());
             userLoginDTO.setSettings(moderation);
-            answer.put("user", userLoginDTO);
+            response.put("user", userLoginDTO);
 
             result = true;
         } else {
             result = false;
         }
-        answer.put("result", result);
+        response.put("result", result);
 
-        return new ResponseEntity<>(answer, HttpStatus.OK);
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     @PostMapping(value = "/api/auth/login")
     @ResponseBody
     public ResponseEntity<JSONObject> login(@RequestBody LoginForm loginForm) {
-        JSONObject answer = new JSONObject();
+        JSONObject response = new JSONObject();
         User userRep = userService.findByEmailAndPassword(loginForm.getE_mail(), loginForm.getPassword());
         boolean result;
         if (userRep != null) {
@@ -67,14 +67,23 @@ public class ApiAuthController{
             userLoginDTO.setModerationCount(userRep.getModifiedPosts().size());
             userLoginDTO.setSettings(moderation);
             result = true;
-            answer.put("user", userLoginDTO);
+            response.put("user", userLoginDTO);
 
             authorizeServlet.authorizeUser(userId);
         } else {
             result = false;
         }
-        answer.put("result", result);
+        response.put("result", result);
 
-        return new ResponseEntity<>(answer, HttpStatus.OK);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @GetMapping(value = "/api/auth/logout")
+    @ResponseBody
+    public ResponseEntity<JSONObject> logout() {
+        authorizeServlet.removeAuthorizedUser();
+        JSONObject response = new JSONObject();
+        response.put("result", true);
+        return new ResponseEntity<JSONObject>(response, HttpStatus.OK);
     }
 }

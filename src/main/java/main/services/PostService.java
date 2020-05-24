@@ -29,8 +29,10 @@ public interface PostService {
     int getTotalCountView(ActivesType activesType, ModerationStatusType moderationStatusType);
     int getTotalCountViewByUserId(int userId);
 
-    Post findPostById(int postId, ActivesType activesType, ModerationStatusType moderationStatusType);
+    Post findPostByPostId(int postId, ActivesType activesType, ModerationStatusType moderationStatusType);
 
     LocalDateTime getDateOfTheEarliestPost(ActivesType activesType, ModerationStatusType moderationStatusType);
     LocalDateTime getDateOfTheEarliestPostByUserId(int userId);
+
+    boolean postByUserIdExists(int userId);
 }

@@ -40,8 +40,6 @@ public class ApiGeneralController {
         this.postVoteService = postVoteService;
     }
 
-
-
     @GetMapping(value = "/api/init")
     @ResponseBody
     public BlogDTO init() {
@@ -57,14 +55,14 @@ public class ApiGeneralController {
 
     @GetMapping(value = "/api/settings")
     public ResponseEntity getSettings() {
-        JSONObject answer = new JSONObject();
+        JSONObject response = new JSONObject();
         List<GlobalSetting> globalSettings = globalSettingsService.findAll();
         for (GlobalSetting setting : globalSettings) {
             boolean enable = setting.getValue() == SettingsValueType.YES;
             String code = setting.getCode().name();
-            answer.put(code, enable);
+            response.put(code, enable);
         }
-        return new ResponseEntity(answer, HttpStatus.OK);
+        return new ResponseEntity(response, HttpStatus.OK);
     }
 
     @GetMapping(value = "/api/calendar")
@@ -82,22 +80,23 @@ public class ApiGeneralController {
     @GetMapping(value = "/api/statistics/all")
     public ResponseEntity getBlogStatistics() {
         if (globalSettingsService.settingStatisticsIsPublicIsEnabled()) {
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d MMM yyyy, EEE, HH:mm");
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm");
             int postsCount = postService.getTotalCountOfPosts(ActivesType.ACTIVE, ModerationStatusType.ACCEPTED);
             int likesCount = postVoteService.getTotalCountLikes();
             int dislikesCount = postVoteService.getTotalCountDislikes();
             int viewsCount = postService.getTotalCountView(ActivesType.ACTIVE, ModerationStatusType.ACCEPTED);
             LocalDateTime localDateTime = postService.getDateOfTheEarliestPost(ActivesType.ACTIVE, ModerationStatusType.ACCEPTED);
-            String firstPublication = formatter.format(localDateTime);
+            String firstPublication = localDateTime == null ?
+                    "-" : formatter.format(localDateTime);
 
-            JSONObject answer = new JSONObject();
-            answer.put("postsCount", postsCount);
-            answer.put("likesCount", likesCount);
-            answer.put("dislikesCount", dislikesCount);
-            answer.put("viewsCount", viewsCount);
-            answer.put("firstPublication", firstPublication);
+            JSONObject response = new JSONObject();
+            response.put("postsCount", postsCount);
+            response.put("likesCount", likesCount);
+            response.put("dislikesCount", dislikesCount);
+            response.put("viewsCount", viewsCount);
+            response.put("firstPublication", firstPublication);
 
-            return new ResponseEntity<>(answer, HttpStatus.OK);
+            return new ResponseEntity<>(response, HttpStatus.OK);
         } else {
             return new ResponseEntity<>(HttpStatus.OK);
         }
@@ -106,21 +105,22 @@ public class ApiGeneralController {
     @GetMapping(value = "/api/statistics/my")
     public ResponseEntity getMyStatistics() {
         int userId = authorizeServlet.getAuthorizedUserId();
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d MMM yyyy, EEE, HH:mm");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm");
         int postsCount = postService.getTotalCountOfPostsByUserId(userId);
         int likesCount = postVoteService.getTotalCountLikesByUserId(userId);
         int dislikesCount = postVoteService.getTotalCountDislikesByUserId(userId);
         int viewsCount = postService.getTotalCountViewByUserId(userId);
         LocalDateTime localDateTime = postService.getDateOfTheEarliestPostByUserId(userId);
-        String firstPublication = formatter.format(localDateTime);
+        String firstPublication = localDateTime == null ?
+                "-" : formatter.format(localDateTime);
 
-        JSONObject answer = new JSONObject();
-        answer.put("postsCount", postsCount);
-        answer.put("likesCount", likesCount);
-        answer.put("dislikesCount", dislikesCount);
-        answer.put("viewsCount", viewsCount);
-        answer.put("firstPublication", firstPublication);
+        JSONObject response = new JSONObject();
+        response.put("postsCount", postsCount);
+        response.put("likesCount", likesCount);
+        response.put("dislikesCount", dislikesCount);
+        response.put("viewsCount", viewsCount);
+        response.put("firstPublication", firstPublication);
 
-        return new ResponseEntity<>(answer, HttpStatus.OK);
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 }

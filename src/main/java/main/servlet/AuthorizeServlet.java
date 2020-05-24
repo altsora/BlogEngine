@@ -36,4 +36,9 @@ public class AuthorizeServlet extends HttpServlet {
         String sessionId = getSession().getId();
         activeSessions.put(sessionId, userId);
     }
+
+    public void removeAuthorizedUser() {
+        String sessionId = getSession().getId();
+        activeSessions.remove(sessionId);
+    }
 }

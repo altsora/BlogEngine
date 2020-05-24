@@ -89,7 +89,7 @@ public class ApiPostController {
     @GetMapping(value = "/api/post/{id}")
     @ResponseBody
     public ResponseEntity<PostFullDTO> getPostById(@PathVariable(value = "id") int id) {
-        Post postRep = postService.findPostById(id, ActivesType.ACTIVE, ModerationStatusType.ACCEPTED);
+        Post postRep = postService.findPostByPostId(id, ActivesType.ACTIVE, ModerationStatusType.ACCEPTED);
         int postId = postRep.getId();
         int userId = postRep.getUser().getId();
         String userName = postRep.getUser().getName();

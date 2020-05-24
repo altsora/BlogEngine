@@ -8,15 +8,23 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {
-    @Query("select u from #{#entityName} u where u.id = 1")
-    User findByPostId();
-
+    /**
+     * Запрос возвращает пользователя по указанным почте и паролю.
+     * @param email - почта, по которой осуществляется поиск пользователя;
+     * @param password - пароль, по которой осуществляется поиск пользователя;
+     * @return - возвращает пользователя.
+     */
     @Query("SELECT u FROM User u WHERE u.email = :email AND u.password = :password")
     User findByEmailAndPassword(
             @Param("email") String email,
             @Param("password") String password
     );
 
+    /**
+     * Зарос возвращает пользователя по его идентификатору.
+     * @param userId - ID пользователя;
+     * @return - возвращает пользователя.
+     */
     @Query("SELECT u FROM User u WHERE u.id = :userId")
     User findByUserId(@Param("userId") int userId);
 }
