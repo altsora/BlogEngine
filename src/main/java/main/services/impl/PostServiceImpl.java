@@ -126,12 +126,12 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    public int getTotalCountViewByUserId(int userId) {
+    public int getTotalCountViewByUserId(long userId) {
         return postRepository.getTotalCountViewByUserId(userId);
     }
 
     @Override
-    public int getTotalCountOfPostsByUserId(int userId) {
+    public int getTotalCountOfPostsByUserId(long userId) {
         return postRepository.getTotalCountOfPostsByUserId(userId);
     }
 
@@ -154,7 +154,7 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    public Post findPostByPostId(int postId, ActivesType activesType, ModerationStatusType moderationStatusType) {
+    public Post findPostByPostId(long postId, ActivesType activesType, ModerationStatusType moderationStatusType) {
         byte isActive = activesType == ActivesType.ACTIVE ? (byte) 1 : 0;
         return postRepository.findPostByPostId(postId, isActive, moderationStatusType);
     }
@@ -166,12 +166,12 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    public LocalDateTime getDateOfTheEarliestPostByUserId(int userId) {
+    public LocalDateTime getDateOfTheEarliestPostByUserId(long userId) {
         return postRepository.getDateOfTheEarliestPostByUserId(userId);
     }
 
     @Override
-    public boolean postByUserIdExists(int userId) {
+    public boolean postByUserIdExists(long userId) {
         return postRepository.postByUserIdExists(userId) != null;
     }
 

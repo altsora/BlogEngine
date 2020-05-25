@@ -22,12 +22,14 @@ public class ApiAuthController{
         this.userService = userService;
     }
 
+    //==================================================================================================================
+
     @GetMapping(value = "/api/auth/check")
     public ResponseEntity<JSONObject> authCheck() {
         JSONObject response = new JSONObject();
         boolean result;
         if (authorizeServlet.isUserAuthorize()) {
-            int userId = authorizeServlet.getAuthorizedUserId();
+            long userId = authorizeServlet.getAuthorizedUserId();
             User userRep = userService.findByUserId(userId);
             UserLoginDTO userLoginDTO = new UserLoginDTO();
             userLoginDTO.setId(userId);
@@ -56,7 +58,7 @@ public class ApiAuthController{
         User userRep = userService.findByEmailAndPassword(loginForm.getE_mail(), loginForm.getPassword());
         boolean result;
         if (userRep != null) {
-            int userId = userRep.getId();
+            long userId = userRep.getId();
             UserLoginDTO userLoginDTO = new UserLoginDTO();
             userLoginDTO.setId(userId);
             userLoginDTO.setName(userRep.getName());

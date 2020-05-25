@@ -19,7 +19,7 @@ import java.util.Date;
 @EqualsAndHashCode
 public class PostVote implements Serializable {
 
-    private int id;
+    private long id;
     private User user;
     private Post post;
     private LocalDateTime time;
@@ -29,7 +29,7 @@ public class PostVote implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    public int getId() {
+    public long getId() {
         return id;
     }
 

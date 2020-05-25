@@ -22,7 +22,7 @@ import java.util.Set;
 @EqualsAndHashCode(exclude = {"children"})
 public class PostComment implements Serializable {
 
-    private int id;
+    private long id;
     private PostComment parent;
     private Post post;
     private User user;
@@ -34,7 +34,7 @@ public class PostComment implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    public int getId() {
+    public long getId() {
         return id;
     }
 

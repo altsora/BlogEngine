@@ -108,7 +108,7 @@ public class ApiGeneralController {
 
     @GetMapping(value = "/api/statistics/my")
     public ResponseEntity getMyStatistics() {
-        int userId = authorizeServlet.getAuthorizedUserId();
+        long userId = authorizeServlet.getAuthorizedUserId();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm");
         int postsCount = postService.getTotalCountOfPostsByUserId(userId);
         int likesCount = postVoteService.getTotalCountLikesByUserId(userId);

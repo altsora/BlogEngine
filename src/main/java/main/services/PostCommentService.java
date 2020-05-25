@@ -6,7 +6,7 @@ import java.util.List;
 
 public interface PostCommentService {
 
-    List<PostComment> findAllPostCommentByPostId(int postId);
+    List<PostComment> findAllPostCommentByPostId(long postId);
 
-    int getCountCommentsByPostId(int postId);
+    int getCountCommentsByPostId(long postId);
 }

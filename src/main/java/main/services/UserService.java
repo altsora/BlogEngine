@@ -4,5 +4,5 @@ import main.model.entities.User;
 
 public interface UserService {
     User findByEmailAndPassword(String email, String password);
-    User findByUserId(int userId);
+    User findByUserId(long userId);
 }

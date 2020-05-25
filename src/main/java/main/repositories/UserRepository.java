@@ -26,5 +26,5 @@ public interface UserRepository extends JpaRepository<User, Long> {
      * @return - возвращает пользователя.
      */
     @Query("SELECT u FROM User u WHERE u.id = :userId")
-    User findByUserId(@Param("userId") int userId);
+    User findByUserId(@Param("userId") long userId);
 }

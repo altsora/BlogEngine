@@ -6,7 +6,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 public class PostSimpleDTO implements ResponseDTO {
-    private int id;
+    private long id;
     private String time;
     private UserSimpleDTO user;
     private String title;

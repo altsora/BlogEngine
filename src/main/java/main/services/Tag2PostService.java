@@ -6,5 +6,5 @@ import java.util.List;
 
 public interface Tag2PostService {
 
-    List<Tag2Post> findAllTag2PostByPostId(int postId);
+    List<Tag2Post> findAllTag2PostByPostId(long postId);
 }

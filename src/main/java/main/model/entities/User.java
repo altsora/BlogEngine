@@ -20,7 +20,7 @@ import java.util.Set;
 @EqualsAndHashCode(exclude = {"posts", "modifiedPosts", "ratedPosts", "comments"})
 public class User implements Serializable {
 
-    private int id;
+    private long id;
     private byte isModerator;
     private LocalDateTime regTime;
     private String name;
@@ -37,7 +37,7 @@ public class User implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    public int getId() {
+    public long getId() {
         return id;
     }
 

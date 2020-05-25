@@ -16,7 +16,7 @@ public interface PostVoteRepository extends JpaRepository<PostVote, Long> {
             "WHERE " +
             "   pv.post.id = :postId AND " +
             "   pv.value = 1")
-    int getCountLikesByPostId(@Param("postId") int postId);
+    int getCountLikesByPostId(@Param("postId") long postId);
 
     /**
      * Запрос возвращает количество дизлайков указанного поста.
@@ -27,7 +27,7 @@ public interface PostVoteRepository extends JpaRepository<PostVote, Long> {
             "WHERE " +
             "   pv.post.id = :postId AND " +
             "   pv.value = -1")
-    int getCountDislikesByPostId(@Param("postId") int postId);
+    int getCountDislikesByPostId(@Param("postId") long postId);
 
     /**
      * Возвращает общее количество лайков.
@@ -53,7 +53,7 @@ public interface PostVoteRepository extends JpaRepository<PostVote, Long> {
             "WHERE " +
             "   p.user.id = :userId AND " +
             "   pv.value = 1")
-    int getTotalCountLikesByUserId(@Param("userId") int userId);
+    int getTotalCountLikesByUserId(@Param("userId") long userId);
 
     /**
      * Запрос возвращает общее количество дизлайков под постами указанного пользователя.
@@ -65,7 +65,7 @@ public interface PostVoteRepository extends JpaRepository<PostVote, Long> {
             "WHERE " +
             "   p.user.id = :userId AND " +
             "   pv.value = -1")
-    int getTotalCountDislikesByUserId(@Param("userId") int userId);
+    int getTotalCountDislikesByUserId(@Param("userId") long userId);
 
     /**
      * Запрос возвращает положительную оценку по идентификатору пользователя и идентификатору поста.
@@ -79,8 +79,8 @@ public interface PostVoteRepository extends JpaRepository<PostVote, Long> {
             "   pv.post.id = :postId AND " +
             "   pv.value = 1")
     PostVote userLikeAlreadyExists(
-            @Param("userId") int userId,
-            @Param("postId") int postId
+            @Param("userId") long userId,
+            @Param("postId") long postId
     );
 
     /**
@@ -95,8 +95,8 @@ public interface PostVoteRepository extends JpaRepository<PostVote, Long> {
             "   pv.post.id = :postId AND " +
             "   pv.value = -1")
     PostVote userDislikeAlreadyExists(
-            @Param("userId") int userId,
-            @Param("postId") int postId
+            @Param("userId") long userId,
+            @Param("postId") long postId
     );
 
     @Query("SELECT pv.id FROM PostVote pv " +
@@ -104,7 +104,7 @@ public interface PostVoteRepository extends JpaRepository<PostVote, Long> {
             "   pv.user.id = :userId AND " +
             "   pv.post.id = :postId")
     Integer getPostVoteIdByUserIdAndPostId(
-            @Param("userId") int userId,
-            @Param("postId") int postId
+            @Param("userId") long userId,
+            @Param("postId") long postId
     );
 }

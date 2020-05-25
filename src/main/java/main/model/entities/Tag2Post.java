@@ -17,7 +17,7 @@ import java.io.Serializable;
 @EqualsAndHashCode(of = {"post", "tag"})
 public class Tag2Post implements Serializable {
 
-    private int id;
+    private long id;
     private Post post;
     private Tag tag;
 
@@ -25,7 +25,7 @@ public class Tag2Post implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    public int getId() {
+    public long getId() {
         return id;
     }
 

@@ -10,7 +10,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Component
 public class AuthorizeServlet extends HttpServlet {
-    private ConcurrentHashMap<String, Integer> activeSessions;
+    private ConcurrentHashMap<String, Long> activeSessions;
 
     public AuthorizeServlet() {
         this.activeSessions = new ConcurrentHashMap<>();
@@ -27,12 +27,12 @@ public class AuthorizeServlet extends HttpServlet {
         return activeSessions.containsKey(sessionId);
     }
 
-    public int getAuthorizedUserId() {
+    public long getAuthorizedUserId() {
         String sessionId = getSession().getId();
         return activeSessions.get(sessionId);
     }
 
-    public void authorizeUser(int userId) {
+    public void authorizeUser(long userId) {
         String sessionId = getSession().getId();
         activeSessions.put(sessionId, userId);
     }

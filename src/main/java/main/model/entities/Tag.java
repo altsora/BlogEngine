@@ -19,7 +19,7 @@ import java.util.Set;
 @EqualsAndHashCode(exclude = {"posts"})
 public class Tag implements Serializable {
 
-    private int id;
+    private long id;
     private String name;
     private Set<Tag2Post> posts;
 
@@ -27,7 +27,7 @@ public class Tag implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    public int getId() {
+    public long getId() {
         return id;
     }
 

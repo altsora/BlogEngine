@@ -15,12 +15,12 @@ public class PostVoteServiceImpl implements PostVoteService {
     }
 
     @Override
-    public int getCountLikesByPostId(int postId) {
+    public int getCountLikesByPostId(long postId) {
         return postVoteRepository.getCountLikesByPostId(postId);
     }
 
     @Override
-    public int getCountDislikesByPostId(int postId) {
+    public int getCountDislikesByPostId(long postId) {
         return postVoteRepository.getCountDislikesByPostId(postId);
     }
 
@@ -35,32 +35,32 @@ public class PostVoteServiceImpl implements PostVoteService {
     }
 
     @Override
-    public int getTotalCountLikesByUserId(int userId) {
+    public int getTotalCountLikesByUserId(long userId) {
         return postVoteRepository.getTotalCountLikesByUserId(userId);
     }
 
     @Override
-    public int getTotalCountDislikesByUserId(int userId) {
+    public int getTotalCountDislikesByUserId(long userId) {
         return postVoteRepository.getTotalCountDislikesByUserId(userId);
     }
 
     @Override
-    public boolean userLikeAlreadyExists(int userId, int postId) {
+    public boolean userLikeAlreadyExists(long userId, long postId) {
         return postVoteRepository.userLikeAlreadyExists(userId, postId) != null;
     }
 
     @Override
-    public boolean userDislikeAlreadyExists(int userId, int postId) {
+    public boolean userDislikeAlreadyExists(long userId, long postId) {
         return postVoteRepository.userDislikeAlreadyExists(userId, postId) != null;
     }
 
     @Override
-    public int getIdByUserIdAndPostId(int userId, int postId) {
+    public int getIdByUserIdAndPostId(long userId, long postId) {
         return postVoteRepository.getPostVoteIdByUserIdAndPostId(userId, postId);
     }
 
     @Override
-    public void deleteById(int postVoteId) {
+    public void deleteById(long postVoteId) {
         postVoteRepository.deleteById((long) postVoteId);
     }
 }

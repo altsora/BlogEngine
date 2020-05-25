@@ -18,7 +18,7 @@ import java.util.Date;
 @EqualsAndHashCode
 public class CaptchaCode implements Serializable {
 
-    private int id;
+    private long id;
     private LocalDateTime time;
     private String code;
     private String secretCode;
@@ -27,7 +27,7 @@ public class CaptchaCode implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    public int getId() {
+    public long getId() {
         return id;
     }
 

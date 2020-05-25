@@ -18,7 +18,7 @@ import java.io.Serializable;
 @EqualsAndHashCode
 public class GlobalSetting implements Serializable {
 
-    private int id;
+    private long id;
     private SettingsCodeType code;
     private String name;
     private SettingsValueType value;
@@ -27,7 +27,7 @@ public class GlobalSetting implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    public int getId() {
+    public long getId() {
         return id;
     }
 

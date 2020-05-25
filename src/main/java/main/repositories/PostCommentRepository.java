@@ -20,7 +20,7 @@ public interface PostCommentRepository extends JpaRepository<PostComment, Long> 
      * @return - возвращает коллекцию комментариев указанного поста.
      */
     @Query("SELECT pc FROM PostComment pc WHERE pc.post.id = :postId")
-    List<PostComment> findAllPostCommentByPostId(@Param("postId") int postId, Sort sort);
+    List<PostComment> findAllPostCommentByPostId(@Param("postId") long postId, Sort sort);
 
     /**
      * Запрос возвращает количество комментарий указанного поста.
@@ -28,5 +28,5 @@ public interface PostCommentRepository extends JpaRepository<PostComment, Long> 
      * @return - возвращает количество комментарий указанного поста.
      */
     @Query("SELECT COUNT(*) FROM PostComment pc WHERE pc.post.id = :postId")
-    int getCountCommentsByPostId(@Param("postId") int postId);
+    int getCountCommentsByPostId(@Param("postId") long postId);
 }

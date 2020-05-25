@@ -18,7 +18,7 @@ public class Tag2PostServiceImpl implements Tag2PostService {
     }
 
     @Override
-    public List<Tag2Post> findAllTag2PostByPostId(int postId) {
+    public List<Tag2Post> findAllTag2PostByPostId(long postId) {
         return tag2PostRepository.findAllTag2PostByPostId(postId);
     }
 }

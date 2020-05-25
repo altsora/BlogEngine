@@ -92,10 +92,10 @@ public class ApiPostController {
 
     @GetMapping(value = "/api/post/{id}")
     @ResponseBody
-    public ResponseEntity<PostFullDTO> getPostById(@PathVariable(value = "id") int id) {
+    public ResponseEntity<PostFullDTO> getPostById(@PathVariable(value = "id") long id) {
         Post postRep = postService.findPostByPostId(id, ActivesType.ACTIVE, ModerationStatusType.ACCEPTED);
-        int postId = postRep.getId();
-        int userId = postRep.getUser().getId();
+        long postId = postRep.getId();
+        long userId = postRep.getUser().getId();
         String userName = postRep.getUser().getName();
         UserSimpleDTO userSimpleDTO = new UserSimpleDTO(userId, userName);
 
@@ -179,8 +179,8 @@ public class ApiPostController {
         JSONObject response = new JSONObject();
         boolean result;
         if (authorizeServlet.isUserAuthorize()) {
-            int userId = authorizeServlet.getAuthorizedUserId();
-            int postId = (int) request.get("post_id");
+            long userId = authorizeServlet.getAuthorizedUserId();
+            long postId = (int) request.get("post_id");
             if (postVoteService.userLikeAlreadyExists(userId, postId)) {
                 int postVoteId = postVoteService.getIdByUserIdAndPostId(userId, postId);
                 postVoteService.deleteById(postVoteId);
@@ -202,8 +202,8 @@ public class ApiPostController {
     private <T extends ResponseDTO> List<ResponseDTO> getPostsDTO(List<Post> postListRep, Class<T> postDTO) {
         List<ResponseDTO> posts = new ArrayList<>();
         for (Post postRep : postListRep) {
-            int postId = postRep.getId();
-            int userId = postRep.getUser().getId();
+            long postId = postRep.getId();
+            long userId = postRep.getUser().getId();
             String userName = postRep.getUser().getName();
             UserSimpleDTO user = new UserSimpleDTO(userId, userName);
             PostSimpleDTO postSimpleDTO = new PostSimpleDTO();
@@ -233,7 +233,7 @@ public class ApiPostController {
         return posts;
     }
 
-    private List<String> getTagsByPostId(int postId) {
+    private List<String> getTagsByPostId(long postId) {
         List<Tag2Post> tag2PostListRep = tag2PostService.findAllTag2PostByPostId(postId);
         List<String> tags = new ArrayList<>();
         for (Tag2Post tag2PostRep : tag2PostListRep) {
@@ -242,12 +242,12 @@ public class ApiPostController {
         return tags;
     }
 
-    private List<CommentDTO> getCommentsByPostId(int postId) {
+    private List<CommentDTO> getCommentsByPostId(long postId) {
         List<PostComment> postCommentListRep = postCommentService.findAllPostCommentByPostId(postId);
         List<CommentDTO> commentDTOList = new ArrayList<>();
 
         for (PostComment postCommentRep : postCommentListRep) {
-            int userId = postCommentRep.getUser().getId();
+            long userId = postCommentRep.getUser().getId();
             String userName = postCommentRep.getUser().getName();
             String userPhoto = postCommentRep.getUser().getPhoto();
             UserWithPhotoDTO userWithPhoto = new UserWithPhotoDTO(userId, userName, userPhoto);

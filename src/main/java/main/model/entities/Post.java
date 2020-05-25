@@ -21,7 +21,7 @@ import java.util.Set;
 @EqualsAndHashCode(exclude = {"postRatings", "tags", "comments"})
 public class Post implements Serializable {
 
-    private int id;
+    private long id;
     private byte isActive;
     private ModerationStatusType moderationStatus = ModerationStatusType.NEW;
     private User moderator;
@@ -38,7 +38,7 @@ public class Post implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    public int getId() {
+    public long getId() {
         return id;
     }
 

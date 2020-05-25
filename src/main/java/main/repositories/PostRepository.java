@@ -25,7 +25,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
      * @return Возвращает null, если пользователь не размещал посты.
      */
     @Query("SELECT p FROM Post p WHERE p.user.id = :userId")
-    Post postByUserIdExists(@Param("userId") int userId);
+    Post postByUserIdExists(@Param("userId") long userId);
 
     //=============================================================================
 
@@ -55,7 +55,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
      */
     @Query("SELECT COUNT(p) FROM Post p " +
             "WHERE p.user.id = :userId")
-    int getTotalCountOfPostsByUserId(@Param("userId") int userId);
+    int getTotalCountOfPostsByUserId(@Param("userId") long userId);
 
     /**
      * Запрос определяет общее количество постов, в которых используется указанный тэг.
@@ -151,7 +151,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
      */
     @Query("SELECT COUNT(p.viewCount) FROM Post p " +
             "WHERE p.user.id = :userId")
-    int getTotalCountViewByUserId(@Param("userId") int userId);
+    int getTotalCountViewByUserId(@Param("userId") long userId);
 
     //=============================================================================
 
@@ -315,7 +315,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
             "   p.moderationStatus = :moderationStatus AND " +
             "   p.time <= now()")
     Post findPostByPostId(
-            @Param("postId") int postId,
+            @Param("postId") long postId,
             @Param("isActive") byte isActive,
             @Param("moderationStatus") ModerationStatusType moderationStatusType
     );
@@ -402,6 +402,6 @@ public interface PostRepository extends JpaRepository<Post, Long> {
      * @return - воззвращает дату самого раннего поста указанного пользователя.
      */
     @Query("SELECT MIN(p.time) FROM Post p WHERE p.user.id = :userId")
-    LocalDateTime getDateOfTheEarliestPostByUserId(@Param("userId") int userId);
+    LocalDateTime getDateOfTheEarliestPostByUserId(@Param("userId") long userId);
 
 }

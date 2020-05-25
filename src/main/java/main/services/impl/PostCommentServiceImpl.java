@@ -19,12 +19,12 @@ public class PostCommentServiceImpl implements PostCommentService {
     }
 
     @Override
-    public List<PostComment> findAllPostCommentByPostId(int postId) {
+    public List<PostComment> findAllPostCommentByPostId(long postId) {
         return postCommentRepository.findAllPostCommentByPostId(postId, Sort.by(Sort.Direction.ASC, PostCommentRepository.COMMENT_TIME));
     }
 
     @Override
-    public int getCountCommentsByPostId(int postId) {
+    public int getCountCommentsByPostId(long postId) {
         return postCommentRepository.getCountCommentsByPostId(postId);
     }
 }

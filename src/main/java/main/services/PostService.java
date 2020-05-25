@@ -22,17 +22,17 @@ public interface PostService {
     Map<String, Long> getDateAndCountPosts(ActivesType activesType, ModerationStatusType moderationStatusType, int year);
 
     int getTotalCountOfPosts(ActivesType activesType, ModerationStatusType moderationStatusType);
-    int getTotalCountOfPostsByUserId(int userId);
+    int getTotalCountOfPostsByUserId(long userId);
     int getTotalCountOfPostsByQuery(ActivesType activesType, ModerationStatusType moderationStatusType, String query);
     int getTotalCountOfPostsByTag(ActivesType activesType, ModerationStatusType moderationStatusType, String tag);
     int getTotalCountOfPostsByDate(ActivesType activesType, ModerationStatusType moderationStatusType, String date);
     int getTotalCountView(ActivesType activesType, ModerationStatusType moderationStatusType);
-    int getTotalCountViewByUserId(int userId);
+    int getTotalCountViewByUserId(long userId);
 
-    Post findPostByPostId(int postId, ActivesType activesType, ModerationStatusType moderationStatusType);
+    Post findPostByPostId(long postId, ActivesType activesType, ModerationStatusType moderationStatusType);
 
     LocalDateTime getDateOfTheEarliestPost(ActivesType activesType, ModerationStatusType moderationStatusType);
-    LocalDateTime getDateOfTheEarliestPostByUserId(int userId);
+    LocalDateTime getDateOfTheEarliestPostByUserId(long userId);
 
-    boolean postByUserIdExists(int userId);
+    boolean postByUserIdExists(long userId);
 }

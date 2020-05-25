@@ -6,7 +6,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 public class CommentDTO {
-    private int id;
+    private long id;
     private String time;
     private String text;
     private UserWithPhotoDTO user;
