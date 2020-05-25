@@ -98,7 +98,11 @@ public class ApiGeneralController {
 
             return new ResponseEntity<>(response, HttpStatus.OK);
         } else {
-            return new ResponseEntity<>(HttpStatus.OK);
+            if (authorizeServlet.isUserAuthorize()) {
+                return new ResponseEntity<>(getMyStatistics().getBody(), HttpStatus.OK);
+            } else {
+                return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+            }
         }
     }
 

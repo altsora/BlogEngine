@@ -43,4 +43,24 @@ public class PostVoteServiceImpl implements PostVoteService {
     public int getTotalCountDislikesByUserId(int userId) {
         return postVoteRepository.getTotalCountDislikesByUserId(userId);
     }
+
+    @Override
+    public boolean userLikeAlreadyExists(int userId, int postId) {
+        return postVoteRepository.userLikeAlreadyExists(userId, postId) != null;
+    }
+
+    @Override
+    public boolean userDislikeAlreadyExists(int userId, int postId) {
+        return postVoteRepository.userDislikeAlreadyExists(userId, postId) != null;
+    }
+
+    @Override
+    public int getIdByUserIdAndPostId(int userId, int postId) {
+        return postVoteRepository.getPostVoteIdByUserIdAndPostId(userId, postId);
+    }
+
+    @Override
+    public void deleteById(int postVoteId) {
+        postVoteRepository.deleteById((long) postVoteId);
+    }
 }

@@ -66,4 +66,45 @@ public interface PostVoteRepository extends JpaRepository<PostVote, Long> {
             "   p.user.id = :userId AND " +
             "   pv.value = -1")
     int getTotalCountDislikesByUserId(@Param("userId") int userId);
+
+    /**
+     * Запрос возвращает положительную оценку по идентификатору пользователя и идентификатору поста.
+     * @param userId - ID пользователя;
+     * @param postId - ID поста.
+     * @return - возвращает положительную оценку класса PostVote. Если такой оценки не найдено, вернётся null.
+     */
+    @Query("SELECT pv FROM PostVote pv " +
+            "WHERE " +
+            "   pv.user.id = :userId AND " +
+            "   pv.post.id = :postId AND " +
+            "   pv.value = 1")
+    PostVote userLikeAlreadyExists(
+            @Param("userId") int userId,
+            @Param("postId") int postId
+    );
+
+    /**
+     * Запрос возвращает отрицательную оценку по идентификатору пользователя и идентификатору поста.
+     * @param userId - ID пользователя;
+     * @param postId - ID поста.
+     * @return - возвращает отрицательную оценку класса PostVote. Если такой оценки не найдено, вернётся null.
+     */
+    @Query("SELECT pv FROM PostVote pv " +
+            "WHERE " +
+            "   pv.user.id = :userId AND " +
+            "   pv.post.id = :postId AND " +
+            "   pv.value = -1")
+    PostVote userDislikeAlreadyExists(
+            @Param("userId") int userId,
+            @Param("postId") int postId
+    );
+
+    @Query("SELECT pv.id FROM PostVote pv " +
+            "WHERE " +
+            "   pv.user.id = :userId AND " +
+            "   pv.post.id = :postId")
+    Integer getPostVoteIdByUserIdAndPostId(
+            @Param("userId") int userId,
+            @Param("postId") int postId
+    );
 }

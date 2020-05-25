@@ -8,6 +8,8 @@ import main.model.entities.PostComment;
 import main.model.entities.Tag2Post;
 import main.responses.*;
 import main.services.*;
+import main.servlet.AuthorizeServlet;
+import org.json.simple.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
@@ -21,6 +23,7 @@ import java.util.List;
 
 @RestController
 public class ApiPostController {
+    private AuthorizeServlet authorizeServlet;
     private PostService postService;
     private PostVoteService postVoteService;
     private PostCommentService postCommentService;
@@ -28,9 +31,10 @@ public class ApiPostController {
     private Tag2PostService tag2PostService;
 
     @Autowired
-    public ApiPostController(PostService postService, PostVoteService postVoteService,
-                             PostCommentService postCommentService, TagService tagService,
-                             Tag2PostService tag2PostService) {
+    public ApiPostController(AuthorizeServlet authorizeServlet, PostService postService,
+                             PostVoteService postVoteService, PostCommentService postCommentService,
+                             TagService tagService, Tag2PostService tag2PostService) {
+        this.authorizeServlet = authorizeServlet;
         this.postService = postService;
         this.postVoteService = postVoteService;
         this.postCommentService = postCommentService;
@@ -168,6 +172,29 @@ public class ApiPostController {
         CollectionTagsResponseDTO collectionTagsResponseDTO = new CollectionTagsResponseDTO();
         collectionTagsResponseDTO.setTags(tags);
         return new ResponseEntity<>(collectionTagsResponseDTO, HttpStatus.OK);
+    }
+
+    @PostMapping(value = "/api/post/like")
+    public ResponseEntity putLike(@RequestBody(required = false) JSONObject request) {
+        JSONObject response = new JSONObject();
+        boolean result;
+        if (authorizeServlet.isUserAuthorize()) {
+            int userId = authorizeServlet.getAuthorizedUserId();
+            int postId = (int) request.get("post_id");
+            if (postVoteService.userLikeAlreadyExists(userId, postId)) {
+                int postVoteId = postVoteService.getIdByUserIdAndPostId(userId, postId);
+                postVoteService.deleteById(postVoteId);
+                result = false;
+            } else {
+                result = true;
+            }
+
+        } else {
+            result = false;
+        }
+        response.put("result", result);
+        return new ResponseEntity(response, HttpStatus.OK);
+
     }
 
     //==================================================================================================================
