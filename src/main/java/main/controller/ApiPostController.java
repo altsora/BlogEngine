@@ -1,11 +1,8 @@
 package main.controller;
 
-import main.model.entities.Tag;
+import main.model.entities.*;
 import main.model.entities.enums.ActivesType;
 import main.model.entities.enums.ModerationStatusType;
-import main.model.entities.Post;
-import main.model.entities.PostComment;
-import main.model.entities.Tag2Post;
 import main.responses.*;
 import main.services.*;
 import main.servlet.AuthorizeServlet;
@@ -29,17 +26,20 @@ public class ApiPostController {
     private PostCommentService postCommentService;
     private TagService tagService;
     private Tag2PostService tag2PostService;
+    private UserService userService;
 
     @Autowired
     public ApiPostController(AuthorizeServlet authorizeServlet, PostService postService,
                              PostVoteService postVoteService, PostCommentService postCommentService,
-                             TagService tagService, Tag2PostService tag2PostService) {
+                             TagService tagService, Tag2PostService tag2PostService,
+                             UserService userService) {
         this.authorizeServlet = authorizeServlet;
         this.postService = postService;
         this.postVoteService = postVoteService;
         this.postCommentService = postCommentService;
         this.tagService = tagService;
         this.tag2PostService = tag2PostService;
+        this.userService = userService;
     }
 
     //==================================================================================================================
@@ -93,7 +93,7 @@ public class ApiPostController {
     @GetMapping(value = "/api/post/{id}")
     @ResponseBody
     public ResponseEntity<PostFullDTO> getPostById(@PathVariable(value = "id") long id) {
-        Post postRep = postService.findPostByPostId(id, ActivesType.ACTIVE, ModerationStatusType.ACCEPTED);
+        Post postRep = postService.findPostByIdWithCondition(id, ActivesType.ACTIVE, ModerationStatusType.ACCEPTED);
         long postId = postRep.getId();
         long userId = postRep.getUser().getId();
         String userName = postRep.getUser().getName();
@@ -175,28 +175,71 @@ public class ApiPostController {
     }
 
     @PostMapping(value = "/api/post/like")
-    public ResponseEntity putLike(@RequestBody(required = false) JSONObject request) {
+    public ResponseEntity<JSONObject> putLike(@RequestBody JSONObject request) {
+        JSONObject response = new JSONObject();
+        boolean result;
+        if (authorizeServlet.isUserAuthorize()) {
+            long userId = authorizeServlet.getAuthorizedUserId();
+            long postId = (int) request.get("post_id");
+            if (postVoteService.userDislikeAlreadyExists(userId, postId)) {
+                long postVoteId = postVoteService.getIdByUserIdAndPostId(userId, postId);
+                postVoteService.replaceDislikeWithLike(postVoteId);
+                result = true;
+            } else if (postVoteService.userLikeAlreadyExists(userId, postId)) {
+                long postVoteId = postVoteService.getIdByUserIdAndPostId(userId, postId);
+                postVoteService.deleteById(postVoteId);
+                result = false;
+            } else {
+                User user = userService.findById(userId);
+                Post post = postService.findById(postId);
+                PostVote postVote = new PostVote();
+                postVote.setUser(user);
+                postVote.setPost(post);
+                postVote.setTime(LocalDateTime.now());
+                postVote.setValue((byte) 1);
+                postVoteService.addPostVote(postVote);
+                result = true;
+            }
+        } else {
+            result = false;
+        }
+        response.put("result", result);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @PostMapping(value = "/api/post/dislike")
+    public ResponseEntity<JSONObject> putDislike(@RequestBody JSONObject request) {
         JSONObject response = new JSONObject();
         boolean result;
         if (authorizeServlet.isUserAuthorize()) {
             long userId = authorizeServlet.getAuthorizedUserId();
             long postId = (int) request.get("post_id");
             if (postVoteService.userLikeAlreadyExists(userId, postId)) {
-                int postVoteId = postVoteService.getIdByUserIdAndPostId(userId, postId);
+                long postVoteId = postVoteService.getIdByUserIdAndPostId(userId, postId);
+                postVoteService.replaceLikeWithDislike(postVoteId);
+                result = true;
+            } else if (postVoteService.userDislikeAlreadyExists(userId, postId)) {
+                long postVoteId = postVoteService.getIdByUserIdAndPostId(userId, postId);
                 postVoteService.deleteById(postVoteId);
                 result = false;
             } else {
+                User user = userService.findById(userId);
+                Post post = postService.findById(postId);
+                PostVote postVote = new PostVote();
+                postVote.setUser(user);
+                postVote.setPost(post);
+                postVote.setTime(LocalDateTime.now());
+                postVote.setValue((byte) -1);
+                postVoteService.addPostVote(postVote);
                 result = true;
             }
-
         } else {
             result = false;
         }
         response.put("result", result);
-        return new ResponseEntity(response, HttpStatus.OK);
-
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
-
+    
     //==================================================================================================================
 
     private <T extends ResponseDTO> List<ResponseDTO> getPostsDTO(List<Post> postListRep, Class<T> postDTO) {

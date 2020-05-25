@@ -54,14 +54,14 @@ public class Post implements Serializable {
     }
 
     @JsonBackReference
-    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "moderator_id")
     public User getModerator() {
         return moderator;
     }
 
     @JsonBackReference
-    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY, optional = false)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id")
     public User getUser() {
         return user;
@@ -88,21 +88,20 @@ public class Post implements Serializable {
     }
 
     @JsonManagedReference
-    @OneToMany(mappedBy = "post", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "post", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     public Set<PostVote> getPostRatings() {
         return postRatings;
     }
 
     @JsonManagedReference
-    @OneToMany(mappedBy = "post", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "post", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     public Set<Tag2Post> getTags() {
         return tags;
     }
 
     @JsonManagedReference
-    @OneToMany(mappedBy = "post", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "post", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     public Set<PostComment> getComments() {
         return comments;
     }
-
 }

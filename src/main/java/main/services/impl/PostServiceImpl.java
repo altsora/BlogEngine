@@ -1,6 +1,7 @@
 package main.services.impl;
 
 import main.model.entities.Post;
+import main.model.entities.PostVote;
 import main.model.entities.enums.ActivesType;
 import main.model.entities.enums.ModerationStatusType;
 import main.repositories.PostRepository;
@@ -27,6 +28,8 @@ public class PostServiceImpl implements PostService {
         this.postRepository = postRepository;
     }
 
+    //==================================================================================================================
+
     @Override
     public List<Post> findAllPostPopular(ActivesType activesType, ModerationStatusType moderationStatusType, int offset, int limit) {
         int pageNumber = offset / limit;
@@ -44,8 +47,7 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    public List<Post> findAllPostSortedByDate(ActivesType activesType, ModerationStatusType moderationStatusType,
-                                              int offset, int limit, Sort.Direction direction) {
+    public List<Post> findAllPostSortedByDate(ActivesType activesType, ModerationStatusType moderationStatusType, int offset, int limit, Sort.Direction direction) {
         int pageNumber = offset / limit;
         Pageable sortedByPostTime = PageRequest.of(pageNumber, limit, Sort.by(direction, PostRepository.POST_TIME));
         byte isActive = activesType == ActivesType.ACTIVE ? (byte) 1 : 0;
@@ -53,8 +55,7 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    public List<Post> findAllPostByQuery(ActivesType activesType, ModerationStatusType moderationStatusType,
-                                         int offset, int limit, String query) {
+    public List<Post> findAllPostByQuery(ActivesType activesType, ModerationStatusType moderationStatusType, int offset, int limit, String query) {
         int pageNumber = offset / limit;
         Pageable sortedByPostTime = PageRequest.of(pageNumber, limit, Sort.by(Sort.Direction.ASC, PostRepository.POST_TIME));
         byte isActive = activesType == ActivesType.ACTIVE ? (byte) 1 : 0;
@@ -62,8 +63,7 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    public List<Post> findAllPostByDate(ActivesType activesType, ModerationStatusType moderationStatusType,
-                                        int offset, int limit, String date) {
+    public List<Post> findAllPostByDate(ActivesType activesType, ModerationStatusType moderationStatusType, int offset, int limit, String date) {
         int pageNumber = offset / limit;
         String[] var = date.split("-");
         int year = Integer.parseInt(var[0]);
@@ -154,9 +154,14 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    public Post findPostByPostId(long postId, ActivesType activesType, ModerationStatusType moderationStatusType) {
+    public Post findPostByIdWithCondition(long postId, ActivesType activesType, ModerationStatusType moderationStatusType) {
         byte isActive = activesType == ActivesType.ACTIVE ? (byte) 1 : 0;
         return postRepository.findPostByPostId(postId, isActive, moderationStatusType);
+    }
+
+    @Override
+    public Post findById(long postId) {
+        return postRepository.findById(postId).orElseThrow();
     }
 
     @Override
@@ -174,5 +179,4 @@ public class PostServiceImpl implements PostService {
     public boolean postByUserIdExists(long userId) {
         return postRepository.postByUserIdExists(userId) != null;
     }
-
 }

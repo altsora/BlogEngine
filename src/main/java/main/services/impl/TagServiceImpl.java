@@ -17,6 +17,8 @@ public class TagServiceImpl implements TagService {
         this.tagRepository = tagRepository;
     }
 
+    //==================================================================================================================
+
     @Override
     public List<Tag> findAllTagsByQuery(String query) {
         return tagRepository.findAllTagsByQuery(query);

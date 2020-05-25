@@ -37,7 +37,7 @@ public class Tag implements Serializable {
     }
 
     @JsonManagedReference
-    @OneToMany(mappedBy = "tag", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "tag", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     public Set<Tag2Post> getPosts() {
         return posts;
     }

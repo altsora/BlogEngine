@@ -18,6 +18,8 @@ public class GlobalSettingsServiceImpl implements GlobalSettingsService {
         this.globalSettingsRepository = globalSettingsRepository;
     }
 
+    //==================================================================================================================
+
     @Override
     public boolean settingMultiUserModeIsEnabled() {
         return globalSettingsRepository.settingMultiUserModeIsEnabled() != null;

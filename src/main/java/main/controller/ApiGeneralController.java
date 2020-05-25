@@ -40,6 +40,8 @@ public class ApiGeneralController {
         this.postVoteService = postVoteService;
     }
 
+    //==================================================================================================================
+
     @GetMapping(value = "/api/init")
     @ResponseBody
     public BlogDTO init() {

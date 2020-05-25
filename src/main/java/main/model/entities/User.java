@@ -46,7 +46,6 @@ public class User implements Serializable {
         return isModerator;
     }
 
-//    @Type(type = "org.hibernate.type.LocalDateTimeType")
     @Column(name = "reg_time", nullable = false)
     public LocalDateTime getRegTime() {
         return regTime;
@@ -84,19 +83,19 @@ public class User implements Serializable {
     }
 
     @JsonManagedReference
-    @OneToMany(mappedBy = "moderator", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "moderator", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     public Set<Post> getModifiedPosts() {
         return modifiedPosts;
     }
 
     @JsonManagedReference
-    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     public Set<PostVote> getRatedPosts() {
         return ratedPosts;
     }
 
     @JsonManagedReference
-    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     public Set<PostComment> getComments() {
         return comments;
     }

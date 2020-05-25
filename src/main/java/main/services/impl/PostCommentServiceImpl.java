@@ -18,6 +18,8 @@ public class PostCommentServiceImpl implements PostCommentService {
         this.postCommentRepository = postCommentRepository;
     }
 
+    //==================================================================================================================
+
     @Override
     public List<PostComment> findAllPostCommentByPostId(long postId) {
         return postCommentRepository.findAllPostCommentByPostId(postId, Sort.by(Sort.Direction.ASC, PostCommentRepository.COMMENT_TIME));

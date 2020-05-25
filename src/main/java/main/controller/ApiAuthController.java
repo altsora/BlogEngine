@@ -30,7 +30,7 @@ public class ApiAuthController{
         boolean result;
         if (authorizeServlet.isUserAuthorize()) {
             long userId = authorizeServlet.getAuthorizedUserId();
-            User userRep = userService.findByUserId(userId);
+            User userRep = userService.findById(userId);
             UserLoginDTO userLoginDTO = new UserLoginDTO();
             userLoginDTO.setId(userId);
             userLoginDTO.setName(userRep.getName());

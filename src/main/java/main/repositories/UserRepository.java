@@ -19,12 +19,4 @@ public interface UserRepository extends JpaRepository<User, Long> {
             @Param("email") String email,
             @Param("password") String password
     );
-
-    /**
-     * Зарос возвращает пользователя по его идентификатору.
-     * @param userId - ID пользователя;
-     * @return - возвращает пользователя.
-     */
-    @Query("SELECT u FROM User u WHERE u.id = :userId")
-    User findByUserId(@Param("userId") long userId);
 }

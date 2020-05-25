@@ -1,9 +1,12 @@
 package main.services.impl;
 
+import main.model.entities.PostVote;
 import main.repositories.PostVoteRepository;
 import main.services.PostVoteService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
 
 @Service
 public class PostVoteServiceImpl implements PostVoteService {
@@ -13,6 +16,8 @@ public class PostVoteServiceImpl implements PostVoteService {
     public PostVoteServiceImpl(PostVoteRepository postVoteRepository) {
         this.postVoteRepository = postVoteRepository;
     }
+
+    //=============================================================================
 
     @Override
     public int getCountLikesByPostId(long postId) {
@@ -61,6 +66,32 @@ public class PostVoteServiceImpl implements PostVoteService {
 
     @Override
     public void deleteById(long postVoteId) {
-        postVoteRepository.deleteById((long) postVoteId);
+        postVoteRepository.deleteById(postVoteId);
+    }
+
+    @Override
+    public void replaceLikeWithDislike(long postVoteId) {
+        PostVote postVote = postVoteRepository.findById(postVoteId).orElseThrow();
+        postVote.setValue((byte) -1);
+        postVote.setTime(LocalDateTime.now());
+        postVoteRepository.saveAndFlush(postVote);
+    }
+
+    @Override
+    public void replaceDislikeWithLike(long postVoteId) {
+        PostVote postVote = postVoteRepository.findById(postVoteId).orElseThrow();
+        postVote.setValue((byte) 1);
+        postVote.setTime(LocalDateTime.now());
+        postVoteRepository.saveAndFlush(postVote);
+    }
+
+    @Override
+    public void addPostVote(PostVote postVote) {
+        postVoteRepository.saveAndFlush(postVote);
+    }
+
+    @Override
+    public PostVote findById(long postVoteId) {
+        return postVoteRepository.findById(postVoteId).orElseThrow();
     }
 }

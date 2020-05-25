@@ -6,6 +6,8 @@ import main.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
+
 @Service
 public class UserServiceImpl implements UserService {
     private UserRepository userRepository;
@@ -15,13 +17,16 @@ public class UserServiceImpl implements UserService {
         this.userRepository = userRepository;
     }
 
+    //==================================================================================================================
+
     @Override
     public User findByEmailAndPassword(String email, String password) {
         return userRepository.findByEmailAndPassword(email, password);
     }
 
     @Override
-    public User findByUserId(long userId) {
-        return userRepository.findByUserId(userId);
+    public User findById(long userId) {
+        Optional<User> optionalUser = userRepository.findById(userId);
+        return optionalUser.orElse(null);
     }
 }
