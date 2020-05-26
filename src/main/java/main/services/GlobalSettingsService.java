@@ -7,7 +7,9 @@ import java.util.List;
 
 public interface GlobalSettingsService {
     boolean settingMultiUserModeIsEnabled();
+
     boolean settingPostPreModerationIsEnabled();
+
     boolean settingStatisticsIsPublicIsEnabled();
 
     GlobalSetting getSettingByCode(SettingsCodeType settingsCodeType);

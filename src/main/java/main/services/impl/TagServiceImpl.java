@@ -20,6 +20,17 @@ public class TagServiceImpl implements TagService {
     //==================================================================================================================
 
     @Override
+    public Tag createTagIfNoExistsAndReturn(String tagName) {
+        Tag tag = tagRepository.existsByTag(tagName);
+        if (tag == null) {
+            tag = new Tag();
+            tag.setName(tagName);
+            tag = tagRepository.saveAndFlush(tag);
+        }
+        return tag;
+    }
+
+    @Override
     public List<Tag> findAllTagsByQuery(String query) {
         return tagRepository.findAllTagsByQuery(query);
     }

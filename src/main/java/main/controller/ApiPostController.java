@@ -10,11 +10,15 @@ import org.json.simple.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -143,37 +147,6 @@ public class ApiPostController {
         return new ResponseEntity<>(new CollectionPostsResponseDTO<>(count, posts), HttpStatus.OK);
     }
 
-    @GetMapping(value = "/api/tag")
-    @ResponseBody
-    public ResponseEntity<CollectionTagsResponseDTO> getTagList(@RequestParam(value = "query", required = false) String query) {
-        List<Tag> tagListRep = (query == null || query.equals("")) ?
-                tagService.findAll() :
-                tagService.findAllTagsByQuery(query);
-        List<Double> weights = new ArrayList<>();
-        int totalNumberOfPosts = postService.getTotalCountOfPosts(ActivesType.ACTIVE, ModerationStatusType.ACCEPTED);
-        double maxWeight = -1;
-        for (Tag tagRep : tagListRep) {
-            int countPosts = postService.getTotalCountOfPostsByTag(ActivesType.ACTIVE, ModerationStatusType.ACCEPTED, tagRep.getName());
-            double weight = (double) countPosts / totalNumberOfPosts;
-            weights.add(weight);
-            if (weight > maxWeight) {
-                maxWeight = weight;
-            }
-        }
-
-        List<TagDTO> tags = new ArrayList<>();
-        for (int i = 0; i < tagListRep.size(); i++) {
-            String tagName = tagListRep.get(i).getName();
-            double normalizedWeight = weights.get(i) / maxWeight;
-            TagDTO tagDTO = new TagDTO(tagName, normalizedWeight);
-            tags.add(tagDTO);
-        }
-
-        CollectionTagsResponseDTO collectionTagsResponseDTO = new CollectionTagsResponseDTO();
-        collectionTagsResponseDTO.setTags(tags);
-        return new ResponseEntity<>(collectionTagsResponseDTO, HttpStatus.OK);
-    }
-
     @PostMapping(value = "/api/post/like")
     public ResponseEntity<JSONObject> putLike(@RequestBody JSONObject request) {
         JSONObject response = new JSONObject();
@@ -239,7 +212,72 @@ public class ApiPostController {
         response.put("result", result);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
-    
+
+    @PostMapping(value = "/api/post")
+    public ResponseEntity addPost(@RequestBody JSONObject request) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+        String postTimeString = (String) request.get("time");
+        int postActive = (int) request.get("active");
+        String postTitle = (String) request.get("title");
+        List<String> postTags = (ArrayList<String>) request.get("tags");
+        String postText = (String) request.get("text");
+
+        JSONObject message = new JSONObject();
+        if (postTitle.isEmpty()) {
+            message.put("message", "Заголовок не должен быть пустым!");
+            return new ResponseEntity<>(message, HttpStatus.BAD_REQUEST);
+        }
+
+        if (postText.isEmpty()) {
+            message.put("message", "Пост не должен быть пустым!");
+            return new ResponseEntity<>(message, HttpStatus.BAD_REQUEST);
+        }
+
+        if (postTitle.length() < 3) {
+            message.put("message", "Минимальное количество символов в заголовке - 3!");
+            return new ResponseEntity<>(message, HttpStatus.BAD_REQUEST);
+        }
+
+        if (postText.length() < 50) {
+            message.put("message", "Минимальное количество символов в публикации - 50!");
+            return new ResponseEntity<>(message, HttpStatus.BAD_REQUEST);
+        }
+
+        LocalDateTime postTime;
+        try {
+            postTime = LocalDateTime.parse(postTimeString, formatter);
+        } catch (DateTimeParseException e) {
+            return new ResponseEntity("Ошибка преобразования String в LocalDateTime", HttpStatus.BAD_REQUEST);
+        }
+        if (postTime.isBefore(LocalDateTime.now())) {
+            postTime = LocalDateTime.now();
+        }
+
+        byte isActive = postActive == 1 ? (byte) 1 : 0;
+        User user = userService.findById(authorizeServlet.getAuthorizedUserId());
+
+        Post newPost = new Post();
+        newPost.setIsActive(isActive);
+        newPost.setUser(user);
+        newPost.setTime(postTime);
+        newPost.setTitle(postTitle);
+        newPost.setText(postText);
+        newPost = postService.addPostAndReturn(newPost);
+
+        for (String tagName : postTags) {
+            Tag tag = tagService.createTagIfNoExistsAndReturn(tagName);
+
+            Tag2Post tag2Post = new Tag2Post();
+            tag2Post.setPost(newPost);
+            tag2Post.setTag(tag);
+            tag2PostService.addTag2Post(tag2Post);
+        }
+
+        JSONObject response = new JSONObject();
+        response.put("result", true);
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
+    }
+
     //==================================================================================================================
 
     private <T extends ResponseDTO> List<ResponseDTO> getPostsDTO(List<Post> postListRep, Class<T> postDTO) {
@@ -317,7 +355,7 @@ public class ApiPostController {
         return announce;
     }
 
-    private static String getStringTime(LocalDateTime localDateTime) {
+    private String getStringTime(LocalDateTime localDateTime) {
         DateTimeFormatter simpleFormat = DateTimeFormatter.ofPattern("HH:mm");
         DateTimeFormatter fullFormat = DateTimeFormatter.ofPattern("d MMM yyyy, EEE, HH:mm");
         LocalDateTime today = LocalDateTime.now();
@@ -337,4 +375,5 @@ public class ApiPostController {
 
         return fullFormat.format(localDateTime);
     }
+
 }

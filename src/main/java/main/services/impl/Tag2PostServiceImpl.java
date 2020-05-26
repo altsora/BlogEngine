@@ -20,6 +20,11 @@ public class Tag2PostServiceImpl implements Tag2PostService {
     //==================================================================================================================
 
     @Override
+    public void addTag2Post(Tag2Post tag2Post) {
+        tag2PostRepository.saveAndFlush(tag2Post);
+    }
+
+    @Override
     public List<Tag2Post> findAllTag2PostByPostId(long postId) {
         return tag2PostRepository.findAllTag2PostByPostId(postId);
     }

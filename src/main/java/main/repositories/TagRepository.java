@@ -16,4 +16,12 @@ public interface TagRepository extends JpaRepository<Tag, Long> {
      */
     @Query("SELECT t FROM Tag t WHERE t.name LIKE :query%")
     List<Tag> findAllTagsByQuery(@Param("query") String query);
+
+    /**
+     * Запрос возвращает указанный тэг. Если тэг отсутствует в базе, возвращается null.
+     * @param tagName - тэг, по которому осуществляется поиск в базе;
+     * @return - возвращается тэг, если есть в базе, иначе null.
+     */
+    @Query("SELECT t FROM Tag t WHERE t.name = :tagName")
+    Tag existsByTag(@Param("tagName") String tagName);
 }

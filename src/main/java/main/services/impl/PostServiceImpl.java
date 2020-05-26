@@ -176,7 +176,7 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    public boolean postByUserIdExists(long userId) {
-        return postRepository.postByUserIdExists(userId) != null;
+    public Post addPostAndReturn(Post post) {
+        return postRepository.saveAndFlush(post);
     }
 }
