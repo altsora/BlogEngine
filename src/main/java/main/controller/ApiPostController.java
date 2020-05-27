@@ -10,12 +10,9 @@ import org.json.simple.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
-import java.io.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -97,7 +94,7 @@ public class ApiPostController {
     @GetMapping(value = "/api/post/{id}")
     @ResponseBody
     public ResponseEntity<PostFullDTO> getPostById(@PathVariable(value = "id") long id) {
-        Post postRep = postService.findPostByIdWithCondition(id, ActivesType.ACTIVE, ModerationStatusType.ACCEPTED);
+        Post postRep = postService.findById(id);
         long postId = postRep.getId();
         long userId = postRep.getUser().getId();
         String userName = postRep.getUser().getName();
@@ -276,6 +273,68 @@ public class ApiPostController {
         JSONObject response = new JSONObject();
         response.put("result", true);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
+    }
+
+    @GetMapping(value = "/api/post/moderation")
+    @ResponseBody
+    public ResponseEntity listOfPostsForModeration(
+            @RequestParam(value = "offset") int offset,
+            @RequestParam(value = "limit") int limit,
+            @RequestParam(value = "status") String status
+    ) {
+        long userId = authorizeServlet.getAuthorizedUserId();
+        int count;
+        List<Post> postListRep;
+        switch (status) {
+            case "declined":
+                postListRep = postService.findAllPostsByModeratorId(ActivesType.ACTIVE, ModerationStatusType.DECLINED, offset, limit, userId);
+                count = postService.getTotalCountOfPostsByModeratorId(ActivesType.ACTIVE, ModerationStatusType.DECLINED, userId);
+                break;
+            case "accepted":
+                postListRep = postService.findAllPostsByModeratorId(ActivesType.ACTIVE, ModerationStatusType.ACCEPTED, offset, limit, userId);
+                count = postService.getTotalCountOfPostsByModeratorId(ActivesType.ACTIVE, ModerationStatusType.ACCEPTED, userId);
+                break;
+            default:
+                postListRep = postService.findAllNewPosts(ActivesType.ACTIVE, offset, limit);
+                count = postService.getTotalCountOfNewPosts(ActivesType.ACTIVE);
+        }
+
+        List<ResponseDTO> posts = getPostsDTO(postListRep, PostInfoDTO.class);
+
+        return new ResponseEntity<>(new CollectionPostsResponseDTO<>(count, posts), HttpStatus.OK);
+    }
+
+    @GetMapping(value = "/api/post/my")
+    @ResponseBody
+    public ResponseEntity getMyPosts(
+            @RequestParam(value = "offset") int offset,
+            @RequestParam(value = "limit") int limit,
+            @RequestParam(value = "status") String status
+    ) {
+        long userId = authorizeServlet.getAuthorizedUserId();
+        List<Post> postListRep;
+        int count;
+        switch (status) {
+            case "inactive":
+                postListRep = postService.findAllHiddenPostsByUserId(offset, limit, userId);
+                count = postService.getTotalCountOfHiddenPostsByUserId(userId);
+                break;
+            case "pending":
+                postListRep = postService.findAllPostsByUserId(ActivesType.ACTIVE, ModerationStatusType.NEW, offset, limit, userId);
+                count = postService.getTotalCountOfPostsByUserId(ActivesType.ACTIVE, ModerationStatusType.NEW, userId);
+                break;
+            case "declined":
+                postListRep = postService.findAllPostsByUserId(ActivesType.ACTIVE, ModerationStatusType.DECLINED, offset, limit, userId);
+                count = postService.getTotalCountOfPostsByUserId(ActivesType.ACTIVE, ModerationStatusType.DECLINED, userId);
+                break;
+            default:
+                postListRep = postService.findAllPostsByUserId(ActivesType.ACTIVE, ModerationStatusType.ACCEPTED, offset, limit, userId);
+                count = postService.getTotalCountOfPostsByUserId(ActivesType.ACTIVE, ModerationStatusType.ACCEPTED, userId);
+        }
+
+        List<ResponseDTO> posts = getPostsDTO(postListRep, PostInfoDTO.class);
+
+        return new ResponseEntity<>(new CollectionPostsResponseDTO<>(count, posts), HttpStatus.OK);
     }
 
     //==================================================================================================================

@@ -1,8 +1,10 @@
 package main.controller;
 
 import main.model.entities.User;
+import main.model.entities.enums.ActivesType;
 import main.responses.LoginForm;
 import main.responses.UserLoginDTO;
+import main.services.PostService;
 import main.services.UserService;
 import main.servlet.AuthorizeServlet;
 import org.json.simple.JSONObject;
@@ -14,11 +16,13 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 public class ApiAuthController{
     private AuthorizeServlet authorizeServlet;
+    private PostService postService;
     private UserService userService;
 
     @Autowired
-    public ApiAuthController(AuthorizeServlet authorizeServlet, UserService userService) {
+    public ApiAuthController(AuthorizeServlet authorizeServlet, PostService postService, UserService userService) {
         this.authorizeServlet = authorizeServlet;
+        this.postService = postService;
         this.userService = userService;
     }
 
@@ -38,7 +42,8 @@ public class ApiAuthController{
             userLoginDTO.setEmail(userRep.getEmail());
             boolean moderation = userRep.getIsModerator() == 1;
             userLoginDTO.setModeration(moderation);
-            userLoginDTO.setModerationCount(userRep.getModifiedPosts().size());
+            int moderationCount = moderation ? postService.getTotalCountOfNewPosts(ActivesType.ACTIVE) : 0;
+            userLoginDTO.setModerationCount(moderationCount);
             userLoginDTO.setSettings(moderation);
             response.put("user", userLoginDTO);
 
@@ -66,7 +71,8 @@ public class ApiAuthController{
             userLoginDTO.setEmail(userRep.getEmail());
             boolean moderation = userRep.getIsModerator() == 1;
             userLoginDTO.setModeration(moderation);
-            userLoginDTO.setModerationCount(userRep.getModifiedPosts().size());
+            int moderationCount = moderation ? postService.getTotalCountOfNewPosts(ActivesType.ACTIVE) : 0;
+            userLoginDTO.setModerationCount(moderationCount);
             userLoginDTO.setSettings(moderation);
             result = true;
             response.put("user", userLoginDTO);

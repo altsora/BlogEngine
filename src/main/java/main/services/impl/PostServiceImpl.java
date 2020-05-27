@@ -2,10 +2,12 @@ package main.services.impl;
 
 import main.model.entities.Post;
 import main.model.entities.PostVote;
+import main.model.entities.User;
 import main.model.entities.enums.ActivesType;
 import main.model.entities.enums.ModerationStatusType;
 import main.repositories.PostRepository;
 import main.services.PostService;
+import main.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -22,10 +24,12 @@ import java.util.Map;
 @Service
 public class PostServiceImpl implements PostService {
     private PostRepository postRepository;
+    private UserService userService;
 
     @Autowired
-    public PostServiceImpl(PostRepository postRepository) {
+    public PostServiceImpl(PostRepository postRepository, UserService userService) {
         this.postRepository = postRepository;
+        this.userService = userService;
     }
 
     //==================================================================================================================
@@ -33,9 +37,25 @@ public class PostServiceImpl implements PostService {
     @Override
     public List<Post> findAllPostPopular(ActivesType activesType, ModerationStatusType moderationStatusType, int offset, int limit) {
         int pageNumber = offset / limit;
-        Pageable sortedByCountComment = PageRequest.of(pageNumber, limit, Sort.by(PostRepository.COUNT_COMMENTS).descending());
+        Pageable sortedByCountComment = PageRequest.of(pageNumber, limit, Sort.by(Sort.Direction.DESC, PostRepository.COUNT_COMMENTS));
         byte isActive = activesType == ActivesType.ACTIVE ? (byte) 1 : 0;
         return postRepository.findAllPostPopular(isActive, moderationStatusType, sortedByCountComment);
+    }
+
+    @Override
+    public List<Post> findAllHiddenPostsByUserId(int offset, int limit, long userId) {
+        int pageNumber = offset / limit;
+        Pageable sortedByPostTime = PageRequest.of(pageNumber, limit, Sort.by(Sort.Direction.DESC, PostRepository.POST_TIME));
+        byte isActive = (byte) 0;
+        return postRepository.findAllHiddenPostsByUserId(isActive, userId, sortedByPostTime);
+    }
+
+    @Override
+    public List<Post> findAllPostsByUserId(ActivesType activesType, ModerationStatusType moderationStatusType, int offset, int limit, long userId) {
+        int pageNumber = offset / limit;
+        Pageable sortedByPostTime = PageRequest.of(pageNumber, limit, Sort.by(Sort.Direction.DESC, PostRepository.POST_TIME));
+        byte isActive = activesType == ActivesType.ACTIVE ? (byte) 1 : 0;
+        return postRepository.findAllPostsByUserId(isActive, moderationStatusType, userId, sortedByPostTime);
     }
 
     @Override
@@ -52,6 +72,22 @@ public class PostServiceImpl implements PostService {
         Pageable sortedByPostTime = PageRequest.of(pageNumber, limit, Sort.by(direction, PostRepository.POST_TIME));
         byte isActive = activesType == ActivesType.ACTIVE ? (byte) 1 : 0;
         return postRepository.findAllPostSortedByDate(isActive, moderationStatusType, sortedByPostTime);
+    }
+
+    @Override
+    public List<Post> findAllNewPosts(ActivesType activesType, int offset, int limit) {
+        int pageNumber = offset / limit;
+        Pageable sortedByPostTime = PageRequest.of(pageNumber, limit, Sort.by(Sort.Direction.ASC, PostRepository.POST_TIME));
+        byte isActive = activesType == ActivesType.ACTIVE ? (byte) 1 : 0;
+        return postRepository.findAllPosts(isActive, ModerationStatusType.NEW, sortedByPostTime);
+    }
+
+    @Override
+    public List<Post> findAllPostsByModeratorId(ActivesType activesType, ModerationStatusType moderationStatusType, int offset, int limit, long moderatorId) {
+        int pageNumber = offset / limit;
+        Pageable sortedByPostTime = PageRequest.of(pageNumber, limit, Sort.by(Sort.Direction.ASC, PostRepository.POST_TIME));
+        byte isActive = activesType == ActivesType.ACTIVE ? (byte) 1 : 0;
+        return postRepository.findAllPostsByModeratorId(isActive, moderationStatusType, moderatorId, sortedByPostTime);
     }
 
     @Override
@@ -110,6 +146,12 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
+    public int getTotalCountOfNewPosts(ActivesType activesType) {
+        byte isActive = activesType == ActivesType.ACTIVE ? (byte) 1 : 0;
+        return postRepository.getTotalCountOfNewPosts(isActive, ModerationStatusType.NEW);
+    }
+
+    @Override
     public int getTotalCountOfPostsByDate(ActivesType activesType, ModerationStatusType moderationStatusType, String date) {
         String[] var = date.split("-");
         int year = Integer.parseInt(var[0]);
@@ -117,6 +159,12 @@ public class PostServiceImpl implements PostService {
         int dayOfMonth = Integer.parseInt(var[2]);
         byte isActive = activesType == ActivesType.ACTIVE ? (byte) 1 : 0;
         return postRepository.getTotalCountOfPostsByDate(isActive, moderationStatusType, year, month, dayOfMonth);
+    }
+
+    @Override
+    public int getTotalCountOfPostsByModeratorId(ActivesType activesType, ModerationStatusType moderationStatusType, long moderatorId) {
+        byte isActive = activesType == ActivesType.ACTIVE ? (byte) 1 : 0;
+        return postRepository.getTotalCountOfPostsByModeratorId(isActive, moderationStatusType, moderatorId);
     }
 
     @Override
@@ -133,6 +181,18 @@ public class PostServiceImpl implements PostService {
     @Override
     public int getTotalCountOfPostsByUserId(long userId) {
         return postRepository.getTotalCountOfPostsByUserId(userId);
+    }
+
+    @Override
+    public int getTotalCountOfPostsByUserId(ActivesType activesType, ModerationStatusType moderationStatusType, long userId) {
+        byte isActive = activesType == ActivesType.ACTIVE ? (byte) 1 : 0;
+        return postRepository.getTotalCountOfPostsByUserId(isActive, moderationStatusType, userId);
+    }
+
+    @Override
+    public int getTotalCountOfHiddenPostsByUserId(long userId) {
+        byte isActive = 0;
+        return postRepository.getTotalCountOfHiddenPostsByUserId(isActive, userId);
     }
 
     @Override
@@ -178,5 +238,14 @@ public class PostServiceImpl implements PostService {
     @Override
     public Post addPostAndReturn(Post post) {
         return postRepository.saveAndFlush(post);
+    }
+
+    @Override
+    public void setModerationStatus(long userId, long postId, ModerationStatusType moderationStatusType) {
+        User moderator = userService.findById(userId);
+        Post post = postRepository.findById(postId).orElseThrow();
+        post.setModerationStatus(moderationStatusType);
+        post.setModerator(moderator);
+        postRepository.saveAndFlush(post);
     }
 }

@@ -1,6 +1,7 @@
 package main.controller;
 
 import main.model.entities.GlobalSetting;
+import main.model.entities.Post;
 import main.model.entities.Tag;
 import main.model.entities.enums.ActivesType;
 import main.model.entities.enums.ModerationStatusType;
@@ -49,8 +50,6 @@ public class ApiGeneralController {
         this.postVoteService = postVoteService;
         this.tagService = tagService;
     }
-
-
 
     //==================================================================================================================
 
@@ -194,6 +193,22 @@ public class ApiGeneralController {
         } else {
             String result = "Вам не удалось загрузить " + name + " потому что файл пустой.";
             return new ResponseEntity(result, HttpStatus.NOT_FOUND);
+        }
+    }
+
+    @PostMapping(value = "/api/moderation")
+    @ResponseBody
+    public void moderation(@RequestBody JSONObject request) {
+        long postId = (int) request.get("post_id");
+        String status = (String) request.get("decision");
+        long userId = authorizeServlet.getAuthorizedUserId();
+        switch (status) {
+            case "accept":
+                postService.setModerationStatus(userId, postId, ModerationStatusType.ACCEPTED);
+                break;
+            case "decline":
+                postService.setModerationStatus(userId, postId, ModerationStatusType.DECLINED);
+                break;
         }
     }
 

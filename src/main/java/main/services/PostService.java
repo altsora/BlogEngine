@@ -11,6 +11,10 @@ import java.util.List;
 import java.util.Map;
 
 public interface PostService {
+    List<Post> findAllHiddenPostsByUserId(int offset, int limit, long userId);
+
+    List<Post> findAllPostsByUserId(ActivesType activesType, ModerationStatusType moderationStatusType, int offset, int limit, long userId);
+
     List<Post> findAllPostBest(ActivesType activesType, ModerationStatusType moderationStatusType, int offset, int limit);
 
     List<Post> findAllPostByDate(ActivesType activesType, ModerationStatusType moderationStatusType, int offset, int limit, String date);
@@ -23,19 +27,31 @@ public interface PostService {
 
     List<Post> findAllPostSortedByDate(ActivesType activesType, ModerationStatusType moderationStatusType, int offset, int limit, Sort.Direction direction);
 
+    List<Post> findAllNewPosts(ActivesType activesType, int offset, int limit);
+
+    List<Post> findAllPostsByModeratorId(ActivesType activesType, ModerationStatusType moderationStatusType, int offset, int limit, long moderatorId);
+
     List<Integer> findAllYearsOfPublication(ActivesType activesType, ModerationStatusType moderationStatusType);
 
     Map<String, Long> getDateAndCountPosts(ActivesType activesType, ModerationStatusType moderationStatusType, int year);
 
+    int getTotalCountOfNewPosts(ActivesType activesType);
+
     int getTotalCountOfPosts(ActivesType activesType, ModerationStatusType moderationStatusType);
 
     int getTotalCountOfPostsByDate(ActivesType activesType, ModerationStatusType moderationStatusType, String date);
+
+    int getTotalCountOfPostsByModeratorId(ActivesType activesType, ModerationStatusType moderationStatusType, long moderatorId);
 
     int getTotalCountOfPostsByQuery(ActivesType activesType, ModerationStatusType moderationStatusType, String query);
 
     int getTotalCountOfPostsByTag(ActivesType activesType, ModerationStatusType moderationStatusType, String tag);
 
     int getTotalCountOfPostsByUserId(long userId);
+
+    int getTotalCountOfPostsByUserId(ActivesType activesType, ModerationStatusType moderationStatusType, long userId);
+
+    int getTotalCountOfHiddenPostsByUserId(long userId);
 
     int getTotalCountView(ActivesType activesType, ModerationStatusType moderationStatusType);
 
@@ -50,4 +66,6 @@ public interface PostService {
     LocalDateTime getDateOfTheEarliestPostByUserId(long userId);
 
     Post addPostAndReturn(Post post);
+
+    void setModerationStatus(long userId, long postId, ModerationStatusType moderationStatusType);
 }
