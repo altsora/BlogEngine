@@ -16,4 +16,16 @@ public interface Tag2PostRepository extends JpaRepository<Tag2Post, Long> {
      */
     @Query("SELECT tp FROM Tag2Post tp WHERE tp.post.id = :postId ORDER BY tp.tag.id")
     List<Tag2Post> findAllTag2PostByPostId(@Param("postId") long postId);
+
+    @Query("SELECT tp FROM Tag2Post tp " +
+            "WHERE " +
+            "   tp.post.id = :postId AND " +
+            "   tp.tag.name = :tagName")
+    Tag2Post existsByPostIdAndTagName(
+            @Param("postId") long postId,
+            @Param("tagName") String tagName
+    );
+
+    @Query("SELECT COUNT(tp) FROM Tag2Post tp WHERE tp.tag.name = :tagName")
+    int getCountPostsByTag(@Param("tagName") String tagName);
 }

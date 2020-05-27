@@ -37,5 +37,5 @@ public interface GlobalSettingsRepository extends JpaRepository<GlobalSetting, L
      * @return - возвращается объект GlobalSetting по указанному коду.
      */
     @Query("SELECT gs FROM GlobalSetting gs WHERE gs.code = :settingCode")
-    GlobalSetting getSettingByCode(@Param("settingCode")SettingsCodeType settingsCodeType);
+    GlobalSetting findSettingByCode(@Param("settingCode")SettingsCodeType settingsCodeType);
 }

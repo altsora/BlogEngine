@@ -264,6 +264,7 @@ public class ApiPostController {
         for (String tagName : postTags) {
             Tag tag = tagService.createTagIfNoExistsAndReturn(tagName);
 
+            //TODO: Поместить создание объекта внутрь метода сервиса
             Tag2Post tag2Post = new Tag2Post();
             tag2Post.setPost(newPost);
             tag2Post.setTag(tag);
@@ -272,7 +273,7 @@ public class ApiPostController {
 
         JSONObject response = new JSONObject();
         response.put("result", true);
-        return new ResponseEntity<>(response, HttpStatus.CREATED);
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     @GetMapping(value = "/api/post/moderation")
@@ -335,6 +336,78 @@ public class ApiPostController {
         List<ResponseDTO> posts = getPostsDTO(postListRep, PostInfoDTO.class);
 
         return new ResponseEntity<>(new CollectionPostsResponseDTO<>(count, posts), HttpStatus.OK);
+    }
+
+    @PutMapping(value = "/api/post/{id}")
+    @ResponseBody
+    public ResponseEntity updatePost(
+            @PathVariable(value = "id") long postId,
+            @RequestBody JSONObject request
+    ) {
+        Post updatedPost = postService.findById(postId);
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+        String timeOfPostString = (String) request.get("time");
+        int newPostActivity = (int) request.get("active");
+        String newTitle = (String) request.get("title");
+        List<String> newPostTags = (ArrayList<String>) request.get("tags");
+        String newText = (String) request.get("text");
+
+        JSONObject message = new JSONObject();
+        if (newTitle.isEmpty()) {
+            message.put("message", "Заголовок не должен быть пустым!");
+            return new ResponseEntity<>(message, HttpStatus.BAD_REQUEST);
+        }
+
+        if (newText.isEmpty()) {
+            message.put("message", "Пост не должен быть пустым!");
+            return new ResponseEntity<>(message, HttpStatus.BAD_REQUEST);
+        }
+
+        if (newTitle.length() < 3) {
+            message.put("message", "Минимальное количество символов в заголовке - 3!");
+            return new ResponseEntity<>(message, HttpStatus.BAD_REQUEST);
+        }
+
+        if (newText.length() < 50) {
+            message.put("message", "Минимальное количество символов в публикации - 50!");
+            return new ResponseEntity<>(message, HttpStatus.BAD_REQUEST);
+        }
+
+        LocalDateTime newTimeOfPost;
+        try {
+            newTimeOfPost = LocalDateTime.parse(timeOfPostString, formatter);
+        } catch (DateTimeParseException e) {
+            message.put("message", "Необходимо указать дату!");
+            return new ResponseEntity<>(message, HttpStatus.BAD_REQUEST);
+        }
+        if (newTimeOfPost.isBefore(LocalDateTime.now())) {
+            newTimeOfPost = LocalDateTime.now();
+        }
+
+        byte isActive = newPostActivity == 1 ? (byte) 1 : 0;
+
+        User user = userService.findById(authorizeServlet.getAuthorizedUserId());
+        if (user.getIsModerator() == (byte) 1) {
+            updatedPost.setModerator(user);
+        } else {
+            updatedPost.setModerationStatus(ModerationStatusType.NEW);
+        }
+
+        updatedPost.setIsActive(isActive);
+        updatedPost.setTime(newTimeOfPost);
+        updatedPost.setTitle(newTitle);
+        updatedPost.setText(newText);
+
+        for (String tagName : newPostTags) {
+            tagService.createTagIfNoExistsAndReturn(tagName);
+        }
+        tag2PostService.updateTagsByPostId(postId, newPostTags);
+
+        JSONObject response = new JSONObject();
+        response.put("result", true);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+//        return ResponseEntity.status(HttpStatus.OK).body(null);
     }
 
     //==================================================================================================================

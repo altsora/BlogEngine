@@ -31,6 +31,17 @@ public class TagServiceImpl implements TagService {
     }
 
     @Override
+    public Tag findByName(String tagName) {
+        return tagRepository.existsByTag(tagName);
+    }
+
+    @Override
+    public void removeByTagName(String tagName) {
+        Tag tag = tagRepository.existsByTag(tagName);
+        if (tag != null) tagRepository.deleteById(tag.getId());
+    }
+
+    @Override
     public List<Tag> findAllTagsByQuery(String query) {
         return tagRepository.findAllTagsByQuery(query);
     }

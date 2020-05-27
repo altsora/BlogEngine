@@ -2,6 +2,7 @@ package main.services.impl;
 
 import main.model.entities.GlobalSetting;
 import main.model.entities.enums.SettingsCodeType;
+import main.model.entities.enums.SettingsValueType;
 import main.repositories.GlobalSettingsRepository;
 import main.services.GlobalSettingsService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,8 +37,16 @@ public class GlobalSettingsServiceImpl implements GlobalSettingsService {
     }
 
     @Override
-    public GlobalSetting getSettingByCode(SettingsCodeType settingsCodeType) {
-        return globalSettingsRepository.getSettingByCode(settingsCodeType);
+    public GlobalSetting findSettingByCode(SettingsCodeType settingsCodeType) {
+        return globalSettingsRepository.findSettingByCode(settingsCodeType);
+    }
+
+    @Override
+    public void setValue(SettingsCodeType settingsCodeType, boolean value) {
+        SettingsValueType valueType = value ? SettingsValueType.YES : SettingsValueType.NO;
+        GlobalSetting globalSetting = globalSettingsRepository.findSettingByCode(settingsCodeType);
+        globalSetting.setValue(valueType);
+        globalSettingsRepository.saveAndFlush(globalSetting);
     }
 
     @Override

@@ -12,7 +12,9 @@ public interface GlobalSettingsService {
 
     boolean settingStatisticsIsPublicIsEnabled();
 
-    GlobalSetting getSettingByCode(SettingsCodeType settingsCodeType);
+    GlobalSetting findSettingByCode(SettingsCodeType settingsCodeType);
+
+    void setValue(SettingsCodeType settingsCodeType, boolean value);
 
     List<GlobalSetting> findAll();
 }

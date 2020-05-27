@@ -3,17 +3,16 @@ package main.controller;
 import main.model.entities.GlobalSetting;
 import main.model.entities.Post;
 import main.model.entities.Tag;
+import main.model.entities.User;
 import main.model.entities.enums.ActivesType;
 import main.model.entities.enums.ModerationStatusType;
+import main.model.entities.enums.SettingsCodeType;
 import main.model.entities.enums.SettingsValueType;
 import main.responses.BlogDTO;
 import main.responses.CalendarResponseDTO;
 import main.responses.CollectionTagsResponseDTO;
 import main.responses.TagDTO;
-import main.services.GlobalSettingsService;
-import main.services.PostService;
-import main.services.PostVoteService;
-import main.services.TagService;
+import main.services.*;
 import main.servlet.AuthorizeServlet;
 import org.json.simple.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,15 +39,18 @@ public class ApiGeneralController {
     private PostService postService;
     private PostVoteService postVoteService;
     private TagService tagService;
+    private UserService userService;
 
     @Autowired
     public ApiGeneralController(AuthorizeServlet authorizeServlet, GlobalSettingsService globalSettingsService,
-                                PostService postService, PostVoteService postVoteService, TagService tagService) {
+                                PostService postService, PostVoteService postVoteService,
+                                TagService tagService, UserService userService) {
         this.authorizeServlet = authorizeServlet;
         this.globalSettingsService = globalSettingsService;
         this.postService = postService;
         this.postVoteService = postVoteService;
         this.tagService = tagService;
+        this.userService = userService;
     }
 
     //==================================================================================================================
@@ -67,6 +69,7 @@ public class ApiGeneralController {
     }
 
     @GetMapping(value = "/api/settings")
+    @ResponseBody
     public ResponseEntity getSettings() {
         JSONObject response = new JSONObject();
         List<GlobalSetting> globalSettings = globalSettingsService.findAll();
@@ -76,6 +79,31 @@ public class ApiGeneralController {
             response.put(code, enable);
         }
         return new ResponseEntity(response, HttpStatus.OK);
+    }
+
+    @PutMapping(value = "/api/settings")
+    @ResponseBody
+    public ResponseEntity saveSettings(
+            @RequestBody JSONObject request
+    ) {
+        Boolean multiUserModeValue = (Boolean) request.get("MULTIUSER_MODE");
+        Boolean postPreModerationValue = (Boolean) request.get("POST_PREMODERATION");
+        Boolean statisticsIsPublicValue = (Boolean) request.get("STATISTICS_IS_PUBLIC");
+        if (authorizeServlet.isUserAuthorize()) {
+            User user = userService.findById(authorizeServlet.getAuthorizedUserId());
+            if (user.getIsModerator() == (byte) 1) {
+                if (multiUserModeValue != null) {
+                    globalSettingsService.setValue(SettingsCodeType.MULTIUSER_MODE, multiUserModeValue);
+                }
+                if (postPreModerationValue != null) {
+                    globalSettingsService.setValue(SettingsCodeType.POST_PREMODERATION, postPreModerationValue);
+                }
+                if (statisticsIsPublicValue != null) {
+                    globalSettingsService.setValue(SettingsCodeType.STATISTICS_IS_PUBLIC, statisticsIsPublicValue);
+                }
+            }
+        }
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 
     @GetMapping(value = "/api/calendar")
