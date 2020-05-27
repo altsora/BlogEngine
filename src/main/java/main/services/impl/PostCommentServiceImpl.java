@@ -26,6 +26,16 @@ public class PostCommentServiceImpl implements PostCommentService {
     }
 
     @Override
+    public PostComment findById(long postCommentId) {
+        return postCommentRepository.findById(postCommentId).orElse(null);
+    }
+
+    @Override
+    public PostComment add(PostComment postComment) {
+        return postCommentRepository.saveAndFlush(postComment);
+    }
+
+    @Override
     public int getCountCommentsByPostId(long postId) {
         return postCommentRepository.getCountCommentsByPostId(postId);
     }

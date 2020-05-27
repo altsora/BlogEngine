@@ -1,9 +1,6 @@
 package main.controller;
 
-import main.model.entities.GlobalSetting;
-import main.model.entities.Post;
-import main.model.entities.Tag;
-import main.model.entities.User;
+import main.model.entities.*;
 import main.model.entities.enums.ActivesType;
 import main.model.entities.enums.ModerationStatusType;
 import main.model.entities.enums.SettingsCodeType;
@@ -36,22 +33,27 @@ import java.util.Map;
 public class ApiGeneralController {
     private AuthorizeServlet authorizeServlet;
     private GlobalSettingsService globalSettingsService;
+    private PostCommentService postCommentService;
     private PostService postService;
     private PostVoteService postVoteService;
     private TagService tagService;
     private UserService userService;
 
-    @Autowired
     public ApiGeneralController(AuthorizeServlet authorizeServlet, GlobalSettingsService globalSettingsService,
-                                PostService postService, PostVoteService postVoteService,
-                                TagService tagService, UserService userService) {
+                                PostCommentService postCommentService, PostService postService,
+                                PostVoteService postVoteService, TagService tagService,
+                                UserService userService) {
         this.authorizeServlet = authorizeServlet;
         this.globalSettingsService = globalSettingsService;
+        this.postCommentService = postCommentService;
         this.postService = postService;
         this.postVoteService = postVoteService;
         this.tagService = tagService;
         this.userService = userService;
     }
+
+    @Autowired
+
 
     //==================================================================================================================
 
@@ -83,9 +85,7 @@ public class ApiGeneralController {
 
     @PutMapping(value = "/api/settings")
     @ResponseBody
-    public ResponseEntity saveSettings(
-            @RequestBody JSONObject request
-    ) {
+    public ResponseEntity saveSettings(@RequestBody JSONObject request) {
         Boolean multiUserModeValue = (Boolean) request.get("MULTIUSER_MODE");
         Boolean postPreModerationValue = (Boolean) request.get("POST_PREMODERATION");
         Boolean statisticsIsPublicValue = (Boolean) request.get("STATISTICS_IS_PUBLIC");
@@ -238,6 +238,56 @@ public class ApiGeneralController {
                 postService.setModerationStatus(userId, postId, ModerationStatusType.DECLINED);
                 break;
         }
+    }
+
+    @PostMapping(value = "/api/comment")
+    public ResponseEntity addComment(
+            @RequestBody JSONObject request
+    ) {
+        JSONObject notFoundResponse = new JSONObject();
+        JSONObject errorResponse = new JSONObject();
+        JSONObject successfulResponse = new JSONObject();
+
+        long postId = (int) request.get("post_id");
+        Object parentIdObj = request.get("parent_id");
+        String text = (String) request.get("text");
+
+        User user = userService.findById(authorizeServlet.getAuthorizedUserId());
+        Post post = postService.findById(postId);
+        if (post == null) {
+            notFoundResponse.put("result", false);
+            notFoundResponse.put("message", "Пост с ID = " + postId + " не существует.");
+            return new ResponseEntity<>(notFoundResponse, HttpStatus.BAD_REQUEST);
+        }
+
+        int minLengthText = 10;
+        if (text.length() < minLengthText) {
+            errorResponse.put("result", false);
+            JSONObject errorText = new JSONObject();
+            errorText.put("text", "Текст комментария не задан или слишком короткий");
+            errorResponse.put("errors", errorText);
+            return new ResponseEntity(errorResponse, HttpStatus.OK);
+        }
+
+        PostComment comment = new PostComment();
+        comment.setUser(user);
+        comment.setPost(post);
+        comment.setText(text);
+        comment.setTime(LocalDateTime.now());
+
+        if (parentIdObj instanceof Integer) {
+            long parentId = (int) parentIdObj;
+            PostComment parent = postCommentService.findById(parentId);
+            if (parent == null) {
+                notFoundResponse.put("result", false);
+                notFoundResponse.put("message", "Комментарий с ID = " + parentId + " не существует.");
+                return new ResponseEntity<>(notFoundResponse, HttpStatus.BAD_REQUEST);
+            }
+            comment.setParent(parent);
+        }
+        long commentId = postCommentService.add(comment).getId();
+        successfulResponse.put("id", commentId);
+        return new ResponseEntity<>(successfulResponse, HttpStatus.OK);
     }
 
     //==================================================================================================================

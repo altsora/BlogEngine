@@ -92,6 +92,6 @@ public class PostVoteServiceImpl implements PostVoteService {
 
     @Override
     public PostVote findById(long postVoteId) {
-        return postVoteRepository.findById(postVoteId).orElseThrow();
+        return postVoteRepository.findById(postVoteId).orElse(null);
     }
 }

@@ -20,6 +20,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Service
 public class PostServiceImpl implements PostService {
@@ -221,7 +222,7 @@ public class PostServiceImpl implements PostService {
 
     @Override
     public Post findById(long postId) {
-        return postRepository.findById(postId).orElseThrow();
+        return postRepository.findById(postId).orElse(null);
     }
 
     @Override
