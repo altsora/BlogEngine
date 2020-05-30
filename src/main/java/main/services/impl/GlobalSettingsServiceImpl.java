@@ -1,8 +1,8 @@
 package main.services.impl;
 
 import main.model.entities.GlobalSetting;
-import main.model.entities.enums.SettingsCodeType;
-import main.model.entities.enums.SettingsValueType;
+import main.model.enums.SettingsCodeType;
+import main.model.enums.SettingsValueType;
 import main.repositories.GlobalSettingsRepository;
 import main.services.GlobalSettingsService;
 import org.springframework.beans.factory.annotation.Autowired;

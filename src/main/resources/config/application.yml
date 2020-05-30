@@ -3,3 +3,4 @@ spring.datasource.username=root
 spring.datasource.password=1235
 spring.jpa.hibernate.ddl-auto=validate
 spring.jpa.show-sql=true
+captcha.lifetime.hour=1

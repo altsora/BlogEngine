@@ -1,9 +1,11 @@
 package main.controller;
 
+import main.model.entities.CaptchaCode;
 import main.model.entities.User;
-import main.model.entities.enums.ActivesType;
+import main.model.enums.ActivesType;
 import main.responses.LoginForm;
 import main.responses.UserLoginDTO;
+import main.services.CaptchaCodeService;
 import main.services.PostService;
 import main.services.UserService;
 import main.servlet.AuthorizeServlet;
@@ -13,15 +15,20 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
+
 @RestController
 public class ApiAuthController{
     private AuthorizeServlet authorizeServlet;
+    private CaptchaCodeService captchaCodeService;
     private PostService postService;
     private UserService userService;
 
     @Autowired
-    public ApiAuthController(AuthorizeServlet authorizeServlet, PostService postService, UserService userService) {
+    public ApiAuthController(AuthorizeServlet authorizeServlet, CaptchaCodeService captchaCodeService,
+                             PostService postService, UserService userService) {
         this.authorizeServlet = authorizeServlet;
+        this.captchaCodeService = captchaCodeService;
         this.postService = postService;
         this.userService = userService;
     }
@@ -94,4 +101,66 @@ public class ApiAuthController{
         response.put("result", true);
         return new ResponseEntity<JSONObject>(response, HttpStatus.OK);
     }
+
+    @PostMapping(value = "/api/auth/register")
+    public ResponseEntity registration(@RequestBody JSONObject request) {
+        System.err.println(request);
+        String email = (String) request.get("e_mail");
+        String name = (String) request.get("name");
+        String password = (String) request.get("password");
+        String inputCaptchaCode = (String) request.get("captcha");
+        String secretCode = (String) request.get("captcha_secret");
+
+        boolean result = true;
+        JSONObject response = new JSONObject();
+        JSONObject errors = new JSONObject();
+
+        if (userService.emailIsInvalid(email, errors)) {
+            result = false;
+        }
+
+        if (userService.nameIsInvalid(name, errors)) {
+            result = false;
+        }
+
+        if (userService.passwordIsInvalid(password, errors)) {
+            result = false;
+        }
+
+        if (!captchaCodeService.checkCorrectCaptcha(inputCaptchaCode, secretCode)) {
+            errors.put("captcha", "Код с картинки введён неверно");
+            result = false;
+        }
+
+        response.put("result", result);
+        if (result) {
+            User user = new User();
+            user.setRegTime(LocalDateTime.now());
+            user.setName(name);
+            user.setEmail(email);
+            user.setPassword(password);
+            userService.add(user);
+        } else {
+            response.put("errors", errors);
+        }
+
+        return new ResponseEntity(response, HttpStatus.OK);
+    }
+
+    @GetMapping(value = "/api/auth/captcha")
+    public ResponseEntity getCaptcha() {
+        captchaCodeService.checkLifetimeCaptcha();
+        CaptchaCode captcha = captchaCodeService.generateCaptcha();
+        String code = captcha.getCode();
+        String secretCode = captcha.getSecretCode();
+        String imageCode = captchaCodeService.getCaptchaImageCode(code, "png");
+        JSONObject response = new JSONObject();
+        response.put("secret", secretCode);
+        response.put("image", "data:image/png;base64," + imageCode);
+        return new ResponseEntity(response, HttpStatus.OK);
+    }
+
+    //==================================================================================================================
+
+
 }

@@ -1,6 +1,6 @@
 package main.repositories;
 
-import main.model.entities.enums.ModerationStatusType;
+import main.model.enums.ModerationStatusType;
 import main.model.entities.Post;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;

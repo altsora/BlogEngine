@@ -1,8 +1,8 @@
 package main.controller;
 
 import main.model.entities.*;
-import main.model.entities.enums.ActivesType;
-import main.model.entities.enums.ModerationStatusType;
+import main.model.enums.ActivesType;
+import main.model.enums.ModerationStatusType;
 import main.responses.*;
 import main.services.*;
 import main.servlet.AuthorizeServlet;

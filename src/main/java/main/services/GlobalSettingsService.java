@@ -1,7 +1,7 @@
 package main.services;
 
 import main.model.entities.GlobalSetting;
-import main.model.entities.enums.SettingsCodeType;
+import main.model.enums.SettingsCodeType;
 
 import java.util.List;
 

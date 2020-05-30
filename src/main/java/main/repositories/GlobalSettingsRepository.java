@@ -1,7 +1,7 @@
 package main.repositories;
 
 import main.model.entities.GlobalSetting;
-import main.model.entities.enums.SettingsCodeType;
+import main.model.enums.SettingsCodeType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

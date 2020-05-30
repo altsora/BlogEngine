@@ -9,7 +9,7 @@ import org.springframework.context.annotation.PropertySource;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
 @SpringBootApplication
-@PropertySource(value = "classpath:application.yml")
+@PropertySource(value = "classpath:config/application.yml")
 public class Main {
     public static void main(String[] args) {
         SpringApplication.run(Main.class, args);

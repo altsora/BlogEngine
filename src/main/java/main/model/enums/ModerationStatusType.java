@@ -1,4 +1,4 @@
-package main.model.entities.enums;
+package main.model.enums;
 
 public enum ModerationStatusType  {
     NEW,

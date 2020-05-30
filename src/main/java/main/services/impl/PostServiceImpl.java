@@ -1,10 +1,9 @@
 package main.services.impl;
 
 import main.model.entities.Post;
-import main.model.entities.PostVote;
 import main.model.entities.User;
-import main.model.entities.enums.ActivesType;
-import main.model.entities.enums.ModerationStatusType;
+import main.model.enums.ActivesType;
+import main.model.enums.ModerationStatusType;
 import main.repositories.PostRepository;
 import main.services.PostService;
 import main.services.UserService;
@@ -20,7 +19,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 @Service
 public class PostServiceImpl implements PostService {

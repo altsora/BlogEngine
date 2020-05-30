@@ -6,7 +6,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
-import main.model.entities.enums.ModerationStatusType;
+import main.model.enums.ModerationStatusType;
 
 import javax.persistence.*;
 import java.io.Serializable;

@@ -1,10 +1,10 @@
 package main.controller;
 
 import main.model.entities.*;
-import main.model.entities.enums.ActivesType;
-import main.model.entities.enums.ModerationStatusType;
-import main.model.entities.enums.SettingsCodeType;
-import main.model.entities.enums.SettingsValueType;
+import main.model.enums.ActivesType;
+import main.model.enums.ModerationStatusType;
+import main.model.enums.SettingsCodeType;
+import main.model.enums.SettingsValueType;
 import main.responses.BlogDTO;
 import main.responses.CalendarResponseDTO;
 import main.responses.CollectionTagsResponseDTO;
@@ -289,6 +289,105 @@ public class ApiGeneralController {
         successfulResponse.put("id", commentId);
         return new ResponseEntity<>(successfulResponse, HttpStatus.OK);
     }
+
+    // С изображением
+    @PostMapping(value = "/api/profile/my", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity updateProfile(
+            @RequestParam(value = "email") String email,
+            @RequestParam(value = "removePhoto") Object removePhoto,
+            @RequestParam(value = "photo") MultipartFile photo,
+            @RequestPart(value = "name") String name,
+            @RequestPart(value = "password", required = false) String password
+    ) {
+//        System.err.println("\nContent-Type: multipart/form-data");
+//        System.err.println("photoObj: " + photo);
+//        System.err.println("photoName: " + photo.getOriginalFilename());
+//        System.err.println("name:  " + name);
+//        System.err.println("email:  " + email);
+//        System.err.println("password:  " + password);
+//        System.err.println("removePhoto:  " + removePhoto);
+
+        JSONObject response = new JSONObject();
+        response.put("email", email);
+        response.put("name", name);
+        response.put("password", password);
+
+        if (removePhoto instanceof String) {
+            response.put("removePhoto", Integer.parseInt((String) removePhoto));
+        } else {
+            response.put("removePhoto", removePhoto);
+        }
+
+        //TODO: Переделать фото в текстовый формат, если необходимо. Сейчас передаётся просто имя файла
+        response.put("photo", photo.getOriginalFilename());
+
+        return new ResponseEntity(updateProfile(response).getBody(), HttpStatus.OK);
+//        return ResponseEntity.status(HttpStatus.OK).body("Всё ок");
+    }
+
+    // Без изображения
+    @PostMapping(value = "/api/profile/my", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity updateProfile(
+            @RequestBody JSONObject request
+    ) {
+//        System.err.println("\nContent-Type: application/json");
+        String name = (String) request.get("name");
+        String email = (String) request.get("email");
+        String password = (String) request.get("password");
+        Integer removePhoto = (Integer) request.get("removePhoto");
+        String photo = (String) request.get("photo");
+
+        boolean result = true;
+        JSONObject response = new JSONObject();
+        JSONObject errors = new JSONObject();
+        User updatedUser = userService.findById(authorizeServlet.getAuthorizedUserId());
+
+        if (!email.equals(updatedUser.getEmail()) && userService.emailExists(email)) {
+            errors.put("email", "Этот e-mail уже зарегистрирован");
+            result = false;
+        }
+
+        if (userService.nameIsInvalid(name, errors)) {
+            result = false;
+        }
+
+        if (password != null) {
+            if (userService.passwordIsInvalid(password, errors)) {
+                result = false;
+            }
+        }
+
+        response.put("result", result);
+        if (result) {
+            if (!email.equals(updatedUser.getEmail())) {
+                updatedUser.setEmail(email);
+            }
+            if (!name.equals(updatedUser.getName())) {
+                updatedUser.setName(name);
+            }
+            if (password != null) {
+                if (!password.equals(updatedUser.getPassword())) {
+                    updatedUser.setPassword(password);
+                }
+            }
+            if (removePhoto != null) {
+                updatedUser.setPhoto(photo);
+//                if (removePhoto == 1) {
+//                    updatedUser.setPhoto(photo);
+//                } else {
+//                    updatedUser.setPhoto(photo);
+//                }
+            }
+
+            userService.update(updatedUser);
+        } else {
+            response.put("errors", errors);
+        }
+
+        return new ResponseEntity(response, HttpStatus.OK);
+//        return ResponseEntity.status(HttpStatus.OK).body("Всё ок");
+    }
+
 
     //==================================================================================================================
 

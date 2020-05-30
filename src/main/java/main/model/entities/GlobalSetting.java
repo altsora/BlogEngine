@@ -4,8 +4,8 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
-import main.model.entities.enums.SettingsCodeType;
-import main.model.entities.enums.SettingsValueType;
+import main.model.enums.SettingsCodeType;
+import main.model.enums.SettingsValueType;
 
 import javax.persistence.*;
 import java.io.Serializable;

@@ -1,9 +1,8 @@
 package main.services;
 
 import main.model.entities.Post;
-import main.model.entities.PostVote;
-import main.model.entities.enums.ActivesType;
-import main.model.entities.enums.ModerationStatusType;
+import main.model.enums.ActivesType;
+import main.model.enums.ModerationStatusType;
 import org.springframework.data.domain.Sort;
 
 import java.time.LocalDateTime;
