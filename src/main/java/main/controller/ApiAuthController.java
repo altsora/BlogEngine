@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDateTime;
 
 @RestController
-public class ApiAuthController{
+public class ApiAuthController {
     private AuthorizeServlet authorizeServlet;
     private CaptchaCodeService captchaCodeService;
     private PostService postService;
@@ -99,12 +99,11 @@ public class ApiAuthController{
         authorizeServlet.removeAuthorizedUser();
         JSONObject response = new JSONObject();
         response.put("result", true);
-        return new ResponseEntity<JSONObject>(response, HttpStatus.OK);
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     @PostMapping(value = "/api/auth/register")
     public ResponseEntity registration(@RequestBody JSONObject request) {
-        System.err.println(request);
         String email = (String) request.get("e_mail");
         String name = (String) request.get("name");
         String password = (String) request.get("password");
@@ -160,7 +159,50 @@ public class ApiAuthController{
         return new ResponseEntity(response, HttpStatus.OK);
     }
 
-    //==================================================================================================================
+    @PostMapping(value = "/api/auth/password")
+    public ResponseEntity changePassword(@RequestBody JSONObject request) {
+        String code = (String) request.get("code");
+        String password = (String) request.get("password");
+        String inputCaptchaCode = (String) request.get("captcha");
+        String secretCode = (String) request.get("captcha_secret");
 
+        boolean result = true;
+        JSONObject response = new JSONObject();
+        JSONObject errors = new JSONObject();
 
+        User user = userService.findByCode(code);
+
+        if (user == null) {
+            errors.put("code", "Ссылка для восстановления пароля устарела.\n" +
+                    "<a href=\"/auth/restore\">Запросить ссылку снова</a>");
+            result = false;
+        }
+        if (userService.passwordIsInvalid(password, errors)) {
+            result = false;
+        }
+
+        if (!captchaCodeService.checkCorrectCaptcha(inputCaptchaCode, secretCode)) {
+            errors.put("captcha", "Код с картинки введён неверно");
+            result = false;
+        }
+
+        response.put("result", result);
+        if (result) {
+            user.setPassword(password);
+        } else {
+            response.put("errors", errors);
+        }
+
+        return new ResponseEntity(response, HttpStatus.OK);
+    }
+
+    @PostMapping(value = "/api/auth/restore")
+    public ResponseEntity restorePassword(@RequestBody JSONObject request) {
+        //TODO: Доделать позже. Недостаточно данных
+        String email = (String) request.get("email");
+        boolean result = userService.emailExists(email);
+        JSONObject response = new JSONObject();
+        response.put("result", result);
+        return ResponseEntity.ok(response);
+    }
 }

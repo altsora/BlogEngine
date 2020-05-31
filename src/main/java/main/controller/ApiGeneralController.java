@@ -13,16 +13,19 @@ import main.services.*;
 import main.servlet.AuthorizeServlet;
 import org.json.simple.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import javax.imageio.ImageIO;
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -39,6 +42,7 @@ public class ApiGeneralController {
     private TagService tagService;
     private UserService userService;
 
+    @Autowired
     public ApiGeneralController(AuthorizeServlet authorizeServlet, GlobalSettingsService globalSettingsService,
                                 PostCommentService postCommentService, PostService postService,
                                 PostVoteService postVoteService, TagService tagService,
@@ -51,9 +55,6 @@ public class ApiGeneralController {
         this.tagService = tagService;
         this.userService = userService;
     }
-
-    @Autowired
-
 
     //==================================================================================================================
 
@@ -202,10 +203,11 @@ public class ApiGeneralController {
 
     @PostMapping(value = "/api/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @ResponseBody
-    public ResponseEntity uploadImage(@RequestPart(value = "image", required = false) MultipartFile file) {
+    public String uploadImage(@RequestPart(value = "image") MultipartFile file) {
         String name = file.getOriginalFilename();
+        String formatName = name.split("\\.")[1];
         StringBuilder mainPath = new StringBuilder("src/main/resources/upload/");
-        String fileName = getRandomFileName(mainPath);
+        String fileName = getRandomFileName(mainPath, formatName);
         if (!file.isEmpty()) {
             try {
                 byte[] bytes = file.getBytes();
@@ -213,15 +215,39 @@ public class ApiGeneralController {
                         new BufferedOutputStream(new FileOutputStream(new File(mainPath.toString())));
                 stream.write(bytes);
                 stream.close();
-                return new ResponseEntity(fileName, HttpStatus.OK);
+                return fileName;
             } catch (Exception e) {
-                String result = "Вам не удалось загрузить " + name + " => " + e.getMessage();
-                return new ResponseEntity(result, HttpStatus.BAD_REQUEST);
+                return null;
             }
         } else {
-            String result = "Вам не удалось загрузить " + name + " потому что файл пустой.";
-            return new ResponseEntity(result, HttpStatus.NOT_FOUND);
+            return null;
         }
+    }
+
+    @GetMapping(value = "/upload/{dir1}/{dir2}/{dir3}/{fileName}")
+    public ResponseEntity getImage(
+            @PathVariable(value = "dir1") String dir1,
+            @PathVariable(value = "dir2") String dir2,
+            @PathVariable(value = "dir3") String dir3,
+            @PathVariable(value = "fileName") String fileName
+    ) {
+        String fullPath = String.format("src/main/resources/upload/%s/%s/%s/%s", dir1, dir2, dir3, fileName);
+
+        byte[] buffer = null;
+        try {
+            buffer = Files.readAllBytes(Paths.get(fullPath));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        String format = fullPath.split("\\.")[1];
+        final HttpHeaders headers = new HttpHeaders();
+        if (format.equalsIgnoreCase("png"))
+            headers.setContentType(MediaType.IMAGE_PNG);
+        if (format.equalsIgnoreCase("jpg"))
+            headers.setContentType(MediaType.IMAGE_JPEG);
+        if (format.equalsIgnoreCase("gif"))
+            headers.setContentType(MediaType.IMAGE_GIF);
+        return new ResponseEntity(buffer, headers, HttpStatus.OK);
     }
 
     @PostMapping(value = "/api/moderation")
@@ -241,9 +267,7 @@ public class ApiGeneralController {
     }
 
     @PostMapping(value = "/api/comment")
-    public ResponseEntity addComment(
-            @RequestBody JSONObject request
-    ) {
+    public ResponseEntity addComment(@RequestBody JSONObject request) {
         JSONObject notFoundResponse = new JSONObject();
         JSONObject errorResponse = new JSONObject();
         JSONObject successfulResponse = new JSONObject();
@@ -295,22 +319,16 @@ public class ApiGeneralController {
     public ResponseEntity updateProfile(
             @RequestParam(value = "email") String email,
             @RequestParam(value = "removePhoto") Object removePhoto,
-            @RequestParam(value = "photo") MultipartFile photo,
+            @RequestParam(value = "photo") MultipartFile file,
             @RequestPart(value = "name") String name,
             @RequestPart(value = "password", required = false) String password
     ) {
-//        System.err.println("\nContent-Type: multipart/form-data");
-//        System.err.println("photoObj: " + photo);
-//        System.err.println("photoName: " + photo.getOriginalFilename());
-//        System.err.println("name:  " + name);
-//        System.err.println("email:  " + email);
-//        System.err.println("password:  " + password);
-//        System.err.println("removePhoto:  " + removePhoto);
-
+        String photo = resizeImageAndUpload(file);
         JSONObject response = new JSONObject();
         response.put("email", email);
         response.put("name", name);
         response.put("password", password);
+        response.put("photo", photo);
 
         if (removePhoto instanceof String) {
             response.put("removePhoto", Integer.parseInt((String) removePhoto));
@@ -318,11 +336,7 @@ public class ApiGeneralController {
             response.put("removePhoto", removePhoto);
         }
 
-        //TODO: Переделать фото в текстовый формат, если необходимо. Сейчас передаётся просто имя файла
-        response.put("photo", photo.getOriginalFilename());
-
         return new ResponseEntity(updateProfile(response).getBody(), HttpStatus.OK);
-//        return ResponseEntity.status(HttpStatus.OK).body("Всё ок");
     }
 
     // Без изображения
@@ -372,11 +386,6 @@ public class ApiGeneralController {
             }
             if (removePhoto != null) {
                 updatedUser.setPhoto(photo);
-//                if (removePhoto == 1) {
-//                    updatedUser.setPhoto(photo);
-//                } else {
-//                    updatedUser.setPhoto(photo);
-//                }
             }
 
             userService.update(updatedUser);
@@ -385,13 +394,12 @@ public class ApiGeneralController {
         }
 
         return new ResponseEntity(response, HttpStatus.OK);
-//        return ResponseEntity.status(HttpStatus.OK).body("Всё ок");
     }
 
 
     //==================================================================================================================
 
-    private String getRandomFileName(StringBuilder mainPath) {
+    private String getRandomFileName(StringBuilder mainPath, String format) {
         String alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvxyz";
         String numbers = "0123456789";
         StringBuilder fileName = new StringBuilder("/upload/");
@@ -415,8 +423,9 @@ public class ApiGeneralController {
             mainPath.append(numbers.charAt(index));
             fileName.append(numbers.charAt(index));
         }
-        mainPath.append(".jpg");
-        fileName.append(".jpg");
+
+        mainPath.append(".").append(format);
+        fileName.append(".").append(format);
         File image = new File(mainPath.toString());
         if (!image.exists()) {
             try {
@@ -426,5 +435,44 @@ public class ApiGeneralController {
             }
         }
         return fileName.toString();
+    }
+
+    private String resizeImageAndUpload(MultipartFile file) {
+        int width = 35;
+        int height = 35;
+        String formatName = file.getOriginalFilename().split("\\.")[1];
+        // MultipartFile -> Image
+        BufferedImage image = null;
+        try (ByteArrayInputStream bais = new ByteArrayInputStream(file.getBytes())){
+            image = ImageIO.read(bais);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        // Resize
+        if (image.getWidth() > width && image.getHeight() > height) {
+            int type = image.getType() == 0 ? BufferedImage.TYPE_INT_ARGB : image.getType();
+            BufferedImage resizeImage = new BufferedImage(width, height, type);
+            Graphics2D g = resizeImage.createGraphics();
+            g.drawImage(image, 0, 0, width, height, null);
+            g.dispose();
+            image = resizeImage;
+        }
+        // Image -> Bytes
+        byte[] imageBytes = null;
+        try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+            ImageIO.write(image, formatName, baos);
+            imageBytes = baos.toByteArray();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        // Bytes -> Upload
+        StringBuilder mainPath = new StringBuilder("src/main/resources/upload/");
+        String fileName = getRandomFileName(mainPath, formatName);
+        try (BufferedOutputStream stream = new BufferedOutputStream(new FileOutputStream(new File(mainPath.toString())))){
+            stream.write(imageBytes);
+            return fileName;
+        } catch (IOException e) {
+            return "";
+        }
     }
 }

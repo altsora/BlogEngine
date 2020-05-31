@@ -3,4 +3,5 @@ spring.datasource.username=root
 spring.datasource.password=1235
 spring.jpa.hibernate.ddl-auto=validate
 spring.jpa.show-sql=true
+spring.servlet.multipart.max-file-size=10MB
 captcha.lifetime.hour=1

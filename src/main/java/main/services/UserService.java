@@ -19,4 +19,6 @@ public interface UserService {
     boolean passwordIsInvalid(String password, JSONObject errors);
 
     boolean emailIsInvalid(String email, JSONObject errors);
+
+    User findByCode(String code);
 }
