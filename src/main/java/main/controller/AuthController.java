@@ -16,17 +16,18 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 
 @RestController
-public class ApiAuthController {
+public class AuthController {
     private AuthorizeServlet authorizeServlet;
     private CaptchaCodeService captchaCodeService;
     private PostService postService;
     private UserService userService;
 
     @Autowired
-    public ApiAuthController(AuthorizeServlet authorizeServlet, CaptchaCodeService captchaCodeService,
-                             PostService postService, UserService userService) {
+    public AuthController(AuthorizeServlet authorizeServlet, CaptchaCodeService captchaCodeService,
+                          PostService postService, UserService userService) {
         this.authorizeServlet = authorizeServlet;
         this.captchaCodeService = captchaCodeService;
         this.postService = postService;
@@ -134,7 +135,7 @@ public class ApiAuthController {
         response.put("result", result);
         if (result) {
             User user = new User();
-            user.setRegTime(LocalDateTime.now());
+            user.setRegTime(LocalDateTime.now(ZoneId.of("UTC")));
             user.setName(name);
             user.setEmail(email);
             user.setPassword(password);

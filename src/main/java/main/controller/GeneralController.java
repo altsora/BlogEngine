@@ -27,13 +27,14 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 @RestController
-public class ApiGeneralController {
+public class GeneralController {
     private AuthorizeServlet authorizeServlet;
     private GlobalSettingsService globalSettingsService;
     private PostCommentService postCommentService;
@@ -43,10 +44,10 @@ public class ApiGeneralController {
     private UserService userService;
 
     @Autowired
-    public ApiGeneralController(AuthorizeServlet authorizeServlet, GlobalSettingsService globalSettingsService,
-                                PostCommentService postCommentService, PostService postService,
-                                PostVoteService postVoteService, TagService tagService,
-                                UserService userService) {
+    public GeneralController(AuthorizeServlet authorizeServlet, GlobalSettingsService globalSettingsService,
+                             PostCommentService postCommentService, PostService postService,
+                             PostVoteService postVoteService, TagService tagService,
+                             UserService userService) {
         this.authorizeServlet = authorizeServlet;
         this.globalSettingsService = globalSettingsService;
         this.postCommentService = postCommentService;
@@ -110,7 +111,7 @@ public class ApiGeneralController {
     @GetMapping(value = "/api/calendar")
     public ResponseEntity<CalendarResponseDTO> getCalendar(@RequestParam(value = "year", required = false) Integer year) {
         if (year == null) {
-            year = LocalDateTime.now().getYear();
+            year = LocalDateTime.now(ZoneId.of("UTC")).getYear();
         }
         Map<String, Long> datesAndCountPosts = postService.getDateAndCountPosts(ActivesType.ACTIVE, ModerationStatusType.ACCEPTED, year);
         JSONObject posts = new JSONObject(datesAndCountPosts);
@@ -297,7 +298,7 @@ public class ApiGeneralController {
         comment.setUser(user);
         comment.setPost(post);
         comment.setText(text);
-        comment.setTime(LocalDateTime.now());
+        comment.setTime(LocalDateTime.now(ZoneId.of("UTC")));
 
         if (parentIdObj instanceof Integer) {
             long parentId = (int) parentIdObj;

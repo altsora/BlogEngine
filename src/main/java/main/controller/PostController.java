@@ -14,13 +14,15 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 
 @RestController
-public class ApiPostController {
+public class PostController {
     private AuthorizeServlet authorizeServlet;
     private PostService postService;
     private PostVoteService postVoteService;
@@ -30,10 +32,10 @@ public class ApiPostController {
     private UserService userService;
 
     @Autowired
-    public ApiPostController(AuthorizeServlet authorizeServlet, PostService postService,
-                             PostVoteService postVoteService, PostCommentService postCommentService,
-                             TagService tagService, Tag2PostService tag2PostService,
-                             UserService userService) {
+    public PostController(AuthorizeServlet authorizeServlet, PostService postService,
+                          PostVoteService postVoteService, PostCommentService postCommentService,
+                          TagService tagService, Tag2PostService tag2PostService,
+                          UserService userService) {
         this.authorizeServlet = authorizeServlet;
         this.postService = postService;
         this.postVoteService = postVoteService;
@@ -165,7 +167,7 @@ public class ApiPostController {
                 PostVote postVote = new PostVote();
                 postVote.setUser(user);
                 postVote.setPost(post);
-                postVote.setTime(LocalDateTime.now());
+                postVote.setTime(LocalDateTime.now(ZoneId.of("UTC")));
                 postVote.setValue((byte) 1);
                 postVoteService.addPostVote(postVote);
                 result = true;
@@ -198,7 +200,7 @@ public class ApiPostController {
                 PostVote postVote = new PostVote();
                 postVote.setUser(user);
                 postVote.setPost(post);
-                postVote.setTime(LocalDateTime.now());
+                postVote.setTime(LocalDateTime.now(ZoneId.of("UTC")));
                 postVote.setValue((byte) -1);
                 postVoteService.addPostVote(postVote);
                 result = true;
@@ -246,8 +248,8 @@ public class ApiPostController {
         } catch (DateTimeParseException e) {
             return new ResponseEntity("Ошибка преобразования String в LocalDateTime", HttpStatus.BAD_REQUEST);
         }
-        if (postTime.isBefore(LocalDateTime.now())) {
-            postTime = LocalDateTime.now();
+        if (postTime.isBefore(LocalDateTime.now(ZoneId.of("UTC")))) {
+            postTime = LocalDateTime.now(ZoneId.of("UTC"));
         }
 
         byte isActive = postActive == 1 ? (byte) 1 : 0;
@@ -381,8 +383,8 @@ public class ApiPostController {
             message.put("message", "Необходимо указать дату!");
             return new ResponseEntity<>(message, HttpStatus.BAD_REQUEST);
         }
-        if (newTimeOfPost.isBefore(LocalDateTime.now())) {
-            newTimeOfPost = LocalDateTime.now();
+        if (newTimeOfPost.isBefore(LocalDateTime.now(ZoneId.of("UTC")))) {
+            newTimeOfPost = LocalDateTime.now(ZoneId.of("UTC"));
         }
 
         byte isActive = newPostActivity == 1 ? (byte) 1 : 0;
@@ -488,24 +490,28 @@ public class ApiPostController {
     }
 
     private String getStringTime(LocalDateTime localDateTime) {
+        ZonedDateTime localZone = localDateTime.atZone(ZoneId.systemDefault());
+        ZonedDateTime utcZone = localZone.withZoneSameInstant(ZoneId.of("UTC"));
+        LocalDateTime utcTime = utcZone.toLocalDateTime();
+
         DateTimeFormatter simpleFormat = DateTimeFormatter.ofPattern("HH:mm");
         DateTimeFormatter fullFormat = DateTimeFormatter.ofPattern("d MMM yyyy, EEE, HH:mm");
-        LocalDateTime today = LocalDateTime.now();
+        LocalDateTime today = LocalDateTime.now(ZoneId.of("UTC"));
         LocalDateTime yesterday = today.minusDays(1);
 
-        if (localDateTime.getYear() == today.getYear() &&
-                localDateTime.getMonth() == today.getMonth() &&
-                localDateTime.getDayOfMonth() == today.getDayOfMonth()) {
-            return "Сегодня, " + simpleFormat.format(localDateTime);
+        if (utcTime.getYear() == today.getYear() &&
+                utcTime.getMonth() == today.getMonth() &&
+                utcTime.getDayOfMonth() == today.getDayOfMonth()) {
+            return "Сегодня, " + simpleFormat.format(utcTime);
         }
 
-        if (localDateTime.getYear() == yesterday.getYear() &&
-                localDateTime.getMonth() == yesterday.getMonth() &&
-                localDateTime.getDayOfMonth() == yesterday.getDayOfMonth()) {
-            return "Вчера, " + simpleFormat.format(localDateTime);
+        if (utcTime.getYear() == yesterday.getYear() &&
+                utcTime.getMonth() == yesterday.getMonth() &&
+                utcTime.getDayOfMonth() == yesterday.getDayOfMonth()) {
+            return "Вчера, " + simpleFormat.format(utcTime);
         }
 
-        return fullFormat.format(localDateTime);
+        return fullFormat.format(utcTime);
     }
 
 }

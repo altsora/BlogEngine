@@ -15,6 +15,8 @@ import org.springframework.stereotype.Service;
 
 import javax.persistence.Tuple;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
@@ -76,7 +78,7 @@ public class PostServiceImpl implements PostService {
     @Override
     public List<Post> findAllNewPosts(ActivesType activesType, int offset, int limit) {
         int pageNumber = offset / limit;
-        Pageable sortedByPostTime = PageRequest.of(pageNumber, limit, Sort.by(Sort.Direction.ASC, PostRepository.POST_TIME));
+        Pageable sortedByPostTime = PageRequest.of(pageNumber, limit, Sort.by(Sort.Direction.DESC, PostRepository.POST_TIME));
         byte isActive = activesType == ActivesType.ACTIVE ? (byte) 1 : 0;
         return postRepository.findAllPosts(isActive, ModerationStatusType.NEW, sortedByPostTime);
     }
@@ -84,7 +86,7 @@ public class PostServiceImpl implements PostService {
     @Override
     public List<Post> findAllPostsByModeratorId(ActivesType activesType, ModerationStatusType moderationStatusType, int offset, int limit, long moderatorId) {
         int pageNumber = offset / limit;
-        Pageable sortedByPostTime = PageRequest.of(pageNumber, limit, Sort.by(Sort.Direction.ASC, PostRepository.POST_TIME));
+        Pageable sortedByPostTime = PageRequest.of(pageNumber, limit, Sort.by(Sort.Direction.DESC, PostRepository.POST_TIME));
         byte isActive = activesType == ActivesType.ACTIVE ? (byte) 1 : 0;
         return postRepository.findAllPostsByModeratorId(isActive, moderationStatusType, moderatorId, sortedByPostTime);
     }
@@ -133,8 +135,13 @@ public class PostServiceImpl implements PostService {
         for (Tuple tuple : datesAndCountPosts) {
             Object[] pair = tuple.toArray();
             try {
-                LocalDateTime localDateTime = (LocalDateTime) pair[0];
-                String date = formatter.format(localDateTime);
+                LocalDateTime localTime = (LocalDateTime) pair[0];
+
+                ZonedDateTime localZone = localTime.atZone(ZoneId.systemDefault());
+                ZonedDateTime utcZone = localZone.withZoneSameInstant(ZoneId.of("UTC"));
+                LocalDateTime utcTime = utcZone.toLocalDateTime();
+
+                String date = formatter.format(utcTime);
                 Long count = (Long) pair[1];
                 result.put(date, count);
             } catch (Exception e) {
@@ -226,12 +233,24 @@ public class PostServiceImpl implements PostService {
     @Override
     public LocalDateTime getDateOfTheEarliestPost(ActivesType activesType, ModerationStatusType moderationStatusType) {
         byte isActive = activesType == ActivesType.ACTIVE ? (byte) 1 : 0;
-        return postRepository.getDateOfTheEarliestPost(isActive, moderationStatusType);
+        LocalDateTime localDateTime = postRepository.getDateOfTheEarliestPost(isActive, moderationStatusType);
+        if (localDateTime != null) {
+            ZonedDateTime localZone = localDateTime.atZone(ZoneId.systemDefault());
+            ZonedDateTime utcZone = localZone.withZoneSameInstant(ZoneId.of("UTC"));
+            localDateTime = utcZone.toLocalDateTime();
+        }
+        return localDateTime;
     }
 
     @Override
     public LocalDateTime getDateOfTheEarliestPostByUserId(long userId) {
-        return postRepository.getDateOfTheEarliestPostByUserId(userId);
+        LocalDateTime localDateTime = postRepository.getDateOfTheEarliestPostByUserId(userId);
+        if (localDateTime != null) {
+            ZonedDateTime localZone = localDateTime.atZone(ZoneId.systemDefault());
+            ZonedDateTime utcZone = localZone.withZoneSameInstant(ZoneId.of("UTC"));
+            localDateTime = utcZone.toLocalDateTime();
+        }
+        return localDateTime;
     }
 
     @Override
