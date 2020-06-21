@@ -59,6 +59,8 @@ public interface PostService {
 
     Post findById(long postId);
 
+    Post updateViewCount(Post post);
+
     LocalDateTime getDateOfTheEarliestPost(ActivesType activesType, ModerationStatusType moderationStatusType);
 
     LocalDateTime getDateOfTheEarliestPostByUserId(long userId);

@@ -220,6 +220,12 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
+    public Post updateViewCount(Post post) {
+        post.setViewCount(post.getViewCount() + 1);
+        return postRepository.saveAndFlush(post);
+    }
+
+    @Override
     public LocalDateTime getDateOfTheEarliestPost(ActivesType activesType, ModerationStatusType moderationStatusType) {
         byte isActive = activesType == ActivesType.ACTIVE ? (byte) 1 : 0;
         LocalDateTime localDateTime = postRepository.getDateOfTheEarliestPost(isActive, moderationStatusType);

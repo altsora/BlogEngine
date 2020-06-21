@@ -89,6 +89,14 @@ public class PostController {
     @ResponseBody
     public ResponseEntity<PostFullDTO> getPostById(@PathVariable(value = "id") long id) {
         Post postRep = postService.findById(id);
+        if (authorizeServlet.isUserAuthorize()) {
+            User user = userService.findById(authorizeServlet.getAuthorizedUserId());
+            if (user.getIsModerator() == 0 && user.getId() != postRep.getUser().getId()) {
+                postRep = postService.updateViewCount(postRep);
+            }
+        } else {
+            postRep = postService.updateViewCount(postRep);
+        }
         long postId = postRep.getId();
         long userId = postRep.getUser().getId();
         String userName = postRep.getUser().getName();
