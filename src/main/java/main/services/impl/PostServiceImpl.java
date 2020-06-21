@@ -1,5 +1,6 @@
 package main.services.impl;
 
+import lombok.RequiredArgsConstructor;
 import main.model.entities.Post;
 import main.model.entities.User;
 import main.model.enums.ActivesType;
@@ -7,7 +8,6 @@ import main.model.enums.ModerationStatusType;
 import main.repositories.PostRepository;
 import main.services.PostService;
 import main.services.UserService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -23,15 +23,10 @@ import java.util.List;
 import java.util.Map;
 
 @Service
+@RequiredArgsConstructor
 public class PostServiceImpl implements PostService {
-    private PostRepository postRepository;
-    private UserService userService;
-
-    @Autowired
-    public PostServiceImpl(PostRepository postRepository, UserService userService) {
-        this.postRepository = postRepository;
-        this.userService = userService;
-    }
+    private final PostRepository postRepository;
+    private final UserService userService;
 
     //==================================================================================================================
 
@@ -220,12 +215,6 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    public Post findPostByIdWithCondition(long postId, ActivesType activesType, ModerationStatusType moderationStatusType) {
-        byte isActive = activesType == ActivesType.ACTIVE ? (byte) 1 : 0;
-        return postRepository.findPostByPostId(postId, isActive, moderationStatusType);
-    }
-
-    @Override
     public Post findById(long postId) {
         return postRepository.findById(postId).orElse(null);
     }
@@ -254,7 +243,13 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    public Post addPostAndReturn(Post post) {
+    public Post addPost(byte isActive, User user, LocalDateTime postTime, String postTitle, String postText) {
+        Post post = new Post();
+        post.setIsActive(isActive);
+        post.setUser(user);
+        post.setTime(postTime);
+        post.setTitle(postTitle);
+        post.setText(postText);
         return postRepository.saveAndFlush(post);
     }
 

@@ -11,6 +11,7 @@ import javax.persistence.*;
 import java.io.Serializable;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Date;
 import java.util.Set;
 
@@ -73,5 +74,14 @@ public class PostComment implements Serializable {
     @OneToMany(mappedBy = "parent", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     public Set<PostComment> getChildren() {
         return children;
+    }
+
+    public static PostComment create(User user, Post post, String text) {
+        PostComment comment = new PostComment();
+        comment.setUser(user);
+        comment.setPost(post);
+        comment.setText(text);
+        comment.setTime(LocalDateTime.now(ZoneId.of("UTC")));
+        return comment;
     }
 }

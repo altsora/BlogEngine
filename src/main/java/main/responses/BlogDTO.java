@@ -1,15 +1,17 @@
 package main.responses;
 
-import lombok.Data;
+import lombok.Builder;
+import lombok.Getter;
 import lombok.ToString;
 
-@Data
+@Getter
+@Builder
 @ToString
 public class BlogDTO {
-    private String title;
-    private String subtitle;
-    private String phone;
-    private String email;
-    private String copyright;
-    private String copyrightFrom;
+    private final String title;
+    private final String subtitle;
+    private final String phone;
+    private final String email;
+    private final String copyright;
+    private final String copyrightFrom;
 }

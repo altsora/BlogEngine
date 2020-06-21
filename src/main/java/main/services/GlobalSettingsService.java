@@ -12,7 +12,6 @@ public interface GlobalSettingsService {
 
     boolean settingStatisticsIsPublicIsEnabled();
 
-    GlobalSetting findSettingByCode(SettingsCodeType settingsCodeType);
 
     void setValue(SettingsCodeType settingsCodeType, boolean value);
 

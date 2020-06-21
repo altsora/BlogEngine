@@ -1,27 +1,29 @@
 package main.services.impl;
 
+import lombok.RequiredArgsConstructor;
 import main.model.entities.User;
 import main.repositories.UserRepository;
 import main.services.UserService;
 import org.json.simple.JSONObject;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.Optional;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 
 @Service
+@RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
-    private UserRepository userRepository;
-
-    @Autowired
-    public UserServiceImpl(UserRepository userRepository) {
-        this.userRepository = userRepository;
-    }
+    private final UserRepository userRepository;
 
     //==================================================================================================================
 
     @Override
-    public User add(User user) {
+    public User add(String name, String email, String password) {
+        User user = new User();
+        user.setRegTime(LocalDateTime.now(ZoneId.of("UTC")));
+        user.setName(name);
+        user.setEmail(email);
+        user.setPassword(password);
         return userRepository.saveAndFlush(user);
     }
 

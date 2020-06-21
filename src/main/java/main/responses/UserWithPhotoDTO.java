@@ -1,10 +1,8 @@
 package main.responses;
 
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.Getter;
 
-@Data
-@NoArgsConstructor
+@Getter
 public class UserWithPhotoDTO extends UserSimpleDTO {
     private String photo;
 

@@ -1,10 +1,10 @@
 package main.services.impl;
 
 import com.github.cage.YCage;
+import lombok.RequiredArgsConstructor;
 import main.model.entities.CaptchaCode;
 import main.repositories.CaptchaCodeRepository;
 import main.services.CaptchaCodeService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Base64;
 
 @Service
+@RequiredArgsConstructor
 public class CaptchaCodeServiceImpl implements CaptchaCodeService {
     @Value("#{T(java.time.LocalDateTime).now(T(java.time.ZoneId).of(\"UTC\")).minusHours('${captcha.lifetime.hour}')}")
     public  LocalDateTime captchaLifetime;
@@ -25,12 +26,7 @@ public class CaptchaCodeServiceImpl implements CaptchaCodeService {
     private final int WIDTH = 100;
     private final int HEIGHT = 35;
 
-    private CaptchaCodeRepository captchaCodeRepository;
-
-    @Autowired
-    public CaptchaCodeServiceImpl(CaptchaCodeRepository captchaCodeRepository) {
-        this.captchaCodeRepository = captchaCodeRepository;
-    }
+    private final CaptchaCodeRepository captchaCodeRepository;
 
     //==================================================================================================================
 
@@ -46,7 +42,7 @@ public class CaptchaCodeServiceImpl implements CaptchaCodeService {
     }
 
     @Override
-    public String getCaptchaImageCode(String code, String formatName) {
+    public String getCaptchaImageCode(String code) {
         BufferedImage image = new YCage().drawImage(code);
         if (image.getWidth() > WIDTH && image.getHeight() > HEIGHT) {
             int type = image.getType() == 0 ? BufferedImage.TYPE_INT_ARGB : image.getType();
@@ -58,7 +54,7 @@ public class CaptchaCodeServiceImpl implements CaptchaCodeService {
         }
         byte[] imageBytes = null;
         try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
-            ImageIO.write(image, formatName, baos);
+            ImageIO.write(image, "png", baos);
             imageBytes = baos.toByteArray();
         } catch (IOException e) {
             e.printStackTrace();

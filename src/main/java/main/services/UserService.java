@@ -4,7 +4,7 @@ import main.model.entities.User;
 import org.json.simple.JSONObject;
 
 public interface UserService {
-    User add(User user);
+    User add(String name, String email, String password);
 
     User findByEmailAndPassword(String email, String password);
 

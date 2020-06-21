@@ -1,23 +1,19 @@
 package main.services.impl;
 
+import lombok.RequiredArgsConstructor;
 import main.model.entities.GlobalSetting;
 import main.model.enums.SettingsCodeType;
 import main.model.enums.SettingsValueType;
 import main.repositories.GlobalSettingsRepository;
 import main.services.GlobalSettingsService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class GlobalSettingsServiceImpl implements GlobalSettingsService {
-    private GlobalSettingsRepository globalSettingsRepository;
-
-    @Autowired
-    public GlobalSettingsServiceImpl(GlobalSettingsRepository globalSettingsRepository) {
-        this.globalSettingsRepository = globalSettingsRepository;
-    }
+    private final GlobalSettingsRepository globalSettingsRepository;
 
     //==================================================================================================================
 
@@ -34,11 +30,6 @@ public class GlobalSettingsServiceImpl implements GlobalSettingsService {
     @Override
     public boolean settingStatisticsIsPublicIsEnabled() {
         return globalSettingsRepository.settingStatisticsIsPublicIsEnabled() != null;
-    }
-
-    @Override
-    public GlobalSetting findSettingByCode(SettingsCodeType settingsCodeType) {
-        return globalSettingsRepository.findSettingByCode(settingsCodeType);
     }
 
     @Override

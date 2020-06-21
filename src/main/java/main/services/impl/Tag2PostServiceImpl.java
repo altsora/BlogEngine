@@ -1,36 +1,31 @@
 package main.services.impl;
 
+import lombok.RequiredArgsConstructor;
 import main.model.entities.Post;
 import main.model.entities.Tag;
 import main.model.entities.Tag2Post;
-import main.repositories.PostRepository;
 import main.repositories.Tag2PostRepository;
 import main.services.PostService;
 import main.services.Tag2PostService;
 import main.services.TagService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class Tag2PostServiceImpl implements Tag2PostService {
-    private Tag2PostRepository tag2PostRepository;
-    private PostService postService;
-    private TagService tagService;
-
-    @Autowired
-    public Tag2PostServiceImpl(Tag2PostRepository tag2PostRepository, PostService postService, TagService tagService) {
-        this.tag2PostRepository = tag2PostRepository;
-        this.postService = postService;
-        this.tagService = tagService;
-    }
+    private final Tag2PostRepository tag2PostRepository;
+    private final PostService postService;
+    private final TagService tagService;
 
     //==================================================================================================================
 
     @Override
-    public void addTag2Post(Tag2Post tag2Post) {
+    public void addTag2Post(Post post, Tag tag) {
+        Tag2Post tag2Post = new Tag2Post();
+        tag2Post.setPost(post);
+        tag2Post.setTag(tag);
         tag2PostRepository.saveAndFlush(tag2Post);
     }
 
@@ -51,10 +46,11 @@ public class Tag2PostServiceImpl implements Tag2PostService {
             if (tag2PostRepository.existsByPostIdAndTagName(postId, newTag) == null) {
                 Post post = postService.findById(postId);
                 Tag tag = tagService.findByName(newTag);
-                Tag2Post tag2Post = new Tag2Post();
-                tag2Post.setPost(post);
-                tag2Post.setTag(tag);
-                addTag2Post(tag2Post);
+                addTag2Post(post, tag);
+//                Tag2Post tag2Post = new Tag2Post();
+//                tag2Post.setPost(post);
+//                tag2Post.setTag(tag);
+//                addTag2Post(tag2Post);
             }
         }
     }

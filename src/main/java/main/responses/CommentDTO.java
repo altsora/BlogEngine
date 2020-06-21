@@ -1,13 +1,15 @@
 package main.responses;
 
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
-@Data
-@NoArgsConstructor
+@Getter
+@Builder
+@RequiredArgsConstructor
 public class CommentDTO {
-    private long id;
-    private String time;
-    private String text;
-    private UserWithPhotoDTO user;
+    private final long id;
+    private final String time;
+    private final String text;
+    private final UserWithPhotoDTO user;
 }

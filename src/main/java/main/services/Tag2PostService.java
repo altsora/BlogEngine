@@ -7,7 +7,7 @@ import main.model.entities.Tag2Post;
 import java.util.List;
 
 public interface Tag2PostService {
-    void addTag2Post(Tag2Post tag2Post);
+    void addTag2Post(Post post, Tag tag);
 
     void updateTagsByPostId(long postId, List<String> newTags);
 

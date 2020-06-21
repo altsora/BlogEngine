@@ -1,13 +1,13 @@
 package main.responses;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-public class UserSimpleDTO implements ResponseDTO {
-    private long id;
-    private String name;
+@Getter
+@Builder
+@RequiredArgsConstructor
+public class UserSimpleDTO {
+    private final long id;
+    private final String name;
 }

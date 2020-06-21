@@ -1,13 +1,13 @@
 package main.responses;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
+@Getter
+@Builder
+@RequiredArgsConstructor
 public class TagDTO {
-    private String name;
-    private double weight;
+    private final String name;
+    private final double weight;
 }

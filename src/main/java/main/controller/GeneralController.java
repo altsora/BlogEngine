@@ -1,18 +1,16 @@
 package main.controller;
 
+import lombok.RequiredArgsConstructor;
 import main.model.entities.*;
 import main.model.enums.ActivesType;
 import main.model.enums.ModerationStatusType;
 import main.model.enums.SettingsCodeType;
 import main.model.enums.SettingsValueType;
 import main.responses.BlogDTO;
-import main.responses.CalendarResponseDTO;
-import main.responses.CollectionTagsResponseDTO;
 import main.responses.TagDTO;
 import main.services.*;
 import main.servlet.AuthorizeServlet;
 import org.json.simple.JSONObject;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -29,52 +27,38 @@ import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
 
 @RestController
+@RequiredArgsConstructor
 public class GeneralController {
-    private AuthorizeServlet authorizeServlet;
-    private GlobalSettingsService globalSettingsService;
-    private PostCommentService postCommentService;
-    private PostService postService;
-    private PostVoteService postVoteService;
-    private TagService tagService;
-    private UserService userService;
-
-    @Autowired
-    public GeneralController(AuthorizeServlet authorizeServlet, GlobalSettingsService globalSettingsService,
-                             PostCommentService postCommentService, PostService postService,
-                             PostVoteService postVoteService, TagService tagService,
-                             UserService userService) {
-        this.authorizeServlet = authorizeServlet;
-        this.globalSettingsService = globalSettingsService;
-        this.postCommentService = postCommentService;
-        this.postService = postService;
-        this.postVoteService = postVoteService;
-        this.tagService = tagService;
-        this.userService = userService;
-    }
+    private final AuthorizeServlet authorizeServlet;
+    private final GlobalSettingsService globalSettingsService;
+    private final PostCommentService postCommentService;
+    private final PostService postService;
+    private final PostVoteService postVoteService;
+    private final TagService tagService;
+    private final UserService userService;
 
     //==================================================================================================================
 
     @GetMapping(value = "/api/init")
     @ResponseBody
     public BlogDTO init() {
-        BlogDTO blogDTO = new BlogDTO();
-        blogDTO.setTitle("DevPub");
-        blogDTO.setSubtitle("Рассказы разработчиков");
-        blogDTO.setPhone("+7 903 666-44-55");
-        blogDTO.setEmail("mail@mail.ru");
-        blogDTO.setCopyright("Александр Вергун");
-        blogDTO.setCopyrightFrom("2005");
-        return blogDTO;
+        return BlogDTO.builder()
+                .title("DevPub")
+                .subtitle("Рассказы разработчиков")
+                .phone("+7 903 666-44-55")
+                .email("mail@mail.ru")
+                .copyright("Александр Вергун")
+                .copyrightFrom("2005")
+                .build();
     }
 
     @GetMapping(value = "/api/settings")
-    @ResponseBody
-    public ResponseEntity getSettings() {
+    @SuppressWarnings("unchecked")
+    public ResponseEntity<JSONObject> getSettings() {
         JSONObject response = new JSONObject();
         List<GlobalSetting> globalSettings = globalSettingsService.findAll();
         for (GlobalSetting setting : globalSettings) {
@@ -82,12 +66,11 @@ public class GeneralController {
             String code = setting.getCode().name();
             response.put(code, enable);
         }
-        return new ResponseEntity(response, HttpStatus.OK);
+        return ResponseEntity.ok(response);
     }
 
     @PutMapping(value = "/api/settings")
-    @ResponseBody
-    public ResponseEntity saveSettings(@RequestBody JSONObject request) {
+    public ResponseEntity<String> saveSettings(@RequestBody JSONObject request) {
         Boolean multiUserModeValue = (Boolean) request.get("MULTIUSER_MODE");
         Boolean postPreModerationValue = (Boolean) request.get("POST_PREMODERATION");
         Boolean statisticsIsPublicValue = (Boolean) request.get("STATISTICS_IS_PUBLIC");
@@ -105,23 +88,27 @@ public class GeneralController {
                 }
             }
         }
-        return new ResponseEntity<>(HttpStatus.OK);
+        return ResponseEntity.ok().body("Settings saved successfully");
     }
 
     @GetMapping(value = "/api/calendar")
-    public ResponseEntity<CalendarResponseDTO> getCalendar(@RequestParam(value = "year", required = false) Integer year) {
+    @SuppressWarnings("unchecked")
+    public ResponseEntity<JSONObject> getCalendar(@RequestParam(value = "year", required = false) Integer year) {
         if (year == null) {
             year = LocalDateTime.now(ZoneId.of("UTC")).getYear();
         }
         Map<String, Long> datesAndCountPosts = postService.getDateAndCountPosts(ActivesType.ACTIVE, ModerationStatusType.ACCEPTED, year);
         JSONObject posts = new JSONObject(datesAndCountPosts);
         List<Integer> years = postService.findAllYearsOfPublication(ActivesType.ACTIVE, ModerationStatusType.ACCEPTED);
-        CalendarResponseDTO calendarResponseDTO = new CalendarResponseDTO(years, posts);
-        return new ResponseEntity<>(calendarResponseDTO, HttpStatus.OK);
+        JSONObject calendar = new JSONObject();
+        calendar.put("years", years);
+        calendar.put("posts", posts);
+        return ResponseEntity.ok(calendar);
     }
 
     @GetMapping(value = "/api/statistics/all")
-    public ResponseEntity getBlogStatistics() {
+    @SuppressWarnings("unchecked")
+    public ResponseEntity<JSONObject> getBlogStatistics() {
         if (globalSettingsService.settingStatisticsIsPublicIsEnabled()) {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm");
             int postsCount = postService.getTotalCountOfPosts(ActivesType.ACTIVE, ModerationStatusType.ACCEPTED);
@@ -139,7 +126,8 @@ public class GeneralController {
             response.put("viewsCount", viewsCount);
             response.put("firstPublication", firstPublication);
 
-            return new ResponseEntity<>(response, HttpStatus.OK);
+            return ResponseEntity.ok(response);
+//            return new ResponseEntity<>(response, HttpStatus.OK);
         } else {
             if (authorizeServlet.isUserAuthorize()) {
                 return new ResponseEntity<>(getMyStatistics().getBody(), HttpStatus.OK);
@@ -150,7 +138,8 @@ public class GeneralController {
     }
 
     @GetMapping(value = "/api/statistics/my")
-    public ResponseEntity getMyStatistics() {
+    @SuppressWarnings("unchecked")
+    public ResponseEntity<JSONObject> getMyStatistics() {
         long userId = authorizeServlet.getAuthorizedUserId();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm");
         int postsCount = postService.getTotalCountOfPostsByUserId(userId);
@@ -172,8 +161,8 @@ public class GeneralController {
     }
 
     @GetMapping(value = "/api/tag")
-    @ResponseBody
-    public ResponseEntity<CollectionTagsResponseDTO> getTagList(@RequestParam(value = "query", required = false) String query) {
+    @SuppressWarnings("unchecked")
+    public ResponseEntity<JSONObject> getTagList(@RequestParam(value = "query", required = false) String query) {
         List<Tag> tagListRep = (query == null || query.equals("")) ?
                 tagService.findAll() :
                 tagService.findAllTagsByQuery(query);
@@ -190,23 +179,27 @@ public class GeneralController {
         }
 
         List<TagDTO> tags = new ArrayList<>();
-        for (int i = 0; i < tagListRep.size(); i++) {
+        int size = tagListRep.size();
+        for (int i = 0; i < size; i++) {
             String tagName = tagListRep.get(i).getName();
             double normalizedWeight = weights.get(i) / maxWeight;
-            TagDTO tagDTO = new TagDTO(tagName, normalizedWeight);
-            tags.add(tagDTO);
+            TagDTO tag = TagDTO.builder()
+                    .name(tagName)
+                    .weight(normalizedWeight)
+                    .build();
+            tags.add(tag);
         }
 
-        CollectionTagsResponseDTO collectionTagsResponseDTO = new CollectionTagsResponseDTO();
-        collectionTagsResponseDTO.setTags(tags);
-        return new ResponseEntity<>(collectionTagsResponseDTO, HttpStatus.OK);
+        JSONObject tagsCollection = new JSONObject();
+        tagsCollection.put("tags", tags);
+        return ResponseEntity.ok(tagsCollection);
     }
 
     @PostMapping(value = "/api/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @ResponseBody
     public String uploadImage(@RequestPart(value = "image") MultipartFile file) {
         String name = file.getOriginalFilename();
-        String formatName = name.split("\\.")[1];
+        String formatName = Objects.requireNonNull(name).split("\\.")[1];
         StringBuilder mainPath = new StringBuilder("src/main/resources/upload/");
         String fileName = getRandomFileName(mainPath, formatName);
         if (!file.isEmpty()) {
@@ -248,7 +241,7 @@ public class GeneralController {
             headers.setContentType(MediaType.IMAGE_JPEG);
         if (format.equalsIgnoreCase("gif"))
             headers.setContentType(MediaType.IMAGE_GIF);
-        return new ResponseEntity(buffer, headers, HttpStatus.OK);
+        return new ResponseEntity<>(buffer, headers, HttpStatus.OK);
     }
 
     @PostMapping(value = "/api/moderation")
@@ -268,7 +261,8 @@ public class GeneralController {
     }
 
     @PostMapping(value = "/api/comment")
-    public ResponseEntity addComment(@RequestBody JSONObject request) {
+    @SuppressWarnings("unchecked")
+    public ResponseEntity<JSONObject> addComment(@RequestBody JSONObject request) {
         JSONObject notFoundResponse = new JSONObject();
         JSONObject errorResponse = new JSONObject();
         JSONObject successfulResponse = new JSONObject();
@@ -291,15 +285,16 @@ public class GeneralController {
             JSONObject errorText = new JSONObject();
             errorText.put("text", "Текст комментария не задан или слишком короткий");
             errorResponse.put("errors", errorText);
-            return new ResponseEntity(errorResponse, HttpStatus.OK);
+            return new ResponseEntity<>(errorResponse, HttpStatus.OK);
         }
 
-        PostComment comment = new PostComment();
-        comment.setUser(user);
-        comment.setPost(post);
-        comment.setText(text);
-        comment.setTime(LocalDateTime.now(ZoneId.of("UTC")));
+//        PostComment comment = new PostComment();
+//        comment.setUser(user);
+//        comment.setPost(post);
+//        comment.setText(text);
+//        comment.setTime(LocalDateTime.now(ZoneId.of("UTC")));
 
+        PostComment comment = PostComment.create(user, post, text);
         if (parentIdObj instanceof Integer) {
             long parentId = (int) parentIdObj;
             PostComment parent = postCommentService.findById(parentId);
@@ -312,12 +307,13 @@ public class GeneralController {
         }
         long commentId = postCommentService.add(comment).getId();
         successfulResponse.put("id", commentId);
-        return new ResponseEntity<>(successfulResponse, HttpStatus.OK);
+        return ResponseEntity.ok(successfulResponse);
     }
 
     // С изображением
     @PostMapping(value = "/api/profile/my", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity updateProfile(
+    @SuppressWarnings("unchecked")
+    public ResponseEntity<JSONObject> updateProfile(
             @RequestParam(value = "email") String email,
             @RequestParam(value = "removePhoto") Object removePhoto,
             @RequestParam(value = "photo") MultipartFile file,
@@ -337,15 +333,15 @@ public class GeneralController {
             response.put("removePhoto", removePhoto);
         }
 
-        return new ResponseEntity(updateProfile(response).getBody(), HttpStatus.OK);
+        return new ResponseEntity<>(updateProfile(response).getBody(), HttpStatus.OK);
     }
 
     // Без изображения
     @PostMapping(value = "/api/profile/my", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity updateProfile(
+    @SuppressWarnings("unchecked")
+    public ResponseEntity<JSONObject> updateProfile(
             @RequestBody JSONObject request
     ) {
-//        System.err.println("\nContent-Type: application/json");
         String name = (String) request.get("name");
         String email = (String) request.get("email");
         String password = (String) request.get("password");
@@ -394,7 +390,7 @@ public class GeneralController {
             response.put("errors", errors);
         }
 
-        return new ResponseEntity(response, HttpStatus.OK);
+        return ResponseEntity.ok(response);
     }
 
 
@@ -446,18 +442,19 @@ public class GeneralController {
         BufferedImage image = null;
         try (ByteArrayInputStream bais = new ByteArrayInputStream(file.getBytes())){
             image = ImageIO.read(bais);
+            if (image.getWidth() > width && image.getHeight() > height) {
+                int type = image.getType() == 0 ? BufferedImage.TYPE_INT_ARGB : image.getType();
+                BufferedImage resizeImage = new BufferedImage(width, height, type);
+                Graphics2D g = resizeImage.createGraphics();
+                g.drawImage(image, 0, 0, width, height, null);
+                g.dispose();
+                image = resizeImage;
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
         // Resize
-        if (image.getWidth() > width && image.getHeight() > height) {
-            int type = image.getType() == 0 ? BufferedImage.TYPE_INT_ARGB : image.getType();
-            BufferedImage resizeImage = new BufferedImage(width, height, type);
-            Graphics2D g = resizeImage.createGraphics();
-            g.drawImage(image, 0, 0, width, height, null);
-            g.dispose();
-            image = resizeImage;
-        }
+
         // Image -> Bytes
         byte[] imageBytes = null;
         try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {

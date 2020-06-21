@@ -1,5 +1,6 @@
 package main.controller;
 
+import lombok.RequiredArgsConstructor;
 import main.model.entities.CaptchaCode;
 import main.model.entities.User;
 import main.model.enums.ActivesType;
@@ -10,101 +11,92 @@ import main.services.PostService;
 import main.services.UserService;
 import main.servlet.AuthorizeServlet;
 import org.json.simple.JSONObject;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-
 @RestController
+@RequiredArgsConstructor
 public class AuthController {
-    private AuthorizeServlet authorizeServlet;
-    private CaptchaCodeService captchaCodeService;
-    private PostService postService;
-    private UserService userService;
-
-    @Autowired
-    public AuthController(AuthorizeServlet authorizeServlet, CaptchaCodeService captchaCodeService,
-                          PostService postService, UserService userService) {
-        this.authorizeServlet = authorizeServlet;
-        this.captchaCodeService = captchaCodeService;
-        this.postService = postService;
-        this.userService = userService;
-    }
+    private final AuthorizeServlet authorizeServlet;
+    private final CaptchaCodeService captchaCodeService;
+    private final PostService postService;
+    private final UserService userService;
 
     //==================================================================================================================
 
     @GetMapping(value = "/api/auth/check")
+    @SuppressWarnings("unchecked")
     public ResponseEntity<JSONObject> authCheck() {
         JSONObject response = new JSONObject();
         boolean result;
         if (authorizeServlet.isUserAuthorize()) {
             long userId = authorizeServlet.getAuthorizedUserId();
             User userRep = userService.findById(userId);
-            UserLoginDTO userLoginDTO = new UserLoginDTO();
-            userLoginDTO.setId(userId);
-            userLoginDTO.setName(userRep.getName());
-            userLoginDTO.setPhoto(userRep.getPhoto());
-            userLoginDTO.setEmail(userRep.getEmail());
             boolean moderation = userRep.getIsModerator() == 1;
-            userLoginDTO.setModeration(moderation);
             int moderationCount = moderation ? postService.getTotalCountOfNewPosts(ActivesType.ACTIVE) : 0;
-            userLoginDTO.setModerationCount(moderationCount);
-            userLoginDTO.setSettings(moderation);
-            response.put("user", userLoginDTO);
 
+            UserLoginDTO userLogin = UserLoginDTO.builder()
+                    .id(userId)
+                    .name(userRep.getName())
+                    .photo(userRep.getPhoto())
+                    .email(userRep.getEmail())
+                    .moderation(moderation)
+                    .moderationCount(moderationCount)
+                    .settings(moderation)
+                    .build();
+            response.put("user", userLogin);
             result = true;
         } else {
             result = false;
         }
         response.put("result", result);
 
-        return new ResponseEntity<>(response, HttpStatus.OK);
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping(value = "/api/auth/login")
-    @ResponseBody
+    @SuppressWarnings("unchecked")
     public ResponseEntity<JSONObject> login(@RequestBody LoginForm loginForm) {
         JSONObject response = new JSONObject();
         User userRep = userService.findByEmailAndPassword(loginForm.getE_mail(), loginForm.getPassword());
         boolean result;
         if (userRep != null) {
             long userId = userRep.getId();
-            UserLoginDTO userLoginDTO = new UserLoginDTO();
-            userLoginDTO.setId(userId);
-            userLoginDTO.setName(userRep.getName());
-            userLoginDTO.setPhoto(userRep.getPhoto());
-            userLoginDTO.setEmail(userRep.getEmail());
             boolean moderation = userRep.getIsModerator() == 1;
-            userLoginDTO.setModeration(moderation);
             int moderationCount = moderation ? postService.getTotalCountOfNewPosts(ActivesType.ACTIVE) : 0;
-            userLoginDTO.setModerationCount(moderationCount);
-            userLoginDTO.setSettings(moderation);
-            result = true;
-            response.put("user", userLoginDTO);
 
+            UserLoginDTO userLogin = UserLoginDTO.builder()
+                    .id(userId)
+                    .name(userRep.getName())
+                    .photo(userRep.getPhoto())
+                    .email(userRep.getEmail())
+                    .moderation(moderation)
+                    .moderationCount(moderationCount)
+                    .settings(moderation)
+                    .build();
+
+            response.put("user", userLogin);
             authorizeServlet.authorizeUser(userId);
+            result = true;
         } else {
             result = false;
         }
         response.put("result", result);
-
-        return new ResponseEntity<>(response, HttpStatus.OK);
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping(value = "/api/auth/logout")
-    @ResponseBody
+    @SuppressWarnings("unchecked")
     public ResponseEntity<JSONObject> logout() {
         authorizeServlet.removeAuthorizedUser();
         JSONObject response = new JSONObject();
         response.put("result", true);
-        return new ResponseEntity<>(response, HttpStatus.OK);
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping(value = "/api/auth/register")
-    public ResponseEntity registration(@RequestBody JSONObject request) {
+    @SuppressWarnings("unchecked")
+    public ResponseEntity<JSONObject> registration(@RequestBody JSONObject request) {
         String email = (String) request.get("e_mail");
         String name = (String) request.get("name");
         String password = (String) request.get("password");
@@ -134,34 +126,31 @@ public class AuthController {
 
         response.put("result", result);
         if (result) {
-            User user = new User();
-            user.setRegTime(LocalDateTime.now(ZoneId.of("UTC")));
-            user.setName(name);
-            user.setEmail(email);
-            user.setPassword(password);
-            userService.add(user);
+            userService.add(name, email, password);
         } else {
             response.put("errors", errors);
         }
 
-        return new ResponseEntity(response, HttpStatus.OK);
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping(value = "/api/auth/captcha")
-    public ResponseEntity getCaptcha() {
+    @SuppressWarnings("unchecked")
+    public ResponseEntity<JSONObject> getCaptcha() {
         captchaCodeService.checkLifetimeCaptcha();
         CaptchaCode captcha = captchaCodeService.generateCaptcha();
         String code = captcha.getCode();
         String secretCode = captcha.getSecretCode();
-        String imageCode = captchaCodeService.getCaptchaImageCode(code, "png");
+        String imageCode = captchaCodeService.getCaptchaImageCode(code);
         JSONObject response = new JSONObject();
         response.put("secret", secretCode);
         response.put("image", "data:image/png;base64," + imageCode);
-        return new ResponseEntity(response, HttpStatus.OK);
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping(value = "/api/auth/password")
-    public ResponseEntity changePassword(@RequestBody JSONObject request) {
+    @SuppressWarnings("unchecked")
+    public ResponseEntity<JSONObject> changePassword(@RequestBody JSONObject request) {
         String code = (String) request.get("code");
         String password = (String) request.get("password");
         String inputCaptchaCode = (String) request.get("captcha");
@@ -194,11 +183,12 @@ public class AuthController {
             response.put("errors", errors);
         }
 
-        return new ResponseEntity(response, HttpStatus.OK);
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping(value = "/api/auth/restore")
-    public ResponseEntity restorePassword(@RequestBody JSONObject request) {
+    @SuppressWarnings("unchecked")
+    public ResponseEntity<JSONObject> restorePassword(@RequestBody JSONObject request) {
         //TODO: Доделать позже. Недостаточно данных
         String email = (String) request.get("email");
         boolean result = userService.emailExists(email);

@@ -1,21 +1,17 @@
 package main.services.impl;
 
+import lombok.RequiredArgsConstructor;
 import main.model.entities.Tag;
 import main.repositories.TagRepository;
 import main.services.TagService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class TagServiceImpl implements TagService {
-    private TagRepository tagRepository;
-
-    @Autowired
-    public TagServiceImpl(TagRepository tagRepository) {
-        this.tagRepository = tagRepository;
-    }
+    private final TagRepository tagRepository;
 
     //==================================================================================================================
 

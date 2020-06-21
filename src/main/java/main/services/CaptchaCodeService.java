@@ -5,7 +5,7 @@ import main.model.entities.CaptchaCode;
 public interface CaptchaCodeService {
     CaptchaCode generateCaptcha();
 
-    String getCaptchaImageCode(String code, String formatName);
+    String getCaptchaImageCode(String code);
 
     boolean checkCorrectCaptcha(String captcha, String secretCode);
 

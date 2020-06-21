@@ -1,6 +1,7 @@
 package main.services;
 
 import main.model.entities.Post;
+import main.model.entities.User;
 import main.model.enums.ActivesType;
 import main.model.enums.ModerationStatusType;
 import org.springframework.data.domain.Sort;
@@ -58,13 +59,11 @@ public interface PostService {
 
     Post findById(long postId);
 
-    Post findPostByIdWithCondition(long postId, ActivesType activesType, ModerationStatusType moderationStatusType);
-
     LocalDateTime getDateOfTheEarliestPost(ActivesType activesType, ModerationStatusType moderationStatusType);
 
     LocalDateTime getDateOfTheEarliestPostByUserId(long userId);
 
-    Post addPostAndReturn(Post post);
+    Post addPost(byte isActive, User user, LocalDateTime postTime, String postTitle, String postText);
 
     void setModerationStatus(long userId, long postId, ModerationStatusType moderationStatusType);
 }

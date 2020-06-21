@@ -1,16 +1,18 @@
 package main.responses;
 
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
-@Data
-@NoArgsConstructor
+@Getter
+@Builder
+@RequiredArgsConstructor
 public class UserLoginDTO {
-    private long id;
-    private String name;
-    private String photo;
-    private String email;
-    private boolean moderation;
-    private int moderationCount;
-    private boolean settings;
+    private final long id;
+    private final String name;
+    private final String photo;
+    private final String email;
+    private final boolean moderation;
+    private final int moderationCount;
+    private final boolean settings;
 }

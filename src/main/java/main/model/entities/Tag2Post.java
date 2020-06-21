@@ -42,5 +42,4 @@ public class Tag2Post implements Serializable {
     public Tag getTag() {
         return tag;
     }
-
 }

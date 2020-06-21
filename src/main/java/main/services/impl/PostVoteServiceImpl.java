@@ -1,21 +1,17 @@
 package main.services.impl;
 
+import lombok.RequiredArgsConstructor;
 import main.model.entities.PostVote;
 import main.repositories.PostVoteRepository;
 import main.services.PostVoteService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 
 @Service
+@RequiredArgsConstructor
 public class PostVoteServiceImpl implements PostVoteService {
-    private PostVoteRepository postVoteRepository;
-
-    @Autowired
-    public PostVoteServiceImpl(PostVoteRepository postVoteRepository) {
-        this.postVoteRepository = postVoteRepository;
-    }
+    private final PostVoteRepository postVoteRepository;
 
     //=============================================================================
 

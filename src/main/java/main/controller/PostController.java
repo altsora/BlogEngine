@@ -1,5 +1,6 @@
 package main.controller;
 
+import lombok.RequiredArgsConstructor;
 import main.model.entities.*;
 import main.model.enums.ActivesType;
 import main.model.enums.ModerationStatusType;
@@ -7,7 +8,7 @@ import main.responses.*;
 import main.services.*;
 import main.servlet.AuthorizeServlet;
 import org.json.simple.JSONObject;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.jsoup.Jsoup;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,35 +23,23 @@ import java.util.ArrayList;
 import java.util.List;
 
 @RestController
+@RequiredArgsConstructor
 public class PostController {
-    private AuthorizeServlet authorizeServlet;
-    private PostService postService;
-    private PostVoteService postVoteService;
-    private PostCommentService postCommentService;
-    private TagService tagService;
-    private Tag2PostService tag2PostService;
-    private UserService userService;
+    private final AuthorizeServlet authorizeServlet;
+    private final PostService postService;
+    private final PostVoteService postVoteService;
+    private final PostCommentService postCommentService;
+    private final TagService tagService;
+    private final Tag2PostService tag2PostService;
+    private final UserService userService;
 
-    @Autowired
-    public PostController(AuthorizeServlet authorizeServlet, PostService postService,
-                          PostVoteService postVoteService, PostCommentService postCommentService,
-                          TagService tagService, Tag2PostService tag2PostService,
-                          UserService userService) {
-        this.authorizeServlet = authorizeServlet;
-        this.postService = postService;
-        this.postVoteService = postVoteService;
-        this.postCommentService = postCommentService;
-        this.tagService = tagService;
-        this.tag2PostService = tag2PostService;
-        this.userService = userService;
-    }
-
+    //TODO: Увеличивать количество просмотров при открытии поста
     //==================================================================================================================
 
     @GetMapping(value = "/api/post")
-    @ResponseBody
-    public ResponseEntity<CollectionPostsResponseDTO<ResponseDTO>> getAllPosts(
-            @RequestParam(value = "offset") int offset,
+    @SuppressWarnings("unchecked")
+    public ResponseEntity<JSONObject> getAllPosts(
+            @RequestParam(value = "offset", defaultValue = "0") int offset,
             @RequestParam(value = "limit") int limit,
             @RequestParam(value = "mode") String mode
     ) {
@@ -68,29 +57,32 @@ public class PostController {
             default:
                 postListRep = postService.findAllPostSortedByDate(ActivesType.ACTIVE, ModerationStatusType.ACCEPTED, offset, limit, Sort.Direction.DESC);
         }
-
-        List<ResponseDTO> posts = getPostsDTO(postListRep, PostInfoDTO.class);
+        List<PostPublicDTO> posts = getPosts(postListRep);
         int count = postService.getTotalCountOfPosts(ActivesType.ACTIVE, ModerationStatusType.ACCEPTED);
-
-        return new ResponseEntity<>(new CollectionPostsResponseDTO<>(count, posts), HttpStatus.OK);
+        JSONObject response = new JSONObject();
+        response.put("count", count);
+        response.put("posts", posts);
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping(value = "/api/post/search")
-    @ResponseBody
-    public ResponseEntity<CollectionPostsResponseDTO<ResponseDTO>> searchPost(
-            @RequestParam(value = "offset") int offset,
+    @SuppressWarnings("unchecked")
+    public ResponseEntity<JSONObject> searchPost(
+            @RequestParam(value = "offset", defaultValue = "0") int offset,
             @RequestParam(value = "limit") int limit,
             @RequestParam(value = "query") String query
     ) {
         List<Post> postListRep = query.equals("") ?
                 postService.findAllPostSortedByDate(ActivesType.ACTIVE, ModerationStatusType.ACCEPTED, offset, limit, Sort.Direction.DESC) :
                 postService.findAllPostByQuery(ActivesType.ACTIVE, ModerationStatusType.ACCEPTED, offset, limit, query);
-        List<ResponseDTO> posts = getPostsDTO(postListRep, PostInfoDTO.class);
+        List<PostPublicDTO> posts = getPosts(postListRep);
         int count = query.equals("") ?
                 postService.getTotalCountOfPosts(ActivesType.ACTIVE, ModerationStatusType.ACCEPTED) :
                 postService.getTotalCountOfPostsByQuery(ActivesType.ACTIVE, ModerationStatusType.ACCEPTED, query);
-
-        return new ResponseEntity<>(new CollectionPostsResponseDTO<>(count, posts), HttpStatus.OK);
+        JSONObject response = new JSONObject();
+        response.put("count", count);
+        response.put("posts", posts);
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping(value = "/api/post/{id}")
@@ -100,55 +92,59 @@ public class PostController {
         long postId = postRep.getId();
         long userId = postRep.getUser().getId();
         String userName = postRep.getUser().getName();
-        UserSimpleDTO userSimpleDTO = new UserSimpleDTO(userId, userName);
 
-        PostFullDTO postFullDTO = new PostFullDTO();
-        postFullDTO.setId(postId);
-        postFullDTO.setTime(getStringTime(postRep.getTime()));
-        postFullDTO.setUser(userSimpleDTO);
-        postFullDTO.setTitle(postRep.getTitle());
-        postFullDTO.setAnnounce(getAnnounce(postRep.getText()));
-        postFullDTO.setLikeCount(postVoteService.getCountLikesByPostId(postId));
-        postFullDTO.setDislikeCount(postVoteService.getCountDislikesByPostId(postId));
-        postFullDTO.setCommentCount(postCommentService.getCountCommentsByPostId(postId));
-        postFullDTO.setViewCount(postRep.getViewCount());
-        postFullDTO.setComments(getCommentsByPostId(postId));
-        postFullDTO.setTags(getTagsByPostId(postId));
-
-        return new ResponseEntity<>(postFullDTO, HttpStatus.OK);
+        PostFullDTO post = PostFullDTO.builder()
+                .id(postId)
+                .time(getStringTime(postRep.getTime()))
+                .active(postRep.getIsActive() == 1)
+                .user(UserSimpleDTO.builder().id(userId).name(userName).build())
+                .title(postRep.getTitle())
+                .text(postRep.getText())
+                .likeCount(postVoteService.getCountLikesByPostId(postId))
+                .dislikeCount(postVoteService.getCountDislikesByPostId(postId))
+                .viewCount(postRep.getViewCount())
+                .comments(getCommentsByPostId(postId))
+                .tags(getTagsByPostId(postId))
+                .build();
+        return ResponseEntity.ok(post);
     }
 
     @GetMapping(value = "/api/post/byDate")
-    @ResponseBody
-    public ResponseEntity<CollectionPostsResponseDTO<ResponseDTO>> getPostsByDate(
-            @RequestParam(value = "offset") int offset,
+    @SuppressWarnings("unchecked")
+    public ResponseEntity<JSONObject> getPostsByDate(
+            @RequestParam(value = "offset", defaultValue = "0") int offset,
             @RequestParam(value = "limit") int limit,
             @RequestParam(value = "date") String date
     ) {
         List<Post> postListRep = postService.findAllPostByDate(ActivesType.ACTIVE, ModerationStatusType.ACCEPTED, offset, limit, date);
-        List<ResponseDTO> posts = getPostsDTO(postListRep, PostInfoDTO.class);
+        List<PostPublicDTO> posts = getPosts(postListRep);
         int count = postService.getTotalCountOfPostsByDate(ActivesType.ACTIVE, ModerationStatusType.ACCEPTED, date);
 
-        return new ResponseEntity<>(new CollectionPostsResponseDTO<>(count, posts), HttpStatus.OK);
+        JSONObject response = new JSONObject();
+        response.put("count", count);
+        response.put("posts", posts);
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping(value = "/api/post/byTag")
-    @ResponseBody
-    public ResponseEntity<CollectionPostsResponseDTO<ResponseDTO>> getPostsByTag(
-            @RequestParam(value = "offset") int offset,
+    @SuppressWarnings("unchecked")
+    public ResponseEntity<JSONObject> getPostsByTag(
+            @RequestParam(value = "offset", defaultValue = "0") int offset,
             @RequestParam(value = "limit") int limit,
             @RequestParam(value = "tag") String tag
     ) {
         List<Post> postListRep = postService.findAllPostByTag(ActivesType.ACTIVE, ModerationStatusType.ACCEPTED, offset, limit, tag);
-        List<ResponseDTO> posts = getPostsDTO(postListRep, PostInfoDTO.class);
+        List<PostPublicDTO> posts = getPosts(postListRep);
         int count = postService.getTotalCountOfPostsByTag(ActivesType.ACTIVE, ModerationStatusType.ACCEPTED, tag);
-
-        return new ResponseEntity<>(new CollectionPostsResponseDTO<>(count, posts), HttpStatus.OK);
+        JSONObject response = new JSONObject();
+        response.put("count", count);
+        response.put("posts", posts);
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping(value = "/api/post/like")
+    @SuppressWarnings("unchecked")
     public ResponseEntity<JSONObject> putLike(@RequestBody JSONObject request) {
-        JSONObject response = new JSONObject();
         boolean result;
         if (authorizeServlet.isUserAuthorize()) {
             long userId = authorizeServlet.getAuthorizedUserId();
@@ -175,13 +171,14 @@ public class PostController {
         } else {
             result = false;
         }
+        JSONObject response = new JSONObject();
         response.put("result", result);
-        return new ResponseEntity<>(response, HttpStatus.OK);
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping(value = "/api/post/dislike")
+    @SuppressWarnings("unchecked")
     public ResponseEntity<JSONObject> putDislike(@RequestBody JSONObject request) {
-        JSONObject response = new JSONObject();
         boolean result;
         if (authorizeServlet.isUserAuthorize()) {
             long userId = authorizeServlet.getAuthorizedUserId();
@@ -208,12 +205,14 @@ public class PostController {
         } else {
             result = false;
         }
+        JSONObject response = new JSONObject();
         response.put("result", result);
-        return new ResponseEntity<>(response, HttpStatus.OK);
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping(value = "/api/post")
-    public ResponseEntity addPost(@RequestBody JSONObject request) {
+    @SuppressWarnings("unchecked")
+    public ResponseEntity<JSONObject> addPost(@RequestBody JSONObject request) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
         String postTimeString = (String) request.get("time");
         int postActive = (int) request.get("active");
@@ -224,21 +223,25 @@ public class PostController {
         JSONObject message = new JSONObject();
         if (postTitle.isEmpty()) {
             message.put("message", "Заголовок не должен быть пустым!");
+            message.put("result", false);
             return new ResponseEntity<>(message, HttpStatus.BAD_REQUEST);
         }
 
         if (postText.isEmpty()) {
             message.put("message", "Пост не должен быть пустым!");
+            message.put("result", false);
             return new ResponseEntity<>(message, HttpStatus.BAD_REQUEST);
         }
 
         if (postTitle.length() < 3) {
             message.put("message", "Минимальное количество символов в заголовке - 3!");
+            message.put("result", false);
             return new ResponseEntity<>(message, HttpStatus.BAD_REQUEST);
         }
 
         if (postText.length() < 50) {
             message.put("message", "Минимальное количество символов в публикации - 50!");
+            message.put("result", false);
             return new ResponseEntity<>(message, HttpStatus.BAD_REQUEST);
         }
 
@@ -246,7 +249,9 @@ public class PostController {
         try {
             postTime = LocalDateTime.parse(postTimeString, formatter);
         } catch (DateTimeParseException e) {
-            return new ResponseEntity("Ошибка преобразования String в LocalDateTime", HttpStatus.BAD_REQUEST);
+            message.put("message", "Ошибка преобразования String в LocalDateTime");
+            message.put("result", false);
+            return new ResponseEntity<>(message, HttpStatus.BAD_REQUEST);
         }
         if (postTime.isBefore(LocalDateTime.now(ZoneId.of("UTC")))) {
             postTime = LocalDateTime.now(ZoneId.of("UTC"));
@@ -254,34 +259,22 @@ public class PostController {
 
         byte isActive = postActive == 1 ? (byte) 1 : 0;
         User user = userService.findById(authorizeServlet.getAuthorizedUserId());
-
-        Post newPost = new Post();
-        newPost.setIsActive(isActive);
-        newPost.setUser(user);
-        newPost.setTime(postTime);
-        newPost.setTitle(postTitle);
-        newPost.setText(postText);
-        newPost = postService.addPostAndReturn(newPost);
+        Post newPost = postService.addPost(isActive, user, postTime, postTitle, postText);
 
         for (String tagName : postTags) {
             Tag tag = tagService.createTagIfNoExistsAndReturn(tagName);
-
-            //TODO: Поместить создание объекта внутрь метода сервиса
-            Tag2Post tag2Post = new Tag2Post();
-            tag2Post.setPost(newPost);
-            tag2Post.setTag(tag);
-            tag2PostService.addTag2Post(tag2Post);
+            tag2PostService.addTag2Post(newPost, tag);
         }
 
         JSONObject response = new JSONObject();
         response.put("result", true);
-        return new ResponseEntity<>(response, HttpStatus.OK);
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping(value = "/api/post/moderation")
-    @ResponseBody
-    public ResponseEntity listOfPostsForModeration(
-            @RequestParam(value = "offset") int offset,
+    @SuppressWarnings("unchecked")
+    public ResponseEntity<JSONObject> listOfPostsForModeration(
+            @RequestParam(value = "offset", defaultValue = "0") int offset,
             @RequestParam(value = "limit") int limit,
             @RequestParam(value = "status") String status
     ) {
@@ -301,16 +294,18 @@ public class PostController {
                 postListRep = postService.findAllNewPosts(ActivesType.ACTIVE, offset, limit);
                 count = postService.getTotalCountOfNewPosts(ActivesType.ACTIVE);
         }
-
-        List<ResponseDTO> posts = getPostsDTO(postListRep, PostInfoDTO.class);
-
-        return new ResponseEntity<>(new CollectionPostsResponseDTO<>(count, posts), HttpStatus.OK);
+//        List<ResponseDTO> posts = getPosts(postListRep);
+        List<PostPublicDTO> posts = getPosts(postListRep);
+        JSONObject response = new JSONObject();
+        response.put("count", count);
+        response.put("posts", posts);
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping(value = "/api/post/my")
-    @ResponseBody
-    public ResponseEntity getMyPosts(
-            @RequestParam(value = "offset") int offset,
+    @SuppressWarnings("unchecked")
+    public ResponseEntity<JSONObject> getMyPosts(
+            @RequestParam(value = "offset", defaultValue = "0") int offset,
             @RequestParam(value = "limit") int limit,
             @RequestParam(value = "status") String status
     ) {
@@ -334,20 +329,19 @@ public class PostController {
                 postListRep = postService.findAllPostsByUserId(ActivesType.ACTIVE, ModerationStatusType.ACCEPTED, offset, limit, userId);
                 count = postService.getTotalCountOfPostsByUserId(ActivesType.ACTIVE, ModerationStatusType.ACCEPTED, userId);
         }
-
-        List<ResponseDTO> posts = getPostsDTO(postListRep, PostInfoDTO.class);
-
-        return new ResponseEntity<>(new CollectionPostsResponseDTO<>(count, posts), HttpStatus.OK);
+        List<PostPublicDTO> posts = getPosts(postListRep);
+        JSONObject response = new JSONObject();
+        response.put("count", count);
+        response.put("posts", posts);
+        return ResponseEntity.ok(response);
     }
 
     @PutMapping(value = "/api/post/{id}")
-    @ResponseBody
-    public ResponseEntity updatePost(
+    @SuppressWarnings("unchecked")
+    public ResponseEntity<JSONObject> updatePost(
             @PathVariable(value = "id") long postId,
             @RequestBody JSONObject request
     ) {
-        Post updatedPost = postService.findById(postId);
-
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
         String timeOfPostString = (String) request.get("time");
         int newPostActivity = (int) request.get("active");
@@ -358,21 +352,25 @@ public class PostController {
         JSONObject message = new JSONObject();
         if (newTitle.isEmpty()) {
             message.put("message", "Заголовок не должен быть пустым!");
+            message.put("result", false);
             return new ResponseEntity<>(message, HttpStatus.BAD_REQUEST);
         }
 
         if (newText.isEmpty()) {
             message.put("message", "Пост не должен быть пустым!");
+            message.put("result", false);
             return new ResponseEntity<>(message, HttpStatus.BAD_REQUEST);
         }
 
         if (newTitle.length() < 3) {
             message.put("message", "Минимальное количество символов в заголовке - 3!");
+            message.put("result", false);
             return new ResponseEntity<>(message, HttpStatus.BAD_REQUEST);
         }
 
         if (newText.length() < 50) {
             message.put("message", "Минимальное количество символов в публикации - 50!");
+            message.put("result", false);
             return new ResponseEntity<>(message, HttpStatus.BAD_REQUEST);
         }
 
@@ -381,6 +379,7 @@ public class PostController {
             newTimeOfPost = LocalDateTime.parse(timeOfPostString, formatter);
         } catch (DateTimeParseException e) {
             message.put("message", "Необходимо указать дату!");
+            message.put("result", false);
             return new ResponseEntity<>(message, HttpStatus.BAD_REQUEST);
         }
         if (newTimeOfPost.isBefore(LocalDateTime.now(ZoneId.of("UTC")))) {
@@ -388,8 +387,8 @@ public class PostController {
         }
 
         byte isActive = newPostActivity == 1 ? (byte) 1 : 0;
-
         User user = userService.findById(authorizeServlet.getAuthorizedUserId());
+        Post updatedPost = postService.findById(postId);
         if (user.getIsModerator() == (byte) 1) {
             updatedPost.setModerator(user);
         } else {
@@ -408,42 +407,30 @@ public class PostController {
 
         JSONObject response = new JSONObject();
         response.put("result", true);
-        return new ResponseEntity<>(response, HttpStatus.OK);
-//        return ResponseEntity.status(HttpStatus.OK).body(null);
+        return ResponseEntity.ok(response);
     }
 
     //==================================================================================================================
 
-    private <T extends ResponseDTO> List<ResponseDTO> getPostsDTO(List<Post> postListRep, Class<T> postDTO) {
-        List<ResponseDTO> posts = new ArrayList<>();
+    private List<PostPublicDTO> getPosts(List<Post> postListRep) {
+        List<PostPublicDTO> posts = new ArrayList<>();
         for (Post postRep : postListRep) {
             long postId = postRep.getId();
             long userId = postRep.getUser().getId();
             String userName = postRep.getUser().getName();
-            UserSimpleDTO user = new UserSimpleDTO(userId, userName);
-            PostSimpleDTO postSimpleDTO = new PostSimpleDTO();
-            postSimpleDTO.setId(postId);
-            postSimpleDTO.setTime(getStringTime(postRep.getTime()));
-            postSimpleDTO.setUser(user);
-            postSimpleDTO.setTitle(postRep.getTitle());
-            postSimpleDTO.setAnnounce(getAnnounce(postRep.getText()));
-            if (postDTO.getSuperclass() == PostSimpleDTO.class || postDTO.getSuperclass() == PostInfoDTO.class) {
-                PostInfoDTO postInfoDTO = new PostInfoDTO(postSimpleDTO);
-                postInfoDTO.setLikeCount(postVoteService.getCountLikesByPostId(postId));
-                postInfoDTO.setDislikeCount(postVoteService.getCountDislikesByPostId(postId));
-                postInfoDTO.setCommentCount(postCommentService.getCountCommentsByPostId(postId));
-                postInfoDTO.setViewCount(postRep.getViewCount());
 
-                if (postDTO.getSuperclass() == PostInfoDTO.class) {
-                    PostFullDTO postFullDTO = new PostFullDTO(postSimpleDTO, postInfoDTO);
-                    postFullDTO.setComments(getCommentsByPostId(postId));
-                    postFullDTO.setTags(getTagsByPostId(postId));
-                } else {
-                    posts.add(postInfoDTO);
-                }
-            } else {
-                posts.add(postSimpleDTO);
-            }
+            PostPublicDTO postPublicDTO = PostPublicDTO.builder()
+                    .id(postId)
+                    .time(getStringTime(postRep.getTime()))
+                    .title(postRep.getTitle())
+                    .announce(getAnnounce(postRep.getText()))
+                    .user(UserSimpleDTO.builder().id(userId).name(userName).build())
+                    .likeCount(postVoteService.getCountLikesByPostId(postId))
+                    .dislikeCount(postVoteService.getCountDislikesByPostId(postId))
+                    .commentCount(postCommentService.getCountCommentsByPostId(postId))
+                    .viewCount(postRep.getViewCount())
+                    .build();
+            posts.add(postPublicDTO);
         }
         return posts;
     }
@@ -467,11 +454,12 @@ public class PostController {
             String userPhoto = postCommentRep.getUser().getPhoto();
             UserWithPhotoDTO userWithPhoto = new UserWithPhotoDTO(userId, userName, userPhoto);
 
-            CommentDTO commentDTO = new CommentDTO();
-            commentDTO.setId(postCommentRep.getId());
-            commentDTO.setTime(getStringTime(postCommentRep.getTime()));
-            commentDTO.setText(postCommentRep.getText());
-            commentDTO.setUser(userWithPhoto);
+            CommentDTO commentDTO = CommentDTO.builder()
+                    .id(postCommentRep.getId())
+                    .time(getStringTime(postCommentRep.getTime()))
+                    .text(postCommentRep.getText())
+                    .user(userWithPhoto)
+                    .build();
 
             //===========================================================
             commentDTOList.add(commentDTO);
@@ -482,7 +470,7 @@ public class PostController {
 
     private String getAnnounce(String text) {
         int maxSizeAnnounce = 200;
-        String announce = text;
+        String announce = Jsoup.parse(text).text();
         if (announce.length() > maxSizeAnnounce) {
             announce = announce.substring(0, maxSizeAnnounce);
         }
