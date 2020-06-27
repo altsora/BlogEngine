@@ -20,7 +20,6 @@ import java.util.Set;
 @ToString(exclude = {"postRatings", "tags", "comments"})
 @EqualsAndHashCode(exclude = {"postRatings", "tags", "comments"})
 public class Post implements Serializable {
-
     private long id;
     private byte isActive;
     private ModerationStatusType moderationStatus = ModerationStatusType.NEW;

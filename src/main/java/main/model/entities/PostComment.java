@@ -22,7 +22,6 @@ import java.util.Set;
 @ToString(exclude = {"children"})
 @EqualsAndHashCode(exclude = {"children"})
 public class PostComment implements Serializable {
-
     private long id;
     private PostComment parent;
     private Post post;

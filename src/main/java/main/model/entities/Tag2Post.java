@@ -16,7 +16,6 @@ import java.io.Serializable;
 @ToString
 @EqualsAndHashCode(of = {"post", "tag"})
 public class Tag2Post implements Serializable {
-
     private long id;
     private Post post;
     private Tag tag;

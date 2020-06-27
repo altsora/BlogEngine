@@ -18,7 +18,6 @@ import java.util.Set;
 @ToString(exclude = {"posts", "modifiedPosts", "ratedPosts", "comments"})
 @EqualsAndHashCode(exclude = {"posts", "modifiedPosts", "ratedPosts", "comments"})
 public class User implements Serializable {
-
     private long id;
     private byte isModerator;
     private LocalDateTime regTime;

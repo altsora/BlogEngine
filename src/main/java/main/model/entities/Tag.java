@@ -17,7 +17,6 @@ import java.util.Set;
 @ToString(exclude = {"posts"})
 @EqualsAndHashCode(exclude = {"posts"})
 public class Tag implements Serializable {
-
     private long id;
     private String name;
     private Set<Tag2Post> posts;

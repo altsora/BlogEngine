@@ -16,7 +16,6 @@ import java.time.LocalDateTime;
 @ToString
 @EqualsAndHashCode
 public class CaptchaCode implements Serializable {
-
     private long id;
     private LocalDateTime time;
     private String code;

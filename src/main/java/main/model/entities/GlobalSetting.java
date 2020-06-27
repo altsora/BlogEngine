@@ -17,7 +17,6 @@ import java.io.Serializable;
 @ToString
 @EqualsAndHashCode
 public class GlobalSetting implements Serializable {
-
     private long id;
     private SettingsCodeType code;
     private String name;

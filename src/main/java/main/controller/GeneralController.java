@@ -40,20 +40,14 @@ public class GeneralController {
     private final PostVoteService postVoteService;
     private final TagService tagService;
     private final UserService userService;
+    private final BlogDTO blog;
 
     //==================================================================================================================
 
     @GetMapping(value = "/api/init")
     @ResponseBody
     public BlogDTO init() {
-        return BlogDTO.builder()
-                .title("DevPub")
-                .subtitle("Рассказы разработчиков")
-                .phone("+7 903 666-44-55")
-                .email("mail@mail.ru")
-                .copyright("Александр Вергун")
-                .copyrightFrom("2005")
-                .build();
+        return blog;
     }
 
     @GetMapping(value = "/api/settings")

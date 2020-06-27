@@ -1,12 +1,16 @@
 package main.responses;
 
-import lombok.Builder;
-import lombok.Getter;
 import lombok.ToString;
+import lombok.RequiredArgsConstructor;
+import lombok.Getter;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.context.properties.ConstructorBinding;
 
-@Getter
-@Builder
+@ConfigurationProperties(prefix = "blog")
+@ConstructorBinding
+@RequiredArgsConstructor
 @ToString
+@Getter
 public class BlogDTO {
     private final String title;
     private final String subtitle;

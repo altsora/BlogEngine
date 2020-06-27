@@ -6,6 +6,8 @@ import main.model.entities.CaptchaCode;
 import main.repositories.CaptchaCodeRepository;
 import main.services.CaptchaCodeService;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Service;
 
 import javax.imageio.ImageIO;
@@ -20,7 +22,7 @@ import java.util.Base64;
 @Service
 @RequiredArgsConstructor
 public class CaptchaCodeServiceImpl implements CaptchaCodeService {
-    @Value("#{T(java.time.LocalDateTime).now(T(java.time.ZoneId).of(\"UTC\")).minusHours('${captcha.lifetime.hour}')}")
+    @Value("#{T(java.time.LocalDateTime).now(T(java.time.ZoneId).of(\"UTC\")).minusHours('${captcha.hour}')}")
     private LocalDateTime captchaLifetime;
     private final int CAPTCHA_CODE_LENGTH = 3;
     private final int WIDTH = 100;
