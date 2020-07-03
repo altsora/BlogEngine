@@ -70,7 +70,7 @@ public class GeneralController {
         Boolean statisticsIsPublicValue = (Boolean) request.get("STATISTICS_IS_PUBLIC");
         if (authorizeServlet.isUserAuthorize()) {
             User user = userService.findById(authorizeServlet.getAuthorizedUserId());
-            if (user.getIsModerator() == (byte) 1) {
+            if (user.isModerator()) {
                 if (multiUserModeValue != null) {
                     globalSettingsService.setValue(SettingsCode.MULTIUSER_MODE, multiUserModeValue);
                 }
@@ -121,7 +121,6 @@ public class GeneralController {
             response.put("firstPublication", firstPublication);
 
             return ResponseEntity.ok(response);
-//            return new ResponseEntity<>(response, HttpStatus.OK);
         } else {
             if (authorizeServlet.isUserAuthorize()) {
                 return new ResponseEntity<>(getMyStatistics().getBody(), HttpStatus.OK);
@@ -135,6 +134,7 @@ public class GeneralController {
     @SuppressWarnings("unchecked")
     public ResponseEntity<JSONObject> getMyStatistics() {
         long userId = authorizeServlet.getAuthorizedUserId();
+        //TODO: добавить секунды
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm");
         int postsCount = postService.getTotalCountOfPostsByUserId(userId);
         int likesCount = postVoteService.getTotalCountLikesByUserId(userId);

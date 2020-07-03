@@ -19,7 +19,7 @@ import java.util.Set;
 @EqualsAndHashCode(exclude = {"posts", "modifiedPosts", "ratedPosts", "comments"})
 public class User implements Serializable {
     private long id;
-    private byte isModerator;
+    private boolean isModerator;
     private LocalDateTime regTime;
     private String name;
     private String email;
@@ -40,7 +40,7 @@ public class User implements Serializable {
     }
 
     @Column(name = "is_moderator", nullable = false)
-    public byte getIsModerator() {
+    public boolean isModerator() {
         return isModerator;
     }
 

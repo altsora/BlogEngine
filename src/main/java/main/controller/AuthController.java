@@ -32,17 +32,17 @@ public class AuthController {
         if (authorizeServlet.isUserAuthorize()) {
             long userId = authorizeServlet.getAuthorizedUserId();
             User userRep = userService.findById(userId);
-            boolean moderation = userRep.getIsModerator() == 1;
-            int moderationCount = moderation ? postService.getTotalCountOfNewPosts(ActivesType.ACTIVE) : 0;
+            boolean userIsModerator = userRep.isModerator();
+            int moderationCount = userIsModerator ? postService.getTotalCountOfNewPosts(ActivesType.ACTIVE) : 0;
 
             UserLoginDTO userLogin = UserLoginDTO.builder()
                     .id(userId)
                     .name(userRep.getName())
                     .photo(userRep.getPhoto())
                     .email(userRep.getEmail())
-                    .moderation(moderation)
+                    .moderation(userIsModerator)
                     .moderationCount(moderationCount)
-                    .settings(moderation)
+                    .settings(userIsModerator)
                     .build();
             response.put("user", userLogin);
             result = true;
@@ -62,17 +62,17 @@ public class AuthController {
         boolean result;
         if (userRep != null) {
             long userId = userRep.getId();
-            boolean moderation = userRep.getIsModerator() == 1;
-            int moderationCount = moderation ? postService.getTotalCountOfNewPosts(ActivesType.ACTIVE) : 0;
+            boolean userIsModerator = userRep.isModerator();
+            int moderationCount = userIsModerator ? postService.getTotalCountOfNewPosts(ActivesType.ACTIVE) : 0;
 
             UserLoginDTO userLogin = UserLoginDTO.builder()
                     .id(userId)
                     .name(userRep.getName())
                     .photo(userRep.getPhoto())
                     .email(userRep.getEmail())
-                    .moderation(moderation)
+                    .moderation(userIsModerator)
                     .moderationCount(moderationCount)
-                    .settings(moderation)
+                    .settings(userIsModerator)
                     .build();
 
             response.put("user", userLogin);
@@ -189,7 +189,7 @@ public class AuthController {
     @PostMapping(value = "/api/auth/restore")
     @SuppressWarnings("unchecked")
     public ResponseEntity<JSONObject> restorePassword(@RequestBody JSONObject request) {
-        //TODO: Доделать позже. Недостаточно данных
+        //TODO: Недостаточно данных
         String email = (String) request.get("email");
         boolean result = userService.emailExists(email);
         JSONObject response = new JSONObject();

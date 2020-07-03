@@ -91,7 +91,7 @@ public class PostController {
         Post postRep = postService.findById(id);
         if (authorizeServlet.isUserAuthorize()) {
             User user = userService.findById(authorizeServlet.getAuthorizedUserId());
-            if (user.getIsModerator() == 0 && user.getId() != postRep.getUser().getId()) {
+            if (!user.isModerator() && user.getId() != postRep.getUser().getId()) {
                 postRep = postService.updateViewCount(postRep);
             }
         } else {
@@ -288,7 +288,6 @@ public class PostController {
                 postListRep = postService.findAllNewPosts(ActivesType.ACTIVE, offset, limit);
                 count = postService.getTotalCountOfNewPosts(ActivesType.ACTIVE);
         }
-//        List<ResponseDTO> posts = getPosts(postListRep);
         List<PostPublicDTO> posts = getPosts(postListRep);
         JSONObject response = new JSONObject();
         response.put("count", count);
@@ -383,7 +382,7 @@ public class PostController {
         byte isActive = newPostActivity == 1 ? (byte) 1 : 0;
         User user = userService.findById(authorizeServlet.getAuthorizedUserId());
         Post updatedPost = postService.findById(postId);
-        if (user.getIsModerator() == (byte) 1) {
+        if (user.isModerator()) {
             updatedPost.setModerator(user);
         } else {
             updatedPost.setModerationStatus(ModerationStatus.NEW);
