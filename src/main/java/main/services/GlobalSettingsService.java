@@ -1,7 +1,7 @@
 package main.services;
 
 import main.model.entities.GlobalSetting;
-import main.model.enums.SettingsCodeType;
+import main.model.enums.SettingsCode;
 
 import java.util.List;
 
@@ -13,7 +13,7 @@ public interface GlobalSettingsService {
     boolean settingStatisticsIsPublicIsEnabled();
 
 
-    void setValue(SettingsCodeType settingsCodeType, boolean value);
+    void setValue(SettingsCode settingsCode, boolean value);
 
     List<GlobalSetting> findAll();
 }

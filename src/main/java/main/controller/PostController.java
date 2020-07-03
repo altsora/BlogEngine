@@ -3,7 +3,8 @@ package main.controller;
 import lombok.RequiredArgsConstructor;
 import main.model.entities.*;
 import main.model.enums.ActivesType;
-import main.model.enums.ModerationStatusType;
+import main.model.enums.ModerationStatus;
+import main.model.enums.Rating;
 import main.responses.*;
 import main.services.*;
 import main.servlet.AuthorizeServlet;
@@ -33,7 +34,6 @@ public class PostController {
     private final Tag2PostService tag2PostService;
     private final UserService userService;
 
-    //TODO: Увеличивать количество просмотров при открытии поста
     //==================================================================================================================
 
     @GetMapping(value = "/api/post")
@@ -46,19 +46,19 @@ public class PostController {
         List<Post> postListRep;
         switch (mode) {
             case "popular":
-                postListRep = postService.findAllPostPopular(ActivesType.ACTIVE, ModerationStatusType.ACCEPTED, offset, limit);
+                postListRep = postService.findAllPostPopular(ActivesType.ACTIVE, ModerationStatus.ACCEPTED, offset, limit);
                 break;
             case "best":
-                postListRep = postService.findAllPostBest(ActivesType.ACTIVE, ModerationStatusType.ACCEPTED, offset, limit);
+                postListRep = postService.findAllPostBest(ActivesType.ACTIVE, ModerationStatus.ACCEPTED, offset, limit);
                 break;
             case "early":
-                postListRep = postService.findAllPostSortedByDate(ActivesType.ACTIVE, ModerationStatusType.ACCEPTED, offset, limit, Sort.Direction.ASC);
+                postListRep = postService.findAllPostSortedByDate(ActivesType.ACTIVE, ModerationStatus.ACCEPTED, offset, limit, Sort.Direction.ASC);
                 break;
             default:
-                postListRep = postService.findAllPostSortedByDate(ActivesType.ACTIVE, ModerationStatusType.ACCEPTED, offset, limit, Sort.Direction.DESC);
+                postListRep = postService.findAllPostSortedByDate(ActivesType.ACTIVE, ModerationStatus.ACCEPTED, offset, limit, Sort.Direction.DESC);
         }
         List<PostPublicDTO> posts = getPosts(postListRep);
-        int count = postService.getTotalCountOfPosts(ActivesType.ACTIVE, ModerationStatusType.ACCEPTED);
+        int count = postService.getTotalCountOfPosts(ActivesType.ACTIVE, ModerationStatus.ACCEPTED);
         JSONObject response = new JSONObject();
         response.put("count", count);
         response.put("posts", posts);
@@ -73,12 +73,12 @@ public class PostController {
             @RequestParam(value = "query") String query
     ) {
         List<Post> postListRep = query.equals("") ?
-                postService.findAllPostSortedByDate(ActivesType.ACTIVE, ModerationStatusType.ACCEPTED, offset, limit, Sort.Direction.DESC) :
-                postService.findAllPostByQuery(ActivesType.ACTIVE, ModerationStatusType.ACCEPTED, offset, limit, query);
+                postService.findAllPostSortedByDate(ActivesType.ACTIVE, ModerationStatus.ACCEPTED, offset, limit, Sort.Direction.DESC) :
+                postService.findAllPostByQuery(ActivesType.ACTIVE, ModerationStatus.ACCEPTED, offset, limit, query);
         List<PostPublicDTO> posts = getPosts(postListRep);
         int count = query.equals("") ?
-                postService.getTotalCountOfPosts(ActivesType.ACTIVE, ModerationStatusType.ACCEPTED) :
-                postService.getTotalCountOfPostsByQuery(ActivesType.ACTIVE, ModerationStatusType.ACCEPTED, query);
+                postService.getTotalCountOfPosts(ActivesType.ACTIVE, ModerationStatus.ACCEPTED) :
+                postService.getTotalCountOfPostsByQuery(ActivesType.ACTIVE, ModerationStatus.ACCEPTED, query);
         JSONObject response = new JSONObject();
         response.put("count", count);
         response.put("posts", posts);
@@ -124,9 +124,9 @@ public class PostController {
             @RequestParam(value = "limit") int limit,
             @RequestParam(value = "date") String date
     ) {
-        List<Post> postListRep = postService.findAllPostByDate(ActivesType.ACTIVE, ModerationStatusType.ACCEPTED, offset, limit, date);
+        List<Post> postListRep = postService.findAllPostByDate(ActivesType.ACTIVE, ModerationStatus.ACCEPTED, offset, limit, date);
         List<PostPublicDTO> posts = getPosts(postListRep);
-        int count = postService.getTotalCountOfPostsByDate(ActivesType.ACTIVE, ModerationStatusType.ACCEPTED, date);
+        int count = postService.getTotalCountOfPostsByDate(ActivesType.ACTIVE, ModerationStatus.ACCEPTED, date);
 
         JSONObject response = new JSONObject();
         response.put("count", count);
@@ -141,9 +141,9 @@ public class PostController {
             @RequestParam(value = "limit") int limit,
             @RequestParam(value = "tag") String tag
     ) {
-        List<Post> postListRep = postService.findAllPostByTag(ActivesType.ACTIVE, ModerationStatusType.ACCEPTED, offset, limit, tag);
+        List<Post> postListRep = postService.findAllPostByTag(ActivesType.ACTIVE, ModerationStatus.ACCEPTED, offset, limit, tag);
         List<PostPublicDTO> posts = getPosts(postListRep);
-        int count = postService.getTotalCountOfPostsByTag(ActivesType.ACTIVE, ModerationStatusType.ACCEPTED, tag);
+        int count = postService.getTotalCountOfPostsByTag(ActivesType.ACTIVE, ModerationStatus.ACCEPTED, tag);
         JSONObject response = new JSONObject();
         response.put("count", count);
         response.put("posts", posts);
@@ -159,21 +159,14 @@ public class PostController {
             long postId = (int) request.get("post_id");
             if (postVoteService.userDislikeAlreadyExists(userId, postId)) {
                 long postVoteId = postVoteService.getIdByUserIdAndPostId(userId, postId);
-                postVoteService.replaceDislikeWithLike(postVoteId);
+                postVoteService.replaceValue(postVoteId);
                 result = true;
             } else if (postVoteService.userLikeAlreadyExists(userId, postId)) {
                 long postVoteId = postVoteService.getIdByUserIdAndPostId(userId, postId);
                 postVoteService.deleteById(postVoteId);
                 result = false;
             } else {
-                User user = userService.findById(userId);
-                Post post = postService.findById(postId);
-                PostVote postVote = new PostVote();
-                postVote.setUser(user);
-                postVote.setPost(post);
-                postVote.setTime(LocalDateTime.now(ZoneId.of("UTC")));
-                postVote.setValue((byte) 1);
-                postVoteService.addPostVote(postVote);
+                postVoteService.setRating(userId, postId, Rating.LIKE);
                 result = true;
             }
         } else {
@@ -193,21 +186,14 @@ public class PostController {
             long postId = (int) request.get("post_id");
             if (postVoteService.userLikeAlreadyExists(userId, postId)) {
                 long postVoteId = postVoteService.getIdByUserIdAndPostId(userId, postId);
-                postVoteService.replaceLikeWithDislike(postVoteId);
+                postVoteService.replaceValue(postVoteId);
                 result = true;
             } else if (postVoteService.userDislikeAlreadyExists(userId, postId)) {
                 long postVoteId = postVoteService.getIdByUserIdAndPostId(userId, postId);
                 postVoteService.deleteById(postVoteId);
                 result = false;
             } else {
-                User user = userService.findById(userId);
-                Post post = postService.findById(postId);
-                PostVote postVote = new PostVote();
-                postVote.setUser(user);
-                postVote.setPost(post);
-                postVote.setTime(LocalDateTime.now(ZoneId.of("UTC")));
-                postVote.setValue((byte) -1);
-                postVoteService.addPostVote(postVote);
+                postVoteService.setRating(userId, postId, Rating.DISLIKE);
                 result = true;
             }
         } else {
@@ -291,12 +277,12 @@ public class PostController {
         List<Post> postListRep;
         switch (status) {
             case "declined":
-                postListRep = postService.findAllPostsByModeratorId(ActivesType.ACTIVE, ModerationStatusType.DECLINED, offset, limit, userId);
-                count = postService.getTotalCountOfPostsByModeratorId(ActivesType.ACTIVE, ModerationStatusType.DECLINED, userId);
+                postListRep = postService.findAllPostsByModeratorId(ActivesType.ACTIVE, ModerationStatus.DECLINED, offset, limit, userId);
+                count = postService.getTotalCountOfPostsByModeratorId(ActivesType.ACTIVE, ModerationStatus.DECLINED, userId);
                 break;
             case "accepted":
-                postListRep = postService.findAllPostsByModeratorId(ActivesType.ACTIVE, ModerationStatusType.ACCEPTED, offset, limit, userId);
-                count = postService.getTotalCountOfPostsByModeratorId(ActivesType.ACTIVE, ModerationStatusType.ACCEPTED, userId);
+                postListRep = postService.findAllPostsByModeratorId(ActivesType.ACTIVE, ModerationStatus.ACCEPTED, offset, limit, userId);
+                count = postService.getTotalCountOfPostsByModeratorId(ActivesType.ACTIVE, ModerationStatus.ACCEPTED, userId);
                 break;
             default:
                 postListRep = postService.findAllNewPosts(ActivesType.ACTIVE, offset, limit);
@@ -326,16 +312,16 @@ public class PostController {
                 count = postService.getTotalCountOfHiddenPostsByUserId(userId);
                 break;
             case "pending":
-                postListRep = postService.findAllPostsByUserId(ActivesType.ACTIVE, ModerationStatusType.NEW, offset, limit, userId);
-                count = postService.getTotalCountOfPostsByUserId(ActivesType.ACTIVE, ModerationStatusType.NEW, userId);
+                postListRep = postService.findAllPostsByUserId(ActivesType.ACTIVE, ModerationStatus.NEW, offset, limit, userId);
+                count = postService.getTotalCountOfPostsByUserId(ActivesType.ACTIVE, ModerationStatus.NEW, userId);
                 break;
             case "declined":
-                postListRep = postService.findAllPostsByUserId(ActivesType.ACTIVE, ModerationStatusType.DECLINED, offset, limit, userId);
-                count = postService.getTotalCountOfPostsByUserId(ActivesType.ACTIVE, ModerationStatusType.DECLINED, userId);
+                postListRep = postService.findAllPostsByUserId(ActivesType.ACTIVE, ModerationStatus.DECLINED, offset, limit, userId);
+                count = postService.getTotalCountOfPostsByUserId(ActivesType.ACTIVE, ModerationStatus.DECLINED, userId);
                 break;
             default:
-                postListRep = postService.findAllPostsByUserId(ActivesType.ACTIVE, ModerationStatusType.ACCEPTED, offset, limit, userId);
-                count = postService.getTotalCountOfPostsByUserId(ActivesType.ACTIVE, ModerationStatusType.ACCEPTED, userId);
+                postListRep = postService.findAllPostsByUserId(ActivesType.ACTIVE, ModerationStatus.ACCEPTED, offset, limit, userId);
+                count = postService.getTotalCountOfPostsByUserId(ActivesType.ACTIVE, ModerationStatus.ACCEPTED, userId);
         }
         List<PostPublicDTO> posts = getPosts(postListRep);
         JSONObject response = new JSONObject();
@@ -400,7 +386,7 @@ public class PostController {
         if (user.getIsModerator() == (byte) 1) {
             updatedPost.setModerator(user);
         } else {
-            updatedPost.setModerationStatus(ModerationStatusType.NEW);
+            updatedPost.setModerationStatus(ModerationStatus.NEW);
         }
 
         updatedPost.setIsActive(isActive);

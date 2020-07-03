@@ -1,7 +1,7 @@
 package main.repositories;
 
 import main.model.entities.GlobalSetting;
-import main.model.enums.SettingsCodeType;
+import main.model.enums.SettingsCode;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -33,9 +33,9 @@ public interface GlobalSettingsRepository extends JpaRepository<GlobalSetting, L
 
     /**
      * Запрос возвращает настройку по её коду.
-     * @param settingsCodeType - код настройки;
+     * @param settingsCode - код настройки;
      * @return - возвращается объект GlobalSetting по указанному коду.
      */
     @Query("SELECT gs FROM GlobalSetting gs WHERE gs.code = :settingCode")
-    GlobalSetting findSettingByCode(@Param("settingCode")SettingsCodeType settingsCodeType);
+    GlobalSetting findSettingByCode(@Param("settingCode") SettingsCode settingsCode);
 }

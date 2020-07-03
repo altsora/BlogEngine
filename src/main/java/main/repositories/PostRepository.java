@@ -1,6 +1,6 @@
 package main.repositories;
 
-import main.model.enums.ModerationStatusType;
+import main.model.enums.ModerationStatus;
 import main.model.entities.Post;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -25,7 +25,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
      * удовлетворяют условиям активности и имеют определённый статус модерации.
      *
      * @param isActive             - указывает активность поста (активный или скрытый);
-     * @param moderationStatusType - указывает статус поста (новый, принят или отклонён);
+     * @param moderationStatus - указывает статус поста (новый, принят или отклонён);
      * @return Возвращает количество постов.
      */
     @Query("SELECT COUNT(p) FROM Post p " +
@@ -35,7 +35,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
             "   p.time <= now()")
     int getTotalCountOfPosts(
             @Param("isActive") byte isActive,
-            @Param("moderationStatus") ModerationStatusType moderationStatusType
+            @Param("moderationStatus") ModerationStatus moderationStatus
     );
 
     /**
@@ -55,7 +55,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
      * удовлетворяют условиям активности и имеют определённый статус модерации.
      *
      * @param isActive             - указывает активность поста (активный или скрытый);
-     * @param moderationStatusType - указывает статус поста (новый, принят или отклонён);
+     * @param moderationStatus - указывает статус поста (новый, принят или отклонён);
      * @param tag                  - тэг, по которому подсчитываются посты;
      * @return - возвращает общее количество постов с указанным тэгом.
      */
@@ -69,7 +69,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
             "   t.name = :tag")
     int getTotalCountOfPostsByTag(
             @Param("isActive") byte isActive,
-            @Param("moderationStatus") ModerationStatusType moderationStatusType,
+            @Param("moderationStatus") ModerationStatus moderationStatus,
             @Param("tag") String tag
     );
 
@@ -78,7 +78,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
      * Посты удовлетворяют условиям активности и имеют определённый статус модерации.
      *
      * @param isActive             - указывает активность поста (активный или скрытый);
-     * @param moderationStatusType - указывает статус поста (новый, принят или отклонён);
+     * @param moderationStatus - указывает статус поста (новый, принят или отклонён);
      * @param year                 - год публикации поста. Целое число;
      * @param month                - месяц публикации поста. Целое число от 1 до 12;
      * @param dayOfMonth           - день публикации поста. Целое число от 1 до 28-31;
@@ -93,7 +93,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
             "   DAYOFMONTH(p.time) = :dayOfMonth")
     int getTotalCountOfPostsByDate(
             @Param("isActive") byte isActive,
-            @Param("moderationStatus") ModerationStatusType moderationStatusType,
+            @Param("moderationStatus") ModerationStatus moderationStatus,
             @Param("year") int year,
             @Param("month") int month,
             @Param("dayOfMonth") int dayOfMonth
@@ -105,7 +105,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
      * удовлетворяют условиям активности и имеют определённый статус модерации.
      *
      * @param isActive             - указывает активность поста (активный или скрытый);
-     * @param moderationStatusType - указывает статус поста (новый, принят или отклонён);
+     * @param moderationStatus - указывает статус поста (новый, принят или отклонён);
      * @param query                - строка, по которой осуществляется подсчёт постов;
      * @return - возвращает общее количество постов, содержащих указанную строку.
      */
@@ -117,7 +117,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
             "   p.title LIKE %:query% OR p.text LIKE %:query% ")
     int getTotalCountOfPostsByQuery(
             @Param("isActive") byte isActive,
-            @Param("moderationStatus") ModerationStatusType moderationStatusType,
+            @Param("moderationStatus") ModerationStatus moderationStatus,
             @Param("query") String query
     );
 
@@ -127,7 +127,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
      * удовлетворяют условиям активности и имеют определённый статус модерации.
      *
      * @param isActive             - указывает активность поста (активный или скрытый);
-     * @param moderationStatusType - указывает статус поста (новый, принят или отклонён);
+     * @param moderationStatus - указывает статус поста (новый, принят или отклонён);
      * @return - Возвращает общее число просмотров у всех постов.
      */
     @Query("SELECT SUM(p.viewCount) FROM Post p " +
@@ -137,7 +137,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
             "   p.time <= now()")
     int getTotalCountView(
             @Param("isActive") byte isActive,
-            @Param("moderationStatus") ModerationStatusType moderationStatusType
+            @Param("moderationStatus") ModerationStatus moderationStatus
     );
 
     /**
@@ -156,7 +156,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
             "   p.moderationStatus = :moderationStatus")
     int getTotalCountOfNewPosts(
             @Param("isActive") byte isActive,
-            @Param("moderationStatus") ModerationStatusType moderationStatusType
+            @Param("moderationStatus") ModerationStatus moderationStatus
     );
 
     @Query("SELECT COUNT(p) FROM Post p " +
@@ -166,7 +166,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
             "   p.moderator.id = :moderatorId")
     int getTotalCountOfPostsByModeratorId(
             @Param("isActive") byte isActive,
-            @Param("moderationStatus") ModerationStatusType moderationStatusType,
+            @Param("moderationStatus") ModerationStatus moderationStatus,
             @Param("moderatorId") long moderatorId
     );
 
@@ -186,7 +186,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
             "   p.user.id = :userId")
     int getTotalCountOfPostsByUserId(
             @Param("isActive") byte isActive,
-            @Param("moderationStatus") ModerationStatusType moderationStatusType,
+            @Param("moderationStatus") ModerationStatus moderationStatus,
             @Param("userId") long userId
     );
 
@@ -198,7 +198,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
      * удовлетворяют условиям активности и имеют определённый статус модерации.
      *
      * @param isActive             - указывает активность поста (активный или скрытый);
-     * @param moderationStatusType - указывает статус поста (новый, принят или отклонён);
+     * @param moderationStatus - указывает статус поста (новый, принят или отклонён);
      * @param year                 - год, по которому осуществляется выборка;
      * @param sort                 - сортировка результирующей выборки;
      * @return Возвращает коллекцию пар значений: дата и количество постов в этот день.
@@ -213,7 +213,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
             "GROUP BY YEAR(p.time), MONTH(p.time), DAYOFMONTH(p.time)")
     List<Tuple> getDateAndCountPosts(
             @Param("isActive") byte isActive,
-            @Param("moderationStatus") ModerationStatusType moderationStatusType,
+            @Param("moderationStatus") ModerationStatus moderationStatus,
             @Param("year") int year,
             Sort sort
     );
@@ -224,7 +224,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
      * удовлетворяют условиям активности и имеют определённый статус модерации.
      *
      * @param isActive             - указывает активность поста (активный или скрытый);
-     * @param moderationStatusType - указывает статус поста (новый, принят или отклонён);
+     * @param moderationStatus - указывает статус поста (новый, принят или отклонён);
      * @param sort                 - сортировка результирующей выборки;
      * @return Возвращает коллекцию лет, в которые производились публикации.
      */
@@ -237,7 +237,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
             "GROUP BY yearPost")
     List<Integer> findAllYearsOfPublication(
             @Param("isActive") byte isActive,
-            @Param("moderationStatus") ModerationStatusType moderationStatusType,
+            @Param("moderationStatus") ModerationStatus moderationStatus,
             Sort sort
     );
 
@@ -249,7 +249,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
      * удовлетворяют условиям активности и имеют определённый статус модерации.
      *
      * @param isActive             - указывает активность поста (активный или скрытый);
-     * @param moderationStatusType - указывает статус поста (новый, принят или отклонён);
+     * @param moderationStatus - указывает статус поста (новый, принят или отклонён);
      * @param pageable             - содержит в себе ограничение по количеству выдачи результатов, а также способ их сортировки;
      * @return Возвращает коллекцию постов, отсортированных по дате.
      */
@@ -260,7 +260,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
             "   p.time <= now() ")
     List<Post> findAllPostSortedByDate(
             @Param("isActive") byte isActive,
-            @Param("moderationStatus") ModerationStatusType moderationStatusType,
+            @Param("moderationStatus") ModerationStatus moderationStatus,
             Pageable pageable
     );
 
@@ -271,7 +271,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
             "   p.time <= now() ")
     List<Post> findAllRealPosts(
             @Param("isActive") byte isActive,
-            @Param("moderationStatus") ModerationStatusType moderationStatusType,
+            @Param("moderationStatus") ModerationStatus moderationStatus,
             Pageable pageable
     );
 
@@ -281,7 +281,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
             "   p.moderationStatus = :moderationStatus")
     List<Post> findAllPosts(
             @Param("isActive") byte isActive,
-            @Param("moderationStatus") ModerationStatusType moderationStatusType,
+            @Param("moderationStatus") ModerationStatus moderationStatus,
             Pageable pageable
     );
 
@@ -292,7 +292,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
             "   p.user.id = :userId")
     List<Post> findAllPostsByUserId(
             @Param("isActive") byte isActive,
-            @Param("moderationStatus") ModerationStatusType moderationStatusType,
+            @Param("moderationStatus") ModerationStatus moderationStatus,
             @Param("userId") long userId,
             Pageable pageable
     );
@@ -304,7 +304,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
             "   p.moderator.id = :moderatorId")
     List<Post> findAllPostsByModeratorId(
             @Param("isActive") byte isActive,
-            @Param("moderationStatus") ModerationStatusType moderationStatusType,
+            @Param("moderationStatus") ModerationStatus moderationStatus,
             @Param("moderatorId") long moderatorId,
             Pageable pageable
     );
@@ -315,7 +315,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
      * удовлетворяют условиям активности и имеют определённый статус модерации.
      *
      * @param isActive             - указывает активность поста (активный или скрытый);
-     * @param moderationStatusType - указывает статус поста (новый, принят или отклонён);
+     * @param moderationStatus - указывает статус поста (новый, принят или отклонён);
      * @param pageable             - содержит в себе ограничение по количеству выдачи результатов, а также способ их сортировки;
      * @return Возвращает коллекцию постов, отсортированных по количеству просмотров.
      */
@@ -329,7 +329,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
             "GROUP BY p.id")
     List<Post> findAllPostPopular(
             @Param("isActive") byte isActive,
-            @Param("moderationStatus") ModerationStatusType moderationStatusType,
+            @Param("moderationStatus") ModerationStatus moderationStatus,
             Pageable pageable
     );
 
@@ -339,7 +339,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
      * удовлетворяют условиям активности и имеют определённый статус модерации.
      *
      * @param isActive             - указывает активность поста (активный или скрытый);
-     * @param moderationStatusType - указывает статус поста (новый, принят или отклонён);
+     * @param moderationStatus - указывает статус поста (новый, принят или отклонён);
      * @param pageable             - содержит в себе ограничение по количеству выдачи результатов, а также способ их сортировки;
      * @return Возвращает коллекцию постов, отсортированных по лайкам.
      */
@@ -355,7 +355,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
             "GROUP BY p.id")
     List<Post> findAllPostBest(
             @Param("isActive") byte isActive,
-            @Param("moderationStatus") ModerationStatusType moderationStatusType,
+            @Param("moderationStatus") ModerationStatus moderationStatus,
             Pageable pageable
     );
 
@@ -367,7 +367,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
      * удовлетворяют условиям активности и имеют определённый статус модерации.
      *
      * @param isActive             - указывает активность поста (активный или скрытый);
-     * @param moderationStatusType - указывает статус поста (новый, принят или отклонён);
+     * @param moderationStatus - указывает статус поста (новый, принят или отклонён);
      * @param query                - строка, по которой осуществляется поиск постов;
      * @param pageable             - содержит в себе ограничение по количеству выдачи результатов, а также способ их сортировки.
      * @return
@@ -380,7 +380,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
             "   p.title LIKE %:query% OR p.text LIKE %:query% ")
     List<Post> findAllPostByQuery(
             @Param("isActive") byte isActive,
-            @Param("moderationStatus") ModerationStatusType moderationStatusType,
+            @Param("moderationStatus") ModerationStatus moderationStatus,
             @Param("query") String query,
             Pageable pageable
     );
@@ -394,7 +394,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
      *
      * @param postId               - ID поста;
      * @param isActive             - указывает активность поста (активный или скрытый);
-     * @param moderationStatusType - указывает статус поста (новый, принят или отклонён);
+     * @param moderationStatus - указывает статус поста (новый, принят или отклонён);
      * @return - возвращает пост по указанному идентификатору.
      */
     @Query("SELECT p FROM Post p " +
@@ -406,7 +406,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     Post findPostByPostId(
             @Param("postId") long postId,
             @Param("isActive") byte isActive,
-            @Param("moderationStatus") ModerationStatusType moderationStatusType
+            @Param("moderationStatus") ModerationStatus moderationStatus
     );
 
     //=============================================================================
@@ -416,7 +416,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
      * Посты удовлетворяют условиям активности и имеют определённый статус модерации.
      *
      * @param isActive             - указывает активность поста (активный или скрытый);
-     * @param moderationStatusType - указывает статус поста (новый, принят или отклонён);
+     * @param moderationStatus - указывает статус поста (новый, принят или отклонён);
      * @param year                 - год публикации постов;
      * @param month                - месяц публикации постов;
      * @param dayOfMonth           - день публикации постов;
@@ -432,7 +432,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
             "   DAYOFMONTH(p.time) = :dayOfMonth")
     List<Post> findAllPostByDate(
             @Param("isActive") byte isActive,
-            @Param("moderationStatus") ModerationStatusType moderationStatusType,
+            @Param("moderationStatus") ModerationStatus moderationStatus,
             @Param("year") int year,
             @Param("month") int month,
             @Param("dayOfMonth") int dayOfMonth,
@@ -447,7 +447,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
      * удовлетворяют условиям активности и имеют определённый статус модерации.
      *
      * @param isActive             - указывает активность поста (активный или скрытый);
-     * @param moderationStatusType - указывает статус поста (новый, принят или отклонён);
+     * @param moderationStatus - указывает статус поста (новый, принят или отклонён);
      * @param tag                  - тэг, по которому осуществляется поиск постов;
      * @param pageable             - содержит в себе ограничение по количеству выдачи результатов, а также способ их сортировки.
      * @return
@@ -462,7 +462,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
             "   t.name = :tag")
     List<Post> findAllPostByTag(
             @Param("isActive") byte isActive,
-            @Param("moderationStatus") ModerationStatusType moderationStatusType,
+            @Param("moderationStatus") ModerationStatus moderationStatus,
             @Param("tag") String tag,
             Pageable pageable
     );
@@ -484,7 +484,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
      * Пост удовлетворяет условиям активности и имеет определённый статус модерации.
      *
      * @param isActive             - указывает активность поста (активный или скрытый);
-     * @param moderationStatusType - указывает статус поста (новый, принят или отклонён);
+     * @param moderationStatus - указывает статус поста (новый, принят или отклонён);
      * @return - возвращает дату самого раннего поста.
      */
     @Query("SELECT MIN(p.time) FROM Post p " +
@@ -494,7 +494,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     )
     LocalDateTime getDateOfTheEarliestPost(
             @Param("isActive") byte isActive,
-            @Param("moderationStatus") ModerationStatusType moderationStatusType
+            @Param("moderationStatus") ModerationStatus moderationStatus
     );
 
     /**

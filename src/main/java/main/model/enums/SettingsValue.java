@@ -1,6 +1,6 @@
 package main.model.enums;
 
-public enum SettingsValueType {
+public enum SettingsValue {
     YES,
     NO
 }

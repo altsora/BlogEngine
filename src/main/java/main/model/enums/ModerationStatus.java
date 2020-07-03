@@ -1,6 +1,6 @@
 package main.model.enums;
 
-public enum ModerationStatusType  {
+public enum ModerationStatus {
     NEW,
     ACCEPTED,
     DECLINED

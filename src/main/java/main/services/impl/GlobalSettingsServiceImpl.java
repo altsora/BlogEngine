@@ -2,8 +2,8 @@ package main.services.impl;
 
 import lombok.RequiredArgsConstructor;
 import main.model.entities.GlobalSetting;
-import main.model.enums.SettingsCodeType;
-import main.model.enums.SettingsValueType;
+import main.model.enums.SettingsCode;
+import main.model.enums.SettingsValue;
 import main.repositories.GlobalSettingsRepository;
 import main.services.GlobalSettingsService;
 import org.springframework.stereotype.Service;
@@ -33,9 +33,9 @@ public class GlobalSettingsServiceImpl implements GlobalSettingsService {
     }
 
     @Override
-    public void setValue(SettingsCodeType settingsCodeType, boolean value) {
-        SettingsValueType valueType = value ? SettingsValueType.YES : SettingsValueType.NO;
-        GlobalSetting globalSetting = globalSettingsRepository.findSettingByCode(settingsCodeType);
+    public void setValue(SettingsCode settingsCode, boolean value) {
+        SettingsValue valueType = value ? SettingsValue.YES : SettingsValue.NO;
+        GlobalSetting globalSetting = globalSettingsRepository.findSettingByCode(settingsCode);
         globalSetting.setValue(valueType);
         globalSettingsRepository.saveAndFlush(globalSetting);
     }

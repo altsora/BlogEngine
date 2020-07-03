@@ -1,6 +1,6 @@
 package main.model.enums;
 
-public enum SettingsCodeType {
+public enum SettingsCode {
     MULTIUSER_MODE,
     POST_PREMODERATION,
     STATISTICS_IS_PUBLIC

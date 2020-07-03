@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
+import main.model.enums.Rating;
 
 import javax.persistence.*;
 import java.io.Serializable;
@@ -22,7 +23,7 @@ public class PostVote implements Serializable {
     private User user;
     private Post post;
     private LocalDateTime time;
-    private byte value;
+    private Rating value;
 
     //==============================================================================
 
@@ -52,7 +53,8 @@ public class PostVote implements Serializable {
     }
 
     @Column(name = "value", nullable = false)
-    public byte getValue() {
+    @Enumerated(EnumType.STRING)
+    public Rating getValue() {
         return value;
     }
 

@@ -4,8 +4,8 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
-import main.model.enums.SettingsCodeType;
-import main.model.enums.SettingsValueType;
+import main.model.enums.SettingsCode;
+import main.model.enums.SettingsValue;
 
 import javax.persistence.*;
 import java.io.Serializable;
@@ -18,9 +18,9 @@ import java.io.Serializable;
 @EqualsAndHashCode
 public class GlobalSetting implements Serializable {
     private long id;
-    private SettingsCodeType code;
+    private SettingsCode code;
     private String name;
-    private SettingsValueType value;
+    private SettingsValue value;
 
     //==============================================================================
 
@@ -32,7 +32,7 @@ public class GlobalSetting implements Serializable {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "code", nullable = false)
-    public SettingsCodeType getCode() {
+    public SettingsCode getCode() {
         return code;
     }
 
@@ -43,7 +43,7 @@ public class GlobalSetting implements Serializable {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "value", nullable = false)
-    public SettingsValueType getValue() {
+    public SettingsValue getValue() {
         return value;
     }
 

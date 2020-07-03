@@ -1,6 +1,7 @@
 package main.repositories;
 
 import main.model.entities.PostVote;
+import main.model.enums.Rating;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -8,95 +9,61 @@ import org.springframework.data.repository.query.Param;
 public interface PostVoteRepository extends JpaRepository<PostVote, Long> {
 
     /**
-     * Запрос возвращает количество лайков указанного поста.
+     * Запрос возвращает количество лайков или дизлайков указанного поста.
      * @param postId - ID поста;
-     * @return - возвращает количество лайков указанного поста.
+     * @param value - значение, по которому подсчитываются количество постов.
+     * @return - возвращает количество конкретных оценок указанного поста.
      */
     @Query("SELECT COUNT(*) FROM PostVote pv " +
             "WHERE " +
             "   pv.post.id = :postId AND " +
-            "   pv.value = 1")
-    int getCountLikesByPostId(@Param("postId") long postId);
-
-    /**
-     * Запрос возвращает количество дизлайков указанного поста.
-     * @param postId - ID поста;
-     * @return - возвращает количество дизлайков указанного поста.
-     */
-    @Query("SELECT COUNT(*) FROM PostVote pv " +
-            "WHERE " +
-            "   pv.post.id = :postId AND " +
-            "   pv.value = -1")
-    int getCountDislikesByPostId(@Param("postId") long postId);
-
-    /**
-     * Возвращает общее количество лайков.
-     * @return - целое число, равное количеству лайков.
-     */
-    @Query("SELECT COUNT(*) FROM PostVote pv WHERE pv.value = 1")
-    int getTotalCountLikes();
-
-    /**
-     * Возвращает общее количество дизлайков.
-     * @return - целое число, равное количеству дизлайков.
-     */
-    @Query("SELECT COUNT(*) FROM PostVote pv WHERE pv.value = -1")
-    int getTotalCountDislikes();
-
-    /**
-     * Запрос возвращает общее количество лайков под постами указанного пользователя.
-     * @param userId - ID пользователя.
-     * @return - целое число, равное количеству лайков определённого пользователя.
-     */
-    @Query("SELECT COUNT(pv.value) FROM PostVote pv " +
-            "JOIN Post p ON p.id = pv.post.id " +
-            "WHERE " +
-            "   p.user.id = :userId AND " +
-            "   pv.value = 1")
-    int getTotalCountLikesByUserId(@Param("userId") long userId);
-
-    /**
-     * Запрос возвращает общее количество дизлайков под постами указанного пользователя.
-     * @param userId - ID пользователя.
-     * @return - целое число, равное количеству дизлайков определённого пользователя.
-     */
-    @Query("SELECT COUNT(pv.value) FROM PostVote pv " +
-            "JOIN Post p ON p.id = pv.post.id " +
-            "WHERE " +
-            "   p.user.id = :userId AND " +
-            "   pv.value = -1")
-    int getTotalCountDislikesByUserId(@Param("userId") long userId);
-
-    /**
-     * Запрос возвращает положительную оценку по идентификатору пользователя и идентификатору поста.
-     * @param userId - ID пользователя;
-     * @param postId - ID поста.
-     * @return - возвращает положительную оценку класса PostVote. Если такой оценки не найдено, вернётся null.
-     */
-    @Query("SELECT pv FROM PostVote pv " +
-            "WHERE " +
-            "   pv.user.id = :userId AND " +
-            "   pv.post.id = :postId AND " +
-            "   pv.value = 1")
-    PostVote userLikeAlreadyExists(
-            @Param("userId") long userId,
-            @Param("postId") long postId
+            "   pv.value = :value")
+    int getCountRatingByPostId(
+            @Param("postId") long postId,
+            @Param("value") Rating value
     );
 
     /**
-     * Запрос возвращает отрицательную оценку по идентификатору пользователя и идентификатору поста.
+     * Возвращает общее количество лайков или дизлайков.
+     * @param value - значение оценки, по которой осуществляется поиск;
+     * @return - целое число, равное количеству лайков или дизлайков.
+     */
+    @Query("SELECT COUNT(*) FROM PostVote pv WHERE pv.value = :value")
+    int getTotalCountRating(@Param("value") Rating value);
+
+    /**
+     * Запрос возвращает общее количество лайков или дизлайков под постами указанного пользователя.
+     * @param userId - идентификатор пользователя;
+     * @param value - значение оценки, по которой осуществляется поиск;
+     * @return - целое число, равное количеству лайков или дизлайков определённого пользователя.
+     */
+    @Query("SELECT COUNT(pv.value) FROM PostVote pv " +
+            "JOIN Post p ON p.id = pv.post.id " +
+            "WHERE " +
+            "   p.user.id = :userId AND " +
+            "   pv.value = :value")
+    int getTotalCountRatingByUserId(
+            @Param("userId") long userId,
+            @Param("value") Rating value
+    );
+
+    /**
+     * Запрос возвращает положительную или отрицательную оценку по идентификатору пользователя и идентификатору поста.
      * @param userId - ID пользователя;
-     * @param postId - ID поста.
-     * @return - возвращает отрицательную оценку класса PostVote. Если такой оценки не найдено, вернётся null.
+     * @param postId - ID поста;
+     * @param value - значение оценки, по которой осуществляется поиск;
+     * @return  - возвращает положительную или отрицательную оценку класса PostVote.
+     * Если такой оценки не найдено, вернётся null.
      */
     @Query("SELECT pv FROM PostVote pv " +
             "WHERE " +
             "   pv.user.id = :userId AND " +
             "   pv.post.id = :postId AND " +
-            "   pv.value = -1")
-    PostVote userDislikeAlreadyExists(
+            "   pv.value = :value")
+    PostVote ratingUserAlreadyExists(
             @Param("userId") long userId,
-            @Param("postId") long postId
+            @Param("postId") long postId,
+            @Param("value") Rating value
     );
 
     @Query("SELECT pv.id FROM PostVote pv " +

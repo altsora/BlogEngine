@@ -1,6 +1,7 @@
 package main.services;
 
 import main.model.entities.PostVote;
+import main.model.enums.Rating;
 
 public interface PostVoteService {
     int getCountLikesByPostId(long postId);
@@ -21,13 +22,11 @@ public interface PostVoteService {
 
     boolean userLikeAlreadyExists(long userId, long postId);
 
-    void addPostVote(PostVote postVote);
-
     void deleteById(long postVoteId);
 
-    void replaceDislikeWithLike(long postVoteId);
-
-    void replaceLikeWithDislike(long postVoteId);
-
     PostVote findById(long postVoteId);
+
+    void setRating(long userId, long postId, Rating value);
+
+    void replaceValue(long postVoteId);
 }

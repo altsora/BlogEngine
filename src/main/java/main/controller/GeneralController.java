@@ -3,9 +3,9 @@ package main.controller;
 import lombok.RequiredArgsConstructor;
 import main.model.entities.*;
 import main.model.enums.ActivesType;
-import main.model.enums.ModerationStatusType;
-import main.model.enums.SettingsCodeType;
-import main.model.enums.SettingsValueType;
+import main.model.enums.ModerationStatus;
+import main.model.enums.SettingsCode;
+import main.model.enums.SettingsValue;
 import main.responses.BlogDTO;
 import main.responses.TagDTO;
 import main.services.*;
@@ -56,7 +56,7 @@ public class GeneralController {
         JSONObject response = new JSONObject();
         List<GlobalSetting> globalSettings = globalSettingsService.findAll();
         for (GlobalSetting setting : globalSettings) {
-            boolean enable = setting.getValue() == SettingsValueType.YES;
+            boolean enable = setting.getValue() == SettingsValue.YES;
             String code = setting.getCode().name();
             response.put(code, enable);
         }
@@ -72,13 +72,13 @@ public class GeneralController {
             User user = userService.findById(authorizeServlet.getAuthorizedUserId());
             if (user.getIsModerator() == (byte) 1) {
                 if (multiUserModeValue != null) {
-                    globalSettingsService.setValue(SettingsCodeType.MULTIUSER_MODE, multiUserModeValue);
+                    globalSettingsService.setValue(SettingsCode.MULTIUSER_MODE, multiUserModeValue);
                 }
                 if (postPreModerationValue != null) {
-                    globalSettingsService.setValue(SettingsCodeType.POST_PREMODERATION, postPreModerationValue);
+                    globalSettingsService.setValue(SettingsCode.POST_PREMODERATION, postPreModerationValue);
                 }
                 if (statisticsIsPublicValue != null) {
-                    globalSettingsService.setValue(SettingsCodeType.STATISTICS_IS_PUBLIC, statisticsIsPublicValue);
+                    globalSettingsService.setValue(SettingsCode.STATISTICS_IS_PUBLIC, statisticsIsPublicValue);
                 }
             }
         }
@@ -91,9 +91,9 @@ public class GeneralController {
         if (year == null) {
             year = LocalDateTime.now(ZoneId.of("UTC")).getYear();
         }
-        Map<String, Long> datesAndCountPosts = postService.getDateAndCountPosts(ActivesType.ACTIVE, ModerationStatusType.ACCEPTED, year);
+        Map<String, Long> datesAndCountPosts = postService.getDateAndCountPosts(ActivesType.ACTIVE, ModerationStatus.ACCEPTED, year);
         JSONObject posts = new JSONObject(datesAndCountPosts);
-        List<Integer> years = postService.findAllYearsOfPublication(ActivesType.ACTIVE, ModerationStatusType.ACCEPTED);
+        List<Integer> years = postService.findAllYearsOfPublication(ActivesType.ACTIVE, ModerationStatus.ACCEPTED);
         JSONObject calendar = new JSONObject();
         calendar.put("years", years);
         calendar.put("posts", posts);
@@ -105,11 +105,11 @@ public class GeneralController {
     public ResponseEntity<JSONObject> getBlogStatistics() {
         if (globalSettingsService.settingStatisticsIsPublicIsEnabled()) {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm");
-            int postsCount = postService.getTotalCountOfPosts(ActivesType.ACTIVE, ModerationStatusType.ACCEPTED);
+            int postsCount = postService.getTotalCountOfPosts(ActivesType.ACTIVE, ModerationStatus.ACCEPTED);
             int likesCount = postVoteService.getTotalCountLikes();
             int dislikesCount = postVoteService.getTotalCountDislikes();
-            int viewsCount = postService.getTotalCountView(ActivesType.ACTIVE, ModerationStatusType.ACCEPTED);
-            LocalDateTime localDateTime = postService.getDateOfTheEarliestPost(ActivesType.ACTIVE, ModerationStatusType.ACCEPTED);
+            int viewsCount = postService.getTotalCountView(ActivesType.ACTIVE, ModerationStatus.ACCEPTED);
+            LocalDateTime localDateTime = postService.getDateOfTheEarliestPost(ActivesType.ACTIVE, ModerationStatus.ACCEPTED);
             String firstPublication = localDateTime == null ?
                     "-" : formatter.format(localDateTime);
 
@@ -161,10 +161,10 @@ public class GeneralController {
                 tagService.findAll() :
                 tagService.findAllTagsByQuery(query);
         List<Double> weights = new ArrayList<>();
-        int totalNumberOfPosts = postService.getTotalCountOfPosts(ActivesType.ACTIVE, ModerationStatusType.ACCEPTED);
+        int totalNumberOfPosts = postService.getTotalCountOfPosts(ActivesType.ACTIVE, ModerationStatus.ACCEPTED);
         double maxWeight = -1;
         for (Tag tagRep : tagListRep) {
-            int countPosts = postService.getTotalCountOfPostsByTag(ActivesType.ACTIVE, ModerationStatusType.ACCEPTED, tagRep.getName());
+            int countPosts = postService.getTotalCountOfPostsByTag(ActivesType.ACTIVE, ModerationStatus.ACCEPTED, tagRep.getName());
             double weight = (double) countPosts / totalNumberOfPosts;
             weights.add(weight);
             if (weight > maxWeight) {
@@ -246,10 +246,10 @@ public class GeneralController {
         long userId = authorizeServlet.getAuthorizedUserId();
         switch (status) {
             case "accept":
-                postService.setModerationStatus(userId, postId, ModerationStatusType.ACCEPTED);
+                postService.setModerationStatus(userId, postId, ModerationStatus.ACCEPTED);
                 break;
             case "decline":
-                postService.setModerationStatus(userId, postId, ModerationStatusType.DECLINED);
+                postService.setModerationStatus(userId, postId, ModerationStatus.DECLINED);
                 break;
         }
     }

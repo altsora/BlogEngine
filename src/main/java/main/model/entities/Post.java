@@ -6,7 +6,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
-import main.model.enums.ModerationStatusType;
+import main.model.enums.ModerationStatus;
 
 import javax.persistence.*;
 import java.io.Serializable;
@@ -22,7 +22,7 @@ import java.util.Set;
 public class Post implements Serializable {
     private long id;
     private byte isActive;
-    private ModerationStatusType moderationStatus = ModerationStatusType.NEW;
+    private ModerationStatus moderationStatus = ModerationStatus.NEW;
     private User moderator;
     private User user;
     private LocalDateTime time;
@@ -48,7 +48,7 @@ public class Post implements Serializable {
 
     @Column(name = "moderation_status")
     @Enumerated(EnumType.STRING)
-    public ModerationStatusType getModerationStatus() {
+    public ModerationStatus getModerationStatus() {
         return moderationStatus;
     }
 
