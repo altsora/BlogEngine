@@ -46,5 +46,4 @@ public class GlobalSetting implements Serializable {
     public SettingsValue getValue() {
         return value;
     }
-
 }

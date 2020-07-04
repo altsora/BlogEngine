@@ -47,10 +47,6 @@ public class Tag2PostServiceImpl implements Tag2PostService {
                 Post post = postService.findById(postId);
                 Tag tag = tagService.findByName(newTag);
                 addTag2Post(post, tag);
-//                Tag2Post tag2Post = new Tag2Post();
-//                tag2Post.setPost(post);
-//                tag2Post.setTag(tag);
-//                addTag2Post(tag2Post);
             }
         }
     }

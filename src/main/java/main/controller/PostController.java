@@ -2,7 +2,7 @@ package main.controller;
 
 import lombok.RequiredArgsConstructor;
 import main.model.entities.*;
-import main.model.enums.ActivesType;
+import main.model.enums.ActivityStatus;
 import main.model.enums.ModerationStatus;
 import main.model.enums.Rating;
 import main.responses.*;
@@ -46,19 +46,19 @@ public class PostController {
         List<Post> postListRep;
         switch (mode) {
             case "popular":
-                postListRep = postService.findAllPostPopular(ActivesType.ACTIVE, ModerationStatus.ACCEPTED, offset, limit);
+                postListRep = postService.findAllPostPopular(ActivityStatus.ACTIVE, ModerationStatus.ACCEPTED, offset, limit);
                 break;
             case "best":
-                postListRep = postService.findAllPostBest(ActivesType.ACTIVE, ModerationStatus.ACCEPTED, offset, limit);
+                postListRep = postService.findAllPostBest(ActivityStatus.ACTIVE, ModerationStatus.ACCEPTED, offset, limit);
                 break;
             case "early":
-                postListRep = postService.findAllPostSortedByDate(ActivesType.ACTIVE, ModerationStatus.ACCEPTED, offset, limit, Sort.Direction.ASC);
+                postListRep = postService.findAllPostSortedByDate(ActivityStatus.ACTIVE, ModerationStatus.ACCEPTED, offset, limit, Sort.Direction.ASC);
                 break;
             default:
-                postListRep = postService.findAllPostSortedByDate(ActivesType.ACTIVE, ModerationStatus.ACCEPTED, offset, limit, Sort.Direction.DESC);
+                postListRep = postService.findAllPostSortedByDate(ActivityStatus.ACTIVE, ModerationStatus.ACCEPTED, offset, limit, Sort.Direction.DESC);
         }
         List<PostPublicDTO> posts = getPosts(postListRep);
-        int count = postService.getTotalCountOfPosts(ActivesType.ACTIVE, ModerationStatus.ACCEPTED);
+        int count = postService.getTotalCountOfPosts(ActivityStatus.ACTIVE, ModerationStatus.ACCEPTED);
         JSONObject response = new JSONObject();
         response.put("count", count);
         response.put("posts", posts);
@@ -73,12 +73,12 @@ public class PostController {
             @RequestParam(value = "query") String query
     ) {
         List<Post> postListRep = query.equals("") ?
-                postService.findAllPostSortedByDate(ActivesType.ACTIVE, ModerationStatus.ACCEPTED, offset, limit, Sort.Direction.DESC) :
-                postService.findAllPostByQuery(ActivesType.ACTIVE, ModerationStatus.ACCEPTED, offset, limit, query);
+                postService.findAllPostSortedByDate(ActivityStatus.ACTIVE, ModerationStatus.ACCEPTED, offset, limit, Sort.Direction.DESC) :
+                postService.findAllPostByQuery(ActivityStatus.ACTIVE, ModerationStatus.ACCEPTED, offset, limit, query);
         List<PostPublicDTO> posts = getPosts(postListRep);
         int count = query.equals("") ?
-                postService.getTotalCountOfPosts(ActivesType.ACTIVE, ModerationStatus.ACCEPTED) :
-                postService.getTotalCountOfPostsByQuery(ActivesType.ACTIVE, ModerationStatus.ACCEPTED, query);
+                postService.getTotalCountOfPosts(ActivityStatus.ACTIVE, ModerationStatus.ACCEPTED) :
+                postService.getTotalCountOfPostsByQuery(ActivityStatus.ACTIVE, ModerationStatus.ACCEPTED, query);
         JSONObject response = new JSONObject();
         response.put("count", count);
         response.put("posts", posts);
@@ -104,7 +104,7 @@ public class PostController {
         PostFullDTO post = PostFullDTO.builder()
                 .id(postId)
                 .time(getStringTime(postRep.getTime()))
-                .active(postRep.getIsActive() == 1)
+                .active(postRep.getActivityStatus() == ActivityStatus.ACTIVE)
                 .user(UserSimpleDTO.builder().id(userId).name(userName).build())
                 .title(postRep.getTitle())
                 .text(postRep.getText())
@@ -124,9 +124,9 @@ public class PostController {
             @RequestParam(value = "limit") int limit,
             @RequestParam(value = "date") String date
     ) {
-        List<Post> postListRep = postService.findAllPostByDate(ActivesType.ACTIVE, ModerationStatus.ACCEPTED, offset, limit, date);
+        List<Post> postListRep = postService.findAllPostByDate(ActivityStatus.ACTIVE, ModerationStatus.ACCEPTED, offset, limit, date);
         List<PostPublicDTO> posts = getPosts(postListRep);
-        int count = postService.getTotalCountOfPostsByDate(ActivesType.ACTIVE, ModerationStatus.ACCEPTED, date);
+        int count = postService.getTotalCountOfPostsByDate(ActivityStatus.ACTIVE, ModerationStatus.ACCEPTED, date);
 
         JSONObject response = new JSONObject();
         response.put("count", count);
@@ -141,9 +141,9 @@ public class PostController {
             @RequestParam(value = "limit") int limit,
             @RequestParam(value = "tag") String tag
     ) {
-        List<Post> postListRep = postService.findAllPostByTag(ActivesType.ACTIVE, ModerationStatus.ACCEPTED, offset, limit, tag);
+        List<Post> postListRep = postService.findAllPostByTag(ActivityStatus.ACTIVE, ModerationStatus.ACCEPTED, offset, limit, tag);
         List<PostPublicDTO> posts = getPosts(postListRep);
-        int count = postService.getTotalCountOfPostsByTag(ActivesType.ACTIVE, ModerationStatus.ACCEPTED, tag);
+        int count = postService.getTotalCountOfPostsByTag(ActivityStatus.ACTIVE, ModerationStatus.ACCEPTED, tag);
         JSONObject response = new JSONObject();
         response.put("count", count);
         response.put("posts", posts);
@@ -207,8 +207,8 @@ public class PostController {
     @PostMapping(value = "/api/post")
     @SuppressWarnings("unchecked")
     public ResponseEntity<JSONObject> addPost(@RequestBody JSONObject request) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
-        String postTimeString = (String) request.get("time");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:s");
+        String postTimeString = request.get("time") + ":" + LocalDateTime.now(ZoneId.of("UTC")).getSecond(); // КОСТЫЛЬ
         int postActive = (int) request.get("active");
         String postTitle = (String) request.get("title");
         List<String> postTags = (ArrayList<String>) request.get("tags");
@@ -251,9 +251,9 @@ public class PostController {
             postTime = LocalDateTime.now(ZoneId.of("UTC"));
         }
 
-        byte isActive = postActive == 1 ? (byte) 1 : 0;
+        ActivityStatus activity = postActive == 1 ? ActivityStatus.ACTIVE : ActivityStatus.INACTIVE;
         User user = userService.findById(authorizeServlet.getAuthorizedUserId());
-        Post newPost = postService.addPost(isActive, user, postTime, postTitle, postText);
+        Post newPost = postService.addPost(activity, user, postTime, postTitle, postText);
 
         for (String tagName : postTags) {
             Tag tag = tagService.createTagIfNoExistsAndReturn(tagName);
@@ -277,16 +277,16 @@ public class PostController {
         List<Post> postListRep;
         switch (status) {
             case "declined":
-                postListRep = postService.findAllPostsByModeratorId(ActivesType.ACTIVE, ModerationStatus.DECLINED, offset, limit, userId);
-                count = postService.getTotalCountOfPostsByModeratorId(ActivesType.ACTIVE, ModerationStatus.DECLINED, userId);
+                postListRep = postService.findAllPostsByModeratorId(ActivityStatus.ACTIVE, ModerationStatus.DECLINED, offset, limit, userId);
+                count = postService.getTotalCountOfPostsByModeratorId(ActivityStatus.ACTIVE, ModerationStatus.DECLINED, userId);
                 break;
             case "accepted":
-                postListRep = postService.findAllPostsByModeratorId(ActivesType.ACTIVE, ModerationStatus.ACCEPTED, offset, limit, userId);
-                count = postService.getTotalCountOfPostsByModeratorId(ActivesType.ACTIVE, ModerationStatus.ACCEPTED, userId);
+                postListRep = postService.findAllPostsByModeratorId(ActivityStatus.ACTIVE, ModerationStatus.ACCEPTED, offset, limit, userId);
+                count = postService.getTotalCountOfPostsByModeratorId(ActivityStatus.ACTIVE, ModerationStatus.ACCEPTED, userId);
                 break;
             default:
-                postListRep = postService.findAllNewPosts(ActivesType.ACTIVE, offset, limit);
-                count = postService.getTotalCountOfNewPosts(ActivesType.ACTIVE);
+                postListRep = postService.findAllNewPosts(ActivityStatus.ACTIVE, offset, limit);
+                count = postService.getTotalCountOfNewPosts(ActivityStatus.ACTIVE);
         }
         List<PostPublicDTO> posts = getPosts(postListRep);
         JSONObject response = new JSONObject();
@@ -311,16 +311,16 @@ public class PostController {
                 count = postService.getTotalCountOfHiddenPostsByUserId(userId);
                 break;
             case "pending":
-                postListRep = postService.findAllPostsByUserId(ActivesType.ACTIVE, ModerationStatus.NEW, offset, limit, userId);
-                count = postService.getTotalCountOfPostsByUserId(ActivesType.ACTIVE, ModerationStatus.NEW, userId);
+                postListRep = postService.findAllPostsByUserId(ActivityStatus.ACTIVE, ModerationStatus.NEW, offset, limit, userId);
+                count = postService.getTotalCountOfPostsByUserId(ActivityStatus.ACTIVE, ModerationStatus.NEW, userId);
                 break;
             case "declined":
-                postListRep = postService.findAllPostsByUserId(ActivesType.ACTIVE, ModerationStatus.DECLINED, offset, limit, userId);
-                count = postService.getTotalCountOfPostsByUserId(ActivesType.ACTIVE, ModerationStatus.DECLINED, userId);
+                postListRep = postService.findAllPostsByUserId(ActivityStatus.ACTIVE, ModerationStatus.DECLINED, offset, limit, userId);
+                count = postService.getTotalCountOfPostsByUserId(ActivityStatus.ACTIVE, ModerationStatus.DECLINED, userId);
                 break;
             default:
-                postListRep = postService.findAllPostsByUserId(ActivesType.ACTIVE, ModerationStatus.ACCEPTED, offset, limit, userId);
-                count = postService.getTotalCountOfPostsByUserId(ActivesType.ACTIVE, ModerationStatus.ACCEPTED, userId);
+                postListRep = postService.findAllPostsByUserId(ActivityStatus.ACTIVE, ModerationStatus.ACCEPTED, offset, limit, userId);
+                count = postService.getTotalCountOfPostsByUserId(ActivityStatus.ACTIVE, ModerationStatus.ACCEPTED, userId);
         }
         List<PostPublicDTO> posts = getPosts(postListRep);
         JSONObject response = new JSONObject();
@@ -379,7 +379,7 @@ public class PostController {
             newTimeOfPost = LocalDateTime.now(ZoneId.of("UTC"));
         }
 
-        byte isActive = newPostActivity == 1 ? (byte) 1 : 0;
+        ActivityStatus activity = newPostActivity == 1 ? ActivityStatus.ACTIVE : ActivityStatus.INACTIVE;
         User user = userService.findById(authorizeServlet.getAuthorizedUserId());
         Post updatedPost = postService.findById(postId);
         if (user.isModerator()) {
@@ -387,8 +387,10 @@ public class PostController {
         } else {
             updatedPost.setModerationStatus(ModerationStatus.NEW);
         }
-
-        updatedPost.setIsActive(isActive);
+        //TODO: Посмотреть, можно ли строки ниже кинуть в сервис
+//        updatedPost.setIsActive(isActive);
+//        updatedPost.setActivity(activity);
+        updatedPost.setActivityStatus(activity);
         updatedPost.setTime(newTimeOfPost);
         updatedPost.setTitle(newTitle);
         updatedPost.setText(newText);

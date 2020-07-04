@@ -90,12 +90,6 @@ public class UserServiceImpl implements UserService {
             errors.put(key, "Этот e-mail уже зарегистрирован");
             return true;
         }
-
-        String containsIncorrectSymbols = "\\W";
-        if (email.matches(containsIncorrectSymbols)) {
-            errors.put(key, "Может содержать только буквенный или цифровой символ или знак подчёркивания");
-            return true;
-        }
         return false;
     }
 

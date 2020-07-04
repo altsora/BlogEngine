@@ -3,8 +3,9 @@ package main.services.impl;
 import lombok.RequiredArgsConstructor;
 import main.model.entities.Post;
 import main.model.entities.User;
-import main.model.enums.ActivesType;
+import main.model.enums.ActivityStatus;
 import main.model.enums.ModerationStatus;
+import main.model.enums.Rating;
 import main.repositories.PostRepository;
 import main.services.PostService;
 import main.services.UserService;
@@ -31,102 +32,90 @@ public class PostServiceImpl implements PostService {
     //==================================================================================================================
 
     @Override
-    public List<Post> findAllPostPopular(ActivesType activesType, ModerationStatus moderationStatus, int offset, int limit) {
+    public List<Post> findAllPostPopular(ActivityStatus activityStatus, ModerationStatus moderationStatus, int offset, int limit) {
         int pageNumber = offset / limit;
         Pageable sortedByCountComment = PageRequest.of(pageNumber, limit, Sort.by(Sort.Direction.DESC, PostRepository.COUNT_COMMENTS));
-        byte isActive = activesType == ActivesType.ACTIVE ? (byte) 1 : 0;
-        return postRepository.findAllPostPopular(isActive, moderationStatus, sortedByCountComment);
+        return postRepository.findAllPostPopular(activityStatus, moderationStatus, sortedByCountComment);
     }
 
     @Override
     public List<Post> findAllHiddenPostsByUserId(int offset, int limit, long userId) {
         int pageNumber = offset / limit;
         Pageable sortedByPostTime = PageRequest.of(pageNumber, limit, Sort.by(Sort.Direction.DESC, PostRepository.POST_TIME));
-        byte isActive = (byte) 0;
-        return postRepository.findAllHiddenPostsByUserId(isActive, userId, sortedByPostTime);
+        return postRepository.findAllHiddenPostsByUserId(ActivityStatus.INACTIVE, userId, sortedByPostTime);
     }
 
     @Override
-    public List<Post> findAllPostsByUserId(ActivesType activesType, ModerationStatus moderationStatus, int offset, int limit, long userId) {
+    public List<Post> findAllPostsByUserId(ActivityStatus activityStatus, ModerationStatus moderationStatus, int offset, int limit, long userId) {
         int pageNumber = offset / limit;
         Pageable sortedByPostTime = PageRequest.of(pageNumber, limit, Sort.by(Sort.Direction.DESC, PostRepository.POST_TIME));
-        byte isActive = activesType == ActivesType.ACTIVE ? (byte) 1 : 0;
-        return postRepository.findAllPostsByUserId(isActive, moderationStatus, userId, sortedByPostTime);
+        return postRepository.findAllPostsByUserId(activityStatus, moderationStatus, userId, sortedByPostTime);
     }
 
     @Override
-    public List<Post> findAllPostBest(ActivesType activesType, ModerationStatus moderationStatus, int offset, int limit) {
+    public List<Post> findAllPostBest(ActivityStatus activityStatus, ModerationStatus moderationStatus, int offset, int limit) {
         int pageNumber = offset / limit;
         Pageable sortedByCountLikes = PageRequest.of(pageNumber, limit, Sort.by(PostRepository.COUNT_LIKES).descending());
-        byte isActive = activesType == ActivesType.ACTIVE ? (byte) 1 : 0;
-        return postRepository.findAllPostBest(isActive, moderationStatus, sortedByCountLikes);
+        return postRepository.findAllPostBest(activityStatus, moderationStatus, Rating.LIKE, sortedByCountLikes);
     }
 
     @Override
-    public List<Post> findAllPostSortedByDate(ActivesType activesType, ModerationStatus moderationStatus, int offset, int limit, Sort.Direction direction) {
+    public List<Post> findAllPostSortedByDate(ActivityStatus activityStatus, ModerationStatus moderationStatus, int offset, int limit, Sort.Direction direction) {
         int pageNumber = offset / limit;
         Pageable sortedByPostTime = PageRequest.of(pageNumber, limit, Sort.by(direction, PostRepository.POST_TIME));
-        byte isActive = activesType == ActivesType.ACTIVE ? (byte) 1 : 0;
-        return postRepository.findAllPostSortedByDate(isActive, moderationStatus, sortedByPostTime);
+        return postRepository.findAllPostSortedByDate(activityStatus, moderationStatus, sortedByPostTime);
     }
 
     @Override
-    public List<Post> findAllNewPosts(ActivesType activesType, int offset, int limit) {
+    public List<Post> findAllNewPosts(ActivityStatus activityStatus, int offset, int limit) {
         int pageNumber = offset / limit;
         Pageable sortedByPostTime = PageRequest.of(pageNumber, limit, Sort.by(Sort.Direction.DESC, PostRepository.POST_TIME));
-        byte isActive = activesType == ActivesType.ACTIVE ? (byte) 1 : 0;
-        return postRepository.findAllPosts(isActive, ModerationStatus.NEW, sortedByPostTime);
+        return postRepository.findAllPosts(activityStatus, ModerationStatus.NEW, sortedByPostTime);
     }
 
     @Override
-    public List<Post> findAllPostsByModeratorId(ActivesType activesType, ModerationStatus moderationStatus, int offset, int limit, long moderatorId) {
+    public List<Post> findAllPostsByModeratorId(ActivityStatus activityStatus, ModerationStatus moderationStatus, int offset, int limit, long moderatorId) {
         int pageNumber = offset / limit;
         Pageable sortedByPostTime = PageRequest.of(pageNumber, limit, Sort.by(Sort.Direction.DESC, PostRepository.POST_TIME));
-        byte isActive = activesType == ActivesType.ACTIVE ? (byte) 1 : 0;
-        return postRepository.findAllPostsByModeratorId(isActive, moderationStatus, moderatorId, sortedByPostTime);
+        return postRepository.findAllPostsByModeratorId(activityStatus, moderationStatus, moderatorId, sortedByPostTime);
     }
 
     @Override
-    public List<Post> findAllPostByQuery(ActivesType activesType, ModerationStatus moderationStatus, int offset, int limit, String query) {
+    public List<Post> findAllPostByQuery(ActivityStatus activityStatus, ModerationStatus moderationStatus, int offset, int limit, String query) {
         int pageNumber = offset / limit;
         Pageable sortedByPostTime = PageRequest.of(pageNumber, limit, Sort.by(Sort.Direction.ASC, PostRepository.POST_TIME));
-        byte isActive = activesType == ActivesType.ACTIVE ? (byte) 1 : 0;
-        return postRepository.findAllPostByQuery(isActive, moderationStatus, query, sortedByPostTime);
+        return postRepository.findAllPostByQuery(activityStatus, moderationStatus, query, sortedByPostTime);
     }
 
     @Override
-    public List<Post> findAllPostByDate(ActivesType activesType, ModerationStatus moderationStatus, int offset, int limit, String date) {
+    public List<Post> findAllPostByDate(ActivityStatus activityStatus, ModerationStatus moderationStatus, int offset, int limit, String date) {
         int pageNumber = offset / limit;
         String[] var = date.split("-");
         int year = Integer.parseInt(var[0]);
         int month = Integer.parseInt(var[1]);
         int dayOfMonth = Integer.parseInt(var[2]);
-        byte isActive = activesType == ActivesType.ACTIVE ? (byte) 1 : 0;
         Pageable sortedByPostTime = PageRequest.of(pageNumber, limit, Sort.by(Sort.Direction.ASC, PostRepository.POST_TIME));
-        return postRepository.findAllPostByDate(isActive, moderationStatus, year, month, dayOfMonth, sortedByPostTime);
+        return postRepository.findAllPostByDate(activityStatus, moderationStatus, year, month, dayOfMonth, sortedByPostTime);
     }
 
     @Override
-    public List<Post> findAllPostByTag(ActivesType activesType, ModerationStatus moderationStatus, int offset, int limit, String tag) {
+    public List<Post> findAllPostByTag(ActivityStatus activityStatus, ModerationStatus moderationStatus, int offset, int limit, String tag) {
         int pageNumber = offset / limit;
-        byte isActive = activesType == ActivesType.ACTIVE ? (byte) 1 : 0;
         Pageable sortedByPostTime = PageRequest.of(pageNumber, limit, Sort.by(Sort.Direction.ASC, PostRepository.POST_TIME));
-        return postRepository.findAllPostByTag(isActive, moderationStatus, tag, sortedByPostTime);
+        return postRepository.findAllPostByTag(activityStatus, moderationStatus, tag, sortedByPostTime);
     }
 
     @Override
-    public List<Integer> findAllYearsOfPublication(ActivesType activesType, ModerationStatus moderationStatus) {
-        byte isActive = activesType == ActivesType.ACTIVE ? (byte) 1 : 0;
+    public List<Integer> findAllYearsOfPublication(ActivityStatus activityStatus, ModerationStatus moderationStatus) {
         Sort sort = Sort.by(Sort.Direction.DESC, PostRepository.POST_TIME);
-        return postRepository.findAllYearsOfPublication(isActive, moderationStatus, sort);
+        return postRepository.findAllYearsOfPublication(activityStatus, moderationStatus, sort);
     }
 
     @Override
-    public Map<String, Long> getDateAndCountPosts(ActivesType activesType, ModerationStatus moderationStatus, int year) {
+    public Map<String, Long> getDateAndCountPosts(ActivityStatus activityStatus, ModerationStatus moderationStatus, int year) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyy-MM-dd");
         Map<String, Long> result = new HashMap<>();
-        byte isActive = activesType == ActivesType.ACTIVE ? (byte) 1 : 0;
-        List<Tuple> datesAndCountPosts = postRepository.getDateAndCountPosts(isActive, moderationStatus, year, Sort.by(Sort.Direction.ASC, PostRepository.POST_TIME));
+        List<Tuple> datesAndCountPosts = postRepository.getDateAndCountPosts(activityStatus, moderationStatus, year, Sort.by(Sort.Direction.ASC, PostRepository.POST_TIME));
         for (Tuple tuple : datesAndCountPosts) {
             Object[] pair = tuple.toArray();
             try {
@@ -147,31 +136,27 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    public int getTotalCountOfNewPosts(ActivesType activesType) {
-        byte isActive = activesType == ActivesType.ACTIVE ? (byte) 1 : 0;
-        return postRepository.getTotalCountOfNewPosts(isActive, ModerationStatus.NEW);
+    public int getTotalCountOfNewPosts(ActivityStatus activityStatus) {
+        return postRepository.getTotalCountOfNewPosts(activityStatus, ModerationStatus.NEW);
     }
 
     @Override
-    public int getTotalCountOfPostsByDate(ActivesType activesType, ModerationStatus moderationStatus, String date) {
+    public int getTotalCountOfPostsByDate(ActivityStatus activityStatus, ModerationStatus moderationStatus, String date) {
         String[] var = date.split("-");
         int year = Integer.parseInt(var[0]);
         int month = Integer.parseInt(var[1]);
         int dayOfMonth = Integer.parseInt(var[2]);
-        byte isActive = activesType == ActivesType.ACTIVE ? (byte) 1 : 0;
-        return postRepository.getTotalCountOfPostsByDate(isActive, moderationStatus, year, month, dayOfMonth);
+        return postRepository.getTotalCountOfPostsByDate(activityStatus, moderationStatus, year, month, dayOfMonth);
     }
 
     @Override
-    public int getTotalCountOfPostsByModeratorId(ActivesType activesType, ModerationStatus moderationStatus, long moderatorId) {
-        byte isActive = activesType == ActivesType.ACTIVE ? (byte) 1 : 0;
-        return postRepository.getTotalCountOfPostsByModeratorId(isActive, moderationStatus, moderatorId);
+    public int getTotalCountOfPostsByModeratorId(ActivityStatus activityStatus, ModerationStatus moderationStatus, long moderatorId) {
+        return postRepository.getTotalCountOfPostsByModeratorId(activityStatus, moderationStatus, moderatorId);
     }
 
     @Override
-    public int getTotalCountView(ActivesType activesType, ModerationStatus moderationStatus) {
-        byte isActive = activesType == ActivesType.ACTIVE ? (byte) 1 : 0;
-        return postRepository.getTotalCountView(isActive, moderationStatus);
+    public int getTotalCountView(ActivityStatus activityStatus, ModerationStatus moderationStatus) {
+        return postRepository.getTotalCountView(activityStatus, moderationStatus);
     }
 
     @Override
@@ -185,33 +170,28 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    public int getTotalCountOfPostsByUserId(ActivesType activesType, ModerationStatus moderationStatus, long userId) {
-        byte isActive = activesType == ActivesType.ACTIVE ? (byte) 1 : 0;
-        return postRepository.getTotalCountOfPostsByUserId(isActive, moderationStatus, userId);
+    public int getTotalCountOfPostsByUserId(ActivityStatus activityStatus, ModerationStatus moderationStatus, long userId) {
+        return postRepository.getTotalCountOfPostsByUserId(activityStatus, moderationStatus, userId);
     }
 
     @Override
     public int getTotalCountOfHiddenPostsByUserId(long userId) {
-        byte isActive = 0;
-        return postRepository.getTotalCountOfHiddenPostsByUserId(isActive, userId);
+        return postRepository.getTotalCountOfHiddenPostsByUserId(ActivityStatus.INACTIVE, userId);
     }
 
     @Override
-    public int getTotalCountOfPosts(ActivesType activesType, ModerationStatus moderationStatus) {
-        byte isActive = activesType == ActivesType.ACTIVE ? (byte) 1 : 0;
-        return postRepository.getTotalCountOfPosts(isActive, moderationStatus);
+    public int getTotalCountOfPosts(ActivityStatus activityStatus, ModerationStatus moderationStatus) {
+        return postRepository.getTotalCountOfPosts(activityStatus, moderationStatus);
     }
 
     @Override
-    public int getTotalCountOfPostsByQuery(ActivesType activesType, ModerationStatus moderationStatus, String query) {
-        byte isActive = activesType == ActivesType.ACTIVE ? (byte) 1 : 0;
-        return postRepository.getTotalCountOfPostsByQuery(isActive, moderationStatus, query);
+    public int getTotalCountOfPostsByQuery(ActivityStatus activityStatus, ModerationStatus moderationStatus, String query) {
+        return postRepository.getTotalCountOfPostsByQuery(activityStatus, moderationStatus, query);
     }
 
     @Override
-    public int getTotalCountOfPostsByTag(ActivesType activesType, ModerationStatus moderationStatus, String tag) {
-        byte isActive = activesType == ActivesType.ACTIVE ? (byte) 1 : 0;
-        return postRepository.getTotalCountOfPostsByTag(isActive, moderationStatus, tag);
+    public int getTotalCountOfPostsByTag(ActivityStatus activityStatus, ModerationStatus moderationStatus, String tag) {
+        return postRepository.getTotalCountOfPostsByTag(activityStatus, moderationStatus, tag);
     }
 
     @Override
@@ -226,9 +206,8 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    public LocalDateTime getDateOfTheEarliestPost(ActivesType activesType, ModerationStatus moderationStatus) {
-        byte isActive = activesType == ActivesType.ACTIVE ? (byte) 1 : 0;
-        LocalDateTime localDateTime = postRepository.getDateOfTheEarliestPost(isActive, moderationStatus);
+    public LocalDateTime getDateOfTheEarliestPost(ActivityStatus activityStatus, ModerationStatus moderationStatus) {
+        LocalDateTime localDateTime = postRepository.getDateOfTheEarliestPost(activityStatus, moderationStatus);
         if (localDateTime != null) {
             ZonedDateTime localZone = localDateTime.atZone(ZoneId.systemDefault());
             ZonedDateTime utcZone = localZone.withZoneSameInstant(ZoneId.of("UTC"));
@@ -249,9 +228,9 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    public Post addPost(byte isActive, User user, LocalDateTime postTime, String postTitle, String postText) {
+    public Post addPost(ActivityStatus activityStatus, User user, LocalDateTime postTime, String postTitle, String postText) {
         Post post = new Post();
-        post.setIsActive(isActive);
+        post.setActivityStatus(activityStatus);
         post.setUser(user);
         post.setTime(postTime);
         post.setTitle(postTitle);

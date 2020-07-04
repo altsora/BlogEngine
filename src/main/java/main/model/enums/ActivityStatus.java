@@ -1,6 +1,6 @@
 package main.model.enums;
 
-public enum ActivesType {
+public enum ActivityStatus {
     ACTIVE,
     INACTIVE
 }

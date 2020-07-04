@@ -3,7 +3,7 @@ package main.controller;
 import lombok.RequiredArgsConstructor;
 import main.model.entities.CaptchaCode;
 import main.model.entities.User;
-import main.model.enums.ActivesType;
+import main.model.enums.ActivityStatus;
 import main.responses.LoginForm;
 import main.responses.UserLoginDTO;
 import main.services.CaptchaCodeService;
@@ -33,7 +33,7 @@ public class AuthController {
             long userId = authorizeServlet.getAuthorizedUserId();
             User userRep = userService.findById(userId);
             boolean userIsModerator = userRep.isModerator();
-            int moderationCount = userIsModerator ? postService.getTotalCountOfNewPosts(ActivesType.ACTIVE) : 0;
+            int moderationCount = userIsModerator ? postService.getTotalCountOfNewPosts(ActivityStatus.ACTIVE) : 0;
 
             UserLoginDTO userLogin = UserLoginDTO.builder()
                     .id(userId)
@@ -63,7 +63,7 @@ public class AuthController {
         if (userRep != null) {
             long userId = userRep.getId();
             boolean userIsModerator = userRep.isModerator();
-            int moderationCount = userIsModerator ? postService.getTotalCountOfNewPosts(ActivesType.ACTIVE) : 0;
+            int moderationCount = userIsModerator ? postService.getTotalCountOfNewPosts(ActivityStatus.ACTIVE) : 0;
 
             UserLoginDTO userLogin = UserLoginDTO.builder()
                     .id(userId)
@@ -119,7 +119,7 @@ public class AuthController {
             result = false;
         }
 
-        if (!captchaCodeService.checkCorrectCaptcha(inputCaptchaCode, secretCode)) {
+        if (captchaCodeService.isIncorrectCaptcha(inputCaptchaCode, secretCode)) {
             errors.put("captcha", "Код с картинки введён неверно");
             result = false;
         }
@@ -171,7 +171,7 @@ public class AuthController {
             result = false;
         }
 
-        if (!captchaCodeService.checkCorrectCaptcha(inputCaptchaCode, secretCode)) {
+        if (captchaCodeService.isIncorrectCaptcha(inputCaptchaCode, secretCode)) {
             errors.put("captcha", "Код с картинки введён неверно");
             result = false;
         }

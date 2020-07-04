@@ -25,49 +25,41 @@ public class PostVoteServiceImpl implements PostVoteService {
 
     @Override
     public int getCountLikesByPostId(long postId) {
-//        return postVoteRepository.getCountLikesByPostId(postId);
         return postVoteRepository.getCountRatingByPostId(postId, Rating.LIKE);
     }
 
     @Override
     public int getCountDislikesByPostId(long postId) {
-//        return postVoteRepository.getCountDislikesByPostId(postId);
         return postVoteRepository.getCountRatingByPostId(postId, Rating.DISLIKE);
     }
 
     @Override
     public int getTotalCountLikes() {
-//        return postVoteRepository.getTotalCountLikes();
         return postVoteRepository.getTotalCountRating(Rating.LIKE);
     }
 
     @Override
     public int getTotalCountDislikes() {
-//        return postVoteRepository.getTotalCountDislikes();
         return postVoteRepository.getTotalCountRating(Rating.DISLIKE);
     }
 
     @Override
     public int getTotalCountLikesByUserId(long userId) {
-//        return postVoteRepository.getTotalCountLikesByUserId(userId);
         return postVoteRepository.getTotalCountRatingByUserId(userId, Rating.LIKE);
     }
 
     @Override
     public int getTotalCountDislikesByUserId(long userId) {
-//        return postVoteRepository.getTotalCountDislikesByUserId(userId);
         return postVoteRepository.getTotalCountRatingByUserId(userId, Rating.DISLIKE);
     }
 
     @Override
     public boolean userLikeAlreadyExists(long userId, long postId) {
-//        return postVoteRepository.userLikeAlreadyExists(userId, postId) != null;
         return postVoteRepository.ratingUserAlreadyExists(userId, postId, Rating.LIKE) != null;
     }
 
     @Override
     public boolean userDislikeAlreadyExists(long userId, long postId) {
-//        return postVoteRepository.userDislikeAlreadyExists(userId, postId) != null;
         return postVoteRepository.ratingUserAlreadyExists(userId, postId, Rating.DISLIKE) != null;
     }
 
@@ -80,22 +72,6 @@ public class PostVoteServiceImpl implements PostVoteService {
     public void deleteById(long postVoteId) {
         postVoteRepository.deleteById(postVoteId);
     }
-
-//    @Override
-//    public void replaceLikeWithDislike(long postVoteId) {
-//        PostVote postVote = postVoteRepository.findById(postVoteId).orElseThrow();
-//        postVote.setValue(Rating.DISLIKE);
-//        postVote.setTime(LocalDateTime.now());
-//        postVoteRepository.saveAndFlush(postVote);
-//    }
-//
-//    @Override
-//    public void replaceDislikeWithLike(long postVoteId) {
-//        PostVote postVote = postVoteRepository.findById(postVoteId).orElseThrow();
-//        postVote.setValue(Rating.LIKE);
-//        postVote.setTime(LocalDateTime.now());
-//        postVoteRepository.saveAndFlush(postVote);
-//    }
 
     @Override
     public PostVote findById(long postVoteId) {

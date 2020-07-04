@@ -7,7 +7,7 @@ public interface CaptchaCodeService {
 
     String getCaptchaImageCode(String code);
 
-    boolean checkCorrectCaptcha(String captcha, String secretCode);
+    boolean isIncorrectCaptcha(String captcha, String secretCode);
 
     void checkLifetimeCaptcha();
 }

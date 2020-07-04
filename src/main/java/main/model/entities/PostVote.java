@@ -57,5 +57,4 @@ public class PostVote implements Serializable {
     public Rating getValue() {
         return value;
     }
-
 }

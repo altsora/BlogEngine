@@ -39,5 +39,4 @@ public class Tag implements Serializable {
     public Set<Tag2Post> getPosts() {
         return posts;
     }
-
 }

@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
+import main.model.enums.ActivityStatus;
 import main.model.enums.ModerationStatus;
 
 import javax.persistence.*;
@@ -21,7 +22,7 @@ import java.util.Set;
 @EqualsAndHashCode(exclude = {"postRatings", "tags", "comments"})
 public class Post implements Serializable {
     private long id;
-    private byte isActive;
+    private ActivityStatus activityStatus;
     private ModerationStatus moderationStatus = ModerationStatus.NEW;
     private User moderator;
     private User user;
@@ -41,9 +42,10 @@ public class Post implements Serializable {
         return id;
     }
 
-    @Column(name = "is_active", nullable = false)
-    public byte getIsActive() {
-        return isActive;
+    @Column(name = "activity_status", nullable = false)
+    @Enumerated(EnumType.STRING)
+    public ActivityStatus getActivityStatus() {
+        return activityStatus;
     }
 
     @Column(name = "moderation_status")

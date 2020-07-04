@@ -65,9 +65,9 @@ public class CaptchaCodeServiceImpl implements CaptchaCodeService {
     }
 
     @Override
-    public boolean checkCorrectCaptcha(String captcha, String secretCode) {
+    public boolean isIncorrectCaptcha(String captcha, String secretCode) {
         String correctCaptcha = captchaCodeRepository.getCodeBySecretCode(secretCode);
-        return captcha.equals(correctCaptcha);
+        return !captcha.equals(correctCaptcha);
     }
 
     @Override

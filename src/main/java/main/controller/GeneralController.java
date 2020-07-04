@@ -2,7 +2,7 @@ package main.controller;
 
 import lombok.RequiredArgsConstructor;
 import main.model.entities.*;
-import main.model.enums.ActivesType;
+import main.model.enums.ActivityStatus;
 import main.model.enums.ModerationStatus;
 import main.model.enums.SettingsCode;
 import main.model.enums.SettingsValue;
@@ -91,9 +91,9 @@ public class GeneralController {
         if (year == null) {
             year = LocalDateTime.now(ZoneId.of("UTC")).getYear();
         }
-        Map<String, Long> datesAndCountPosts = postService.getDateAndCountPosts(ActivesType.ACTIVE, ModerationStatus.ACCEPTED, year);
+        Map<String, Long> datesAndCountPosts = postService.getDateAndCountPosts(ActivityStatus.ACTIVE, ModerationStatus.ACCEPTED, year);
         JSONObject posts = new JSONObject(datesAndCountPosts);
-        List<Integer> years = postService.findAllYearsOfPublication(ActivesType.ACTIVE, ModerationStatus.ACCEPTED);
+        List<Integer> years = postService.findAllYearsOfPublication(ActivityStatus.ACTIVE, ModerationStatus.ACCEPTED);
         JSONObject calendar = new JSONObject();
         calendar.put("years", years);
         calendar.put("posts", posts);
@@ -105,11 +105,11 @@ public class GeneralController {
     public ResponseEntity<JSONObject> getBlogStatistics() {
         if (globalSettingsService.settingStatisticsIsPublicIsEnabled()) {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm");
-            int postsCount = postService.getTotalCountOfPosts(ActivesType.ACTIVE, ModerationStatus.ACCEPTED);
+            int postsCount = postService.getTotalCountOfPosts(ActivityStatus.ACTIVE, ModerationStatus.ACCEPTED);
             int likesCount = postVoteService.getTotalCountLikes();
             int dislikesCount = postVoteService.getTotalCountDislikes();
-            int viewsCount = postService.getTotalCountView(ActivesType.ACTIVE, ModerationStatus.ACCEPTED);
-            LocalDateTime localDateTime = postService.getDateOfTheEarliestPost(ActivesType.ACTIVE, ModerationStatus.ACCEPTED);
+            int viewsCount = postService.getTotalCountView(ActivityStatus.ACTIVE, ModerationStatus.ACCEPTED);
+            LocalDateTime localDateTime = postService.getDateOfTheEarliestPost(ActivityStatus.ACTIVE, ModerationStatus.ACCEPTED);
             String firstPublication = localDateTime == null ?
                     "-" : formatter.format(localDateTime);
 
@@ -134,7 +134,6 @@ public class GeneralController {
     @SuppressWarnings("unchecked")
     public ResponseEntity<JSONObject> getMyStatistics() {
         long userId = authorizeServlet.getAuthorizedUserId();
-        //TODO: добавить секунды
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm");
         int postsCount = postService.getTotalCountOfPostsByUserId(userId);
         int likesCount = postVoteService.getTotalCountLikesByUserId(userId);
@@ -161,10 +160,10 @@ public class GeneralController {
                 tagService.findAll() :
                 tagService.findAllTagsByQuery(query);
         List<Double> weights = new ArrayList<>();
-        int totalNumberOfPosts = postService.getTotalCountOfPosts(ActivesType.ACTIVE, ModerationStatus.ACCEPTED);
+        int totalNumberOfPosts = postService.getTotalCountOfPosts(ActivityStatus.ACTIVE, ModerationStatus.ACCEPTED);
         double maxWeight = -1;
         for (Tag tagRep : tagListRep) {
-            int countPosts = postService.getTotalCountOfPostsByTag(ActivesType.ACTIVE, ModerationStatus.ACCEPTED, tagRep.getName());
+            int countPosts = postService.getTotalCountOfPostsByTag(ActivityStatus.ACTIVE, ModerationStatus.ACCEPTED, tagRep.getName());
             double weight = (double) countPosts / totalNumberOfPosts;
             weights.add(weight);
             if (weight > maxWeight) {
@@ -281,12 +280,6 @@ public class GeneralController {
             errorResponse.put("errors", errorText);
             return new ResponseEntity<>(errorResponse, HttpStatus.OK);
         }
-
-//        PostComment comment = new PostComment();
-//        comment.setUser(user);
-//        comment.setPost(post);
-//        comment.setText(text);
-//        comment.setTime(LocalDateTime.now(ZoneId.of("UTC")));
 
         PostComment comment = PostComment.create(user, post, text);
         if (parentIdObj instanceof Integer) {
@@ -447,8 +440,6 @@ public class GeneralController {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        // Resize
-
         // Image -> Bytes
         byte[] imageBytes = null;
         try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
