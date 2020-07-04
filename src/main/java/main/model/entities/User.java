@@ -1,56 +1,100 @@
 package main.model.entities;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
 import javax.persistence.*;
-import java.util.Date;
-import java.util.List;
+import java.io.Serializable;
+import java.time.LocalDateTime;
+import java.util.Set;
 
 @Entity
 @Table(name = "users")
 @NoArgsConstructor
 @Data
 @ToString(exclude = {"posts", "modifiedPosts", "ratedPosts", "comments"})
-@EqualsAndHashCode(of = {"email"})
-public class User {
+@EqualsAndHashCode(exclude = {"posts", "modifiedPosts", "ratedPosts", "comments"})
+public class User implements Serializable {
+    private long id;
+    private boolean isModerator;
+    private LocalDateTime regTime;
+    private String name;
+    private String email;
+    private String password;
+    private String code;
+    private String photo;
+    private Set<Post> posts;
+    private Set<Post> modifiedPosts;
+    private Set<PostVote> ratedPosts;
+    private Set<PostComment> comments;
+
+    //==============================================================================
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
+    public long getId() {
+        return id;
+    }
 
     @Column(name = "is_moderator", nullable = false)
-    private boolean isModerator;
+    public boolean isModerator() {
+        return isModerator;
+    }
 
     @Column(name = "reg_time", nullable = false)
-    private Date regTime;
+    public LocalDateTime getRegTime() {
+        return regTime;
+    }
 
     @Column(name = "name", nullable = false)
-    private String name;
+    public String getName() {
+        return name;
+    }
 
     @Column(name = "email", nullable = false)
-    private String email;
+    public String getEmail() {
+        return email;
+    }
 
     @Column(name = "password", nullable = false)
-    private String password;
+    public String getPassword() {
+        return password;
+    }
 
     @Column(name = "code")
-    private String code;
+    public String getCode() {
+        return code;
+    }
 
-    @Column(name = "photo")
-    private String photo;
+    @Column(name = "photo", columnDefinition = "TEXT")
+    public String getPhoto() {
+        return photo;
+    }
 
+    @JsonManagedReference
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
-    private List<Post> posts;
+    public Set<Post> getPosts() {
+        return posts;
+    }
 
-    @OneToMany(mappedBy = "moderator", fetch = FetchType.LAZY)
-    private List<Post> modifiedPosts;
+    @JsonManagedReference
+    @OneToMany(mappedBy = "moderator", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    public Set<Post> getModifiedPosts() {
+        return modifiedPosts;
+    }
 
-    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
-    private List<PostVote> ratedPosts;
+    @JsonManagedReference
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    public Set<PostVote> getRatedPosts() {
+        return ratedPosts;
+    }
 
-    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
-    private List<PostComment> comments;
+    @JsonManagedReference
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    public Set<PostComment> getComments() {
+        return comments;
+    }
 }

@@ -1,58 +1,108 @@
 package main.model.entities;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
-import main.model.ModerationStatusType;
+import main.model.enums.ActivityStatus;
+import main.model.enums.ModerationStatus;
 
 import javax.persistence.*;
-import java.util.Date;
-import java.util.List;
+import java.io.Serializable;
+import java.time.LocalDateTime;
+import java.util.Set;
 
 @Entity
 @Table(name = "posts")
 @NoArgsConstructor
 @Data
 @ToString(exclude = {"postRatings", "tags", "comments"})
-@EqualsAndHashCode(of = {"user", "title", "time"})
-public class Post {
+@EqualsAndHashCode(exclude = {"postRatings", "tags", "comments"})
+public class Post implements Serializable {
+    private long id;
+    private ActivityStatus activityStatus;
+    private ModerationStatus moderationStatus = ModerationStatus.NEW;
+    private User moderator;
+    private User user;
+    private LocalDateTime time;
+    private String title;
+    private String text;
+    private int viewCount;
+    private Set<PostVote> postRatings;
+    private Set<Tag2Post> tags;
+    private Set<PostComment> comments;
+
+    //==============================================================================
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
+    public long getId() {
+        return id;
+    }
 
-    @Column(name = "is_active", nullable = false)
-    private boolean isActive;
-
-    @Column(name = "moderation_status", columnDefinition = "enum")
+    @Column(name = "activity_status", nullable = false)
     @Enumerated(EnumType.STRING)
-    private ModerationStatusType moderationStatus = ModerationStatusType.NEW;
+    public ActivityStatus getActivityStatus() {
+        return activityStatus;
+    }
 
-    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private User moderator;
+    @Column(name = "moderation_status")
+    @Enumerated(EnumType.STRING)
+    public ModerationStatus getModerationStatus() {
+        return moderationStatus;
+    }
 
-    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private User user;
+    @JsonBackReference
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "moderator_id")
+    public User getModerator() {
+        return moderator;
+    }
+
+    @JsonBackReference
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "user_id")
+    public User getUser() {
+        return user;
+    }
 
     @Column(name = "time", nullable = false)
-    private Date time;
+    public LocalDateTime getTime() {
+        return time;
+    }
 
     @Column(name = "title", nullable = false)
-    private String title;
+    public String getTitle() {
+        return title;
+    }
 
-    @Column(name = "text", nullable = false)
-    private String text;
+    @Column(name = "text", nullable = false, columnDefinition = "TEXT")
+    public String getText() {
+        return text;
+    }
 
     @Column(name = "view_count", nullable = false)
-    private int viewCount;
+    public int getViewCount() {
+        return viewCount;
+    }
 
-    @OneToMany(mappedBy = "post", fetch = FetchType.LAZY)
-    private List<PostVote> postRatings;
+    @JsonManagedReference
+    @OneToMany(mappedBy = "post", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    public Set<PostVote> getPostRatings() {
+        return postRatings;
+    }
 
-    @OneToMany(mappedBy = "post", fetch = FetchType.LAZY)
-    private List<Tag2Post> tags;
+    @JsonManagedReference
+    @OneToMany(mappedBy = "post", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    public Set<Tag2Post> getTags() {
+        return tags;
+    }
 
-    @OneToMany(mappedBy = "post", fetch = FetchType.LAZY)
-    private List<PostComment> comments;
+    @JsonManagedReference
+    @OneToMany(mappedBy = "post", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    public Set<PostComment> getComments() {
+        return comments;
+    }
 }

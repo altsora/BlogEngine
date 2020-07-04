@@ -1,11 +1,13 @@
 package main.model.entities;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
 import javax.persistence.*;
+import java.io.Serializable;
 
 @Entity
 @Table(name = "tag2post")
@@ -13,15 +15,30 @@ import javax.persistence.*;
 @Data
 @ToString
 @EqualsAndHashCode(of = {"post", "tag"})
-public class Tag2Post {
+public class Tag2Post implements Serializable {
+    private long id;
+    private Post post;
+    private Tag tag;
+
+    //==============================================================================
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
+    public long getId() {
+        return id;
+    }
 
-    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private Post post;
+    @JsonBackReference
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "post_id")
+    public Post getPost() {
+        return post;
+    }
 
-    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private Tag tag;
+    @JsonBackReference
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "tag_id")
+    public Tag getTag() {
+        return tag;
+    }
 }
