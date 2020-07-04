@@ -65,21 +65,15 @@ public class GeneralController {
 
     @PutMapping(value = "/api/settings")
     public ResponseEntity<String> saveSettings(@RequestBody JSONObject request) {
-        Boolean multiUserModeValue = (Boolean) request.get("MULTIUSER_MODE");
-        Boolean postPreModerationValue = (Boolean) request.get("POST_PREMODERATION");
-        Boolean statisticsIsPublicValue = (Boolean) request.get("STATISTICS_IS_PUBLIC");
+        boolean multiUserModeValue = (boolean) request.get("MULTIUSER_MODE");
+        boolean postPreModerationValue = (boolean) request.get("POST_PREMODERATION");
+        boolean statisticsIsPublicValue = (boolean) request.get("STATISTICS_IS_PUBLIC");
         if (authorizeServlet.isUserAuthorize()) {
             User user = userService.findById(authorizeServlet.getAuthorizedUserId());
             if (user.isModerator()) {
-                if (multiUserModeValue != null) {
-                    globalSettingsService.setValue(SettingsCode.MULTIUSER_MODE, multiUserModeValue);
-                }
-                if (postPreModerationValue != null) {
-                    globalSettingsService.setValue(SettingsCode.POST_PREMODERATION, postPreModerationValue);
-                }
-                if (statisticsIsPublicValue != null) {
-                    globalSettingsService.setValue(SettingsCode.STATISTICS_IS_PUBLIC, statisticsIsPublicValue);
-                }
+                globalSettingsService.setValue(SettingsCode.MULTIUSER_MODE, multiUserModeValue);
+                globalSettingsService.setValue(SettingsCode.POST_PREMODERATION, postPreModerationValue);
+                globalSettingsService.setValue(SettingsCode.STATISTICS_IS_PUBLIC, statisticsIsPublicValue);
             }
         }
         return ResponseEntity.ok().body("Settings saved successfully");
@@ -156,15 +150,17 @@ public class GeneralController {
     @GetMapping(value = "/api/tag")
     @SuppressWarnings("unchecked")
     public ResponseEntity<JSONObject> getTagList(@RequestParam(value = "query", required = false) String query) {
+        double minNormalizedWeight = 0.3d;
         List<Tag> tagListRep = (query == null || query.equals("")) ?
                 tagService.findAll() :
                 tagService.findAllTagsByQuery(query);
         List<Double> weights = new ArrayList<>();
         int totalNumberOfPosts = postService.getTotalCountOfPosts(ActivityStatus.ACTIVE, ModerationStatus.ACCEPTED);
-        double maxWeight = -1;
+        double maxWeight = -1, weight;
+        int countPosts;
         for (Tag tagRep : tagListRep) {
-            int countPosts = postService.getTotalCountOfPostsByTag(ActivityStatus.ACTIVE, ModerationStatus.ACCEPTED, tagRep.getName());
-            double weight = (double) countPosts / totalNumberOfPosts;
+            countPosts = postService.getTotalCountOfPostsByTag(ActivityStatus.ACTIVE, ModerationStatus.ACCEPTED, tagRep.getName());
+            weight = (double) countPosts / totalNumberOfPosts;
             weights.add(weight);
             if (weight > maxWeight) {
                 maxWeight = weight;
@@ -176,11 +172,13 @@ public class GeneralController {
         for (int i = 0; i < size; i++) {
             String tagName = tagListRep.get(i).getName();
             double normalizedWeight = weights.get(i) / maxWeight;
-            TagDTO tag = TagDTO.builder()
-                    .name(tagName)
-                    .weight(normalizedWeight)
-                    .build();
-            tags.add(tag);
+            if (Double.compare(normalizedWeight, minNormalizedWeight) >= 0) {
+                TagDTO tag = TagDTO.builder()
+                        .name(tagName)
+                        .weight(normalizedWeight)
+                        .build();
+                tags.add(tag);
+            }
         }
 
         JSONObject tagsCollection = new JSONObject();
@@ -427,7 +425,7 @@ public class GeneralController {
         String formatName = file.getOriginalFilename().split("\\.")[1];
         // MultipartFile -> Image
         BufferedImage image = null;
-        try (ByteArrayInputStream bais = new ByteArrayInputStream(file.getBytes())){
+        try (ByteArrayInputStream bais = new ByteArrayInputStream(file.getBytes())) {
             image = ImageIO.read(bais);
             if (image.getWidth() > width && image.getHeight() > height) {
                 int type = image.getType() == 0 ? BufferedImage.TYPE_INT_ARGB : image.getType();
@@ -451,7 +449,7 @@ public class GeneralController {
         // Bytes -> Upload
         StringBuilder mainPath = new StringBuilder("src/main/resources/upload/");
         String fileName = getRandomFileName(mainPath, formatName);
-        try (BufferedOutputStream stream = new BufferedOutputStream(new FileOutputStream(new File(mainPath.toString())))){
+        try (BufferedOutputStream stream = new BufferedOutputStream(new FileOutputStream(new File(mainPath.toString())))) {
             stream.write(imageBytes);
             return fileName;
         } catch (IOException e) {

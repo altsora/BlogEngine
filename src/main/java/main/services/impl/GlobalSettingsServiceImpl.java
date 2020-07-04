@@ -19,25 +19,32 @@ public class GlobalSettingsServiceImpl implements GlobalSettingsService {
 
     @Override
     public boolean settingMultiUserModeIsEnabled() {
-        return globalSettingsRepository.settingMultiUserModeIsEnabled() != null;
+        return settingIsEnabled(SettingsCode.MULTIUSER_MODE);
     }
 
     @Override
     public boolean settingPostPreModerationIsEnabled() {
-        return globalSettingsRepository.settingPostPreModerationIsEnabled() != null;
+        return settingIsEnabled(SettingsCode.POST_PREMODERATION);
     }
 
     @Override
     public boolean settingStatisticsIsPublicIsEnabled() {
-        return globalSettingsRepository.settingStatisticsIsPublicIsEnabled() != null;
+        return settingIsEnabled(SettingsCode.STATISTICS_IS_PUBLIC);
     }
 
     @Override
     public void setValue(SettingsCode settingsCode, boolean value) {
-        SettingsValue valueType = value ? SettingsValue.YES : SettingsValue.NO;
-        GlobalSetting globalSetting = globalSettingsRepository.findSettingByCode(settingsCode);
-        globalSetting.setValue(valueType);
-        globalSettingsRepository.saveAndFlush(globalSetting);
+        if (settingIsEnabled(settingsCode) != value) {
+            SettingsValue newValue = value ? SettingsValue.YES : SettingsValue.NO;
+            GlobalSetting globalSetting = globalSettingsRepository.findSettingByCode(settingsCode);
+            globalSetting.setValue(newValue);
+            globalSettingsRepository.saveAndFlush(globalSetting);
+        }
+    }
+
+    @Override
+    public boolean settingIsEnabled(SettingsCode code) {
+        return globalSettingsRepository.checkValue(code, SettingsValue.YES) != null;
     }
 
     @Override

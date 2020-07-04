@@ -206,6 +206,21 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
+    public Post updatePost(long postId, User user, ActivityStatus activityStatus, LocalDateTime time, String title, String text) {
+        Post updatedPost = findById(postId);
+        if (user.isModerator()) {
+            updatedPost.setModerator(user);
+        } else {
+            updatedPost.setModerationStatus(ModerationStatus.NEW);
+        }
+        updatedPost.setActivityStatus(activityStatus);
+        updatedPost.setTime(time);
+        updatedPost.setTitle(title);
+        updatedPost.setText(text);
+        return postRepository.saveAndFlush(updatedPost);
+    }
+
+    @Override
     public LocalDateTime getDateOfTheEarliestPost(ActivityStatus activityStatus, ModerationStatus moderationStatus) {
         LocalDateTime localDateTime = postRepository.getDateOfTheEarliestPost(activityStatus, moderationStatus);
         if (localDateTime != null) {
@@ -228,13 +243,16 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    public Post addPost(ActivityStatus activityStatus, User user, LocalDateTime postTime, String postTitle, String postText) {
+    public Post addPost(ActivityStatus activityStatus, User user, LocalDateTime postTime, String postTitle, String postText, boolean preModeration) {
         Post post = new Post();
         post.setActivityStatus(activityStatus);
         post.setUser(user);
         post.setTime(postTime);
         post.setTitle(postTitle);
         post.setText(postText);
+        if (!preModeration) {
+            post.setModerationStatus(ModerationStatus.ACCEPTED);
+        }
         return postRepository.saveAndFlush(post);
     }
 

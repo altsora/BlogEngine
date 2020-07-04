@@ -27,6 +27,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class PostController {
     private final AuthorizeServlet authorizeServlet;
+    private final GlobalSettingsService globalSettingsService;
     private final PostService postService;
     private final PostVoteService postVoteService;
     private final PostCommentService postCommentService;
@@ -207,61 +208,70 @@ public class PostController {
     @PostMapping(value = "/api/post")
     @SuppressWarnings("unchecked")
     public ResponseEntity<JSONObject> addPost(@RequestBody JSONObject request) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:s");
-        String postTimeString = request.get("time") + ":" + LocalDateTime.now(ZoneId.of("UTC")).getSecond(); // КОСТЫЛЬ
-        int postActive = (int) request.get("active");
-        String postTitle = (String) request.get("title");
-        List<String> postTags = (ArrayList<String>) request.get("tags");
-        String postText = (String) request.get("text");
-
-        JSONObject message = new JSONObject();
-        if (postTitle.isEmpty()) {
-            message.put("message", "Заголовок не должен быть пустым!");
-            message.put("result", false);
-            return new ResponseEntity<>(message, HttpStatus.BAD_REQUEST);
-        }
-
-        if (postText.isEmpty()) {
-            message.put("message", "Пост не должен быть пустым!");
-            message.put("result", false);
-            return new ResponseEntity<>(message, HttpStatus.BAD_REQUEST);
-        }
-
-        if (postTitle.length() < 3) {
-            message.put("message", "Минимальное количество символов в заголовке - 3!");
-            message.put("result", false);
-            return new ResponseEntity<>(message, HttpStatus.BAD_REQUEST);
-        }
-
-        if (postText.length() < 50) {
-            message.put("message", "Минимальное количество символов в публикации - 50!");
-            message.put("result", false);
-            return new ResponseEntity<>(message, HttpStatus.BAD_REQUEST);
-        }
-
-        LocalDateTime postTime;
-        try {
-            postTime = LocalDateTime.parse(postTimeString, formatter);
-        } catch (DateTimeParseException e) {
-            message.put("message", "Ошибка преобразования String в LocalDateTime");
-            message.put("result", false);
-            return new ResponseEntity<>(message, HttpStatus.BAD_REQUEST);
-        }
-        if (postTime.isBefore(LocalDateTime.now(ZoneId.of("UTC")))) {
-            postTime = LocalDateTime.now(ZoneId.of("UTC"));
-        }
-
-        ActivityStatus activity = postActive == 1 ? ActivityStatus.ACTIVE : ActivityStatus.INACTIVE;
-        User user = userService.findById(authorizeServlet.getAuthorizedUserId());
-        Post newPost = postService.addPost(activity, user, postTime, postTitle, postText);
-
-        for (String tagName : postTags) {
-            Tag tag = tagService.createTagIfNoExistsAndReturn(tagName);
-            tag2PostService.addTag2Post(newPost, tag);
-        }
-
         JSONObject response = new JSONObject();
-        response.put("result", true);
+        boolean result;
+        if (globalSettingsService.settingMultiUserModeIsEnabled()) {
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:s");
+            String postTimeString = request.get("time") + ":" + LocalDateTime.now(ZoneId.of("UTC")).getSecond(); // КОСТЫЛЬ
+            int postActive = (int) request.get("active");
+            String postTitle = (String) request.get("title");
+            List<String> postTags = (ArrayList<String>) request.get("tags");
+            String postText = (String) request.get("text");
+
+            JSONObject message = new JSONObject();
+            if (postTitle.isEmpty()) {
+                message.put("message", "Заголовок не должен быть пустым!");
+                message.put("result", false);
+                return new ResponseEntity<>(message, HttpStatus.BAD_REQUEST);
+            }
+
+            if (postText.isEmpty()) {
+                message.put("message", "Пост не должен быть пустым!");
+                message.put("result", false);
+                return new ResponseEntity<>(message, HttpStatus.BAD_REQUEST);
+            }
+
+            if (postTitle.length() < 3) {
+                message.put("message", "Минимальное количество символов в заголовке - 3!");
+                message.put("result", false);
+                return new ResponseEntity<>(message, HttpStatus.BAD_REQUEST);
+            }
+
+            if (postText.length() < 50) {
+                message.put("message", "Минимальное количество символов в публикации - 50!");
+                message.put("result", false);
+                return new ResponseEntity<>(message, HttpStatus.BAD_REQUEST);
+            }
+
+            LocalDateTime postTime;
+            try {
+                postTime = LocalDateTime.parse(postTimeString, formatter);
+            } catch (DateTimeParseException e) {
+                message.put("message", "Ошибка преобразования String в LocalDateTime");
+                message.put("result", false);
+                return new ResponseEntity<>(message, HttpStatus.BAD_REQUEST);
+            }
+            if (postTime.isBefore(LocalDateTime.now(ZoneId.of("UTC")))) {
+                postTime = LocalDateTime.now(ZoneId.of("UTC"));
+            }
+
+            ActivityStatus activity = postActive == 1 ? ActivityStatus.ACTIVE : ActivityStatus.INACTIVE;
+            User user = userService.findById(authorizeServlet.getAuthorizedUserId());
+
+            boolean moderation = globalSettingsService.settingPostPreModerationIsEnabled();
+            Post newPost = postService.addPost(activity, user, postTime, postTitle, postText, moderation);
+
+            for (String tagName : postTags) {
+                Tag tag = tagService.createTagIfNoExistsAndReturn(tagName);
+                tag2PostService.addTag2Post(newPost, tag);
+            }
+
+            result = true;
+        } else {
+            result = false;
+        }
+
+        response.put("result", result);
         return ResponseEntity.ok(response);
     }
 
@@ -379,21 +389,9 @@ public class PostController {
             newTimeOfPost = LocalDateTime.now(ZoneId.of("UTC"));
         }
 
-        ActivityStatus activity = newPostActivity == 1 ? ActivityStatus.ACTIVE : ActivityStatus.INACTIVE;
+        ActivityStatus activityStatus = newPostActivity == 1 ? ActivityStatus.ACTIVE : ActivityStatus.INACTIVE;
         User user = userService.findById(authorizeServlet.getAuthorizedUserId());
-        Post updatedPost = postService.findById(postId);
-        if (user.isModerator()) {
-            updatedPost.setModerator(user);
-        } else {
-            updatedPost.setModerationStatus(ModerationStatus.NEW);
-        }
-        //TODO: Посмотреть, можно ли строки ниже кинуть в сервис
-//        updatedPost.setIsActive(isActive);
-//        updatedPost.setActivity(activity);
-        updatedPost.setActivityStatus(activity);
-        updatedPost.setTime(newTimeOfPost);
-        updatedPost.setTitle(newTitle);
-        updatedPost.setText(newText);
+        postService.updatePost(postId, user, activityStatus, newTimeOfPost, newTitle, newText);
 
         for (String tagName : newPostTags) {
             tagService.createTagIfNoExistsAndReturn(tagName);

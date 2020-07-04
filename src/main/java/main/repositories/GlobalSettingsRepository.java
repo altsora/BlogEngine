@@ -2,6 +2,7 @@ package main.repositories;
 
 import main.model.entities.GlobalSetting;
 import main.model.enums.SettingsCode;
+import main.model.enums.SettingsValue;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -12,6 +13,12 @@ public interface GlobalSettingsRepository extends JpaRepository<GlobalSetting, L
     String STATISTICS_IS_PUBLIC = "STATISTICS_IS_PUBLIC";
 
     //==================================================================================================================
+
+    @Query("SELECT gs FROM GlobalSetting gs " +
+            "WHERE " +
+            "   gs.code = :code AND " +
+            "   gs.value = :value")
+    GlobalSetting checkValue(SettingsCode code, SettingsValue value);
 
     @Query("SELECT gs FROM GlobalSetting gs " +
             "WHERE " +

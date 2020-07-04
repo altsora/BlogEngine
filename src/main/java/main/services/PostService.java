@@ -61,11 +61,13 @@ public interface PostService {
 
     Post updateViewCount(Post post);
 
+    Post updatePost(long postId, User user, ActivityStatus activityStatus, LocalDateTime time, String title, String text);
+
     LocalDateTime getDateOfTheEarliestPost(ActivityStatus activityStatus, ModerationStatus moderationStatus);
 
     LocalDateTime getDateOfTheEarliestPostByUserId(long userId);
 
-    Post addPost(ActivityStatus activity, User user, LocalDateTime postTime, String postTitle, String postText);
+    Post addPost(ActivityStatus activityStatus, User user, LocalDateTime postTime, String postTitle, String postText, boolean preModeration);
 
     void setModerationStatus(long userId, long postId, ModerationStatus moderationStatus);
 }
