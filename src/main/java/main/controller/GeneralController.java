@@ -6,6 +6,9 @@ import main.model.enums.ActivityStatus;
 import main.model.enums.ModerationStatus;
 import main.model.enums.SettingsCode;
 import main.model.enums.SettingsValue;
+import main.requests.ModerationForm;
+import main.requests.NewCommentForm;
+import main.requests.SettingsForm;
 import main.responses.BlogDTO;
 import main.responses.TagDTO;
 import main.services.*;
@@ -64,10 +67,10 @@ public class GeneralController {
     }
 
     @PutMapping(value = "/api/settings")
-    public ResponseEntity<String> saveSettings(@RequestBody JSONObject request) {
-        boolean multiUserModeValue = (boolean) request.get("MULTIUSER_MODE");
-        boolean postPreModerationValue = (boolean) request.get("POST_PREMODERATION");
-        boolean statisticsIsPublicValue = (boolean) request.get("STATISTICS_IS_PUBLIC");
+    public ResponseEntity<String> saveSettings(@RequestBody SettingsForm settingsForm) {
+        boolean multiUserModeValue = settingsForm.isMultiUserModeValue();
+        boolean postPreModerationValue = settingsForm.isPostPreModerationValue();
+        boolean statisticsIsPublicValue = settingsForm.isStatisticsIsPublicValue();
         if (authorizeServlet.isUserAuthorize()) {
             User user = userService.findById(authorizeServlet.getAuthorizedUserId());
             if (user.isModerator()) {
@@ -75,8 +78,9 @@ public class GeneralController {
                 globalSettingsService.setValue(SettingsCode.POST_PREMODERATION, postPreModerationValue);
                 globalSettingsService.setValue(SettingsCode.STATISTICS_IS_PUBLIC, statisticsIsPublicValue);
             }
+            return ResponseEntity.ok().body("Settings saved successfully");
         }
-        return ResponseEntity.ok().body("Settings saved successfully");
+        return ResponseEntity.ok().body("Changes were not saved");
     }
 
     @GetMapping(value = "/api/calendar")
@@ -236,10 +240,9 @@ public class GeneralController {
     }
 
     @PostMapping(value = "/api/moderation")
-    @ResponseBody
-    public void moderation(@RequestBody JSONObject request) {
-        long postId = (int) request.get("post_id");
-        String status = (String) request.get("decision");
+    public void moderation(@RequestBody ModerationForm moderationForm) {
+        long postId = moderationForm.getPostId();
+        String status = moderationForm.getDecision();
         long userId = authorizeServlet.getAuthorizedUserId();
         switch (status) {
             case "accept":
@@ -253,14 +256,14 @@ public class GeneralController {
 
     @PostMapping(value = "/api/comment")
     @SuppressWarnings("unchecked")
-    public ResponseEntity<JSONObject> addComment(@RequestBody JSONObject request) {
+    public ResponseEntity<JSONObject> addComment(@RequestBody NewCommentForm newCommentForm) {
         JSONObject notFoundResponse = new JSONObject();
         JSONObject errorResponse = new JSONObject();
         JSONObject successfulResponse = new JSONObject();
 
-        long postId = (int) request.get("post_id");
-        Object parentIdObj = request.get("parent_id");
-        String text = (String) request.get("text");
+        long postId = newCommentForm.getPostId();
+        Object parentIdObj = newCommentForm.getParentIdObj();
+        String text = newCommentForm.getText();
 
         User user = userService.findById(authorizeServlet.getAuthorizedUserId());
         Post post = postService.findById(postId);

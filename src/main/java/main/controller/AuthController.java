@@ -4,7 +4,9 @@ import lombok.RequiredArgsConstructor;
 import main.model.entities.CaptchaCode;
 import main.model.entities.User;
 import main.model.enums.ActivityStatus;
-import main.responses.LoginForm;
+import main.requests.LoginForm;
+import main.requests.PasswordChangeForm;
+import main.requests.RegisterForm;
 import main.responses.UserLoginDTO;
 import main.services.CaptchaCodeService;
 import main.services.PostService;
@@ -58,7 +60,7 @@ public class AuthController {
     @SuppressWarnings("unchecked")
     public ResponseEntity<JSONObject> login(@RequestBody LoginForm loginForm) {
         JSONObject response = new JSONObject();
-        User userRep = userService.findByEmailAndPassword(loginForm.getE_mail(), loginForm.getPassword());
+        User userRep = userService.findByEmailAndPassword(loginForm.getEmail(), loginForm.getPassword());
         boolean result;
         if (userRep != null) {
             long userId = userRep.getId();
@@ -96,12 +98,12 @@ public class AuthController {
 
     @PostMapping(value = "/api/auth/register")
     @SuppressWarnings("unchecked")
-    public ResponseEntity<JSONObject> registration(@RequestBody JSONObject request) {
-        String email = (String) request.get("e_mail");
-        String name = (String) request.get("name");
-        String password = (String) request.get("password");
-        String inputCaptchaCode = (String) request.get("captcha");
-        String secretCode = (String) request.get("captcha_secret");
+    public ResponseEntity<JSONObject> registration(@RequestBody RegisterForm registerForm) {
+        String email = registerForm.getEmail();
+        String name = registerForm.getName();
+        String password = registerForm.getPassword();
+        String inputCaptchaCode = registerForm.getCaptcha();
+        String secretCode = registerForm.getCaptchaSecret();
 
         boolean result = true;
         JSONObject response = new JSONObject();
@@ -150,11 +152,11 @@ public class AuthController {
 
     @PostMapping(value = "/api/auth/password")
     @SuppressWarnings("unchecked")
-    public ResponseEntity<JSONObject> changePassword(@RequestBody JSONObject request) {
-        String code = (String) request.get("code");
-        String password = (String) request.get("password");
-        String inputCaptchaCode = (String) request.get("captcha");
-        String secretCode = (String) request.get("captcha_secret");
+    public ResponseEntity<JSONObject> changePassword(@RequestBody PasswordChangeForm passwordChangeForm) {
+        String code = passwordChangeForm.getCode();
+        String password = passwordChangeForm.getPassword();
+        String inputCaptchaCode = passwordChangeForm.getCode();
+        String secretCode = passwordChangeForm.getCaptchaSecret();
 
         boolean result = true;
         JSONObject response = new JSONObject();
@@ -189,7 +191,7 @@ public class AuthController {
     @PostMapping(value = "/api/auth/restore")
     @SuppressWarnings("unchecked")
     public ResponseEntity<JSONObject> restorePassword(@RequestBody JSONObject request) {
-        //TODO: Недостаточно данных
+        //TODO: 1
         String email = (String) request.get("email");
         boolean result = userService.emailExists(email);
         JSONObject response = new JSONObject();

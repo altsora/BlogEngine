@@ -5,6 +5,7 @@ import main.model.entities.*;
 import main.model.enums.ActivityStatus;
 import main.model.enums.ModerationStatus;
 import main.model.enums.Rating;
+import main.requests.PostForm;
 import main.responses.*;
 import main.services.*;
 import main.servlet.AuthorizeServlet;
@@ -154,7 +155,7 @@ public class PostController {
     @PostMapping(value = "/api/post/like")
     @SuppressWarnings("unchecked")
     public ResponseEntity<JSONObject> putLike(@RequestBody JSONObject request) {
-        boolean result;
+        boolean result = false;
         if (authorizeServlet.isUserAuthorize()) {
             long userId = authorizeServlet.getAuthorizedUserId();
             long postId = (int) request.get("post_id");
@@ -170,8 +171,6 @@ public class PostController {
                 postVoteService.setRating(userId, postId, Rating.LIKE);
                 result = true;
             }
-        } else {
-            result = false;
         }
         JSONObject response = new JSONObject();
         response.put("result", result);
@@ -181,7 +180,7 @@ public class PostController {
     @PostMapping(value = "/api/post/dislike")
     @SuppressWarnings("unchecked")
     public ResponseEntity<JSONObject> putDislike(@RequestBody JSONObject request) {
-        boolean result;
+        boolean result = false;
         if (authorizeServlet.isUserAuthorize()) {
             long userId = authorizeServlet.getAuthorizedUserId();
             long postId = (int) request.get("post_id");
@@ -197,8 +196,6 @@ public class PostController {
                 postVoteService.setRating(userId, postId, Rating.DISLIKE);
                 result = true;
             }
-        } else {
-            result = false;
         }
         JSONObject response = new JSONObject();
         response.put("result", result);
@@ -207,16 +204,17 @@ public class PostController {
 
     @PostMapping(value = "/api/post")
     @SuppressWarnings("unchecked")
-    public ResponseEntity<JSONObject> addPost(@RequestBody JSONObject request) {
+    public ResponseEntity<JSONObject> addPost(@RequestBody PostForm postForm) {
         JSONObject response = new JSONObject();
-        boolean result;
+        boolean result = false;
         if (globalSettingsService.settingMultiUserModeIsEnabled()) {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:s");
-            String postTimeString = request.get("time") + ":" + LocalDateTime.now(ZoneId.of("UTC")).getSecond(); // КОСТЫЛЬ
-            int postActive = (int) request.get("active");
-            String postTitle = (String) request.get("title");
-            List<String> postTags = (ArrayList<String>) request.get("tags");
-            String postText = (String) request.get("text");
+
+            String postTimeString = postForm.getTime() + ":" + LocalDateTime.now(ZoneId.of("UTC")).getSecond(); // КОСТЫЛЬ
+            int postActive = postForm.getActive();
+            String postTitle = postForm.getTitle();
+            List<String> postTags = postForm.getTags();
+            String postText = postForm.getText();
 
             JSONObject message = new JSONObject();
             if (postTitle.isEmpty()) {
@@ -267,8 +265,6 @@ public class PostController {
             }
 
             result = true;
-        } else {
-            result = false;
         }
 
         response.put("result", result);
@@ -343,14 +339,15 @@ public class PostController {
     @SuppressWarnings("unchecked")
     public ResponseEntity<JSONObject> updatePost(
             @PathVariable(value = "id") long postId,
-            @RequestBody JSONObject request
+            @RequestBody PostForm postForm
     ) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
-        String timeOfPostString = (String) request.get("time");
-        int newPostActivity = (int) request.get("active");
-        String newTitle = (String) request.get("title");
-        List<String> newPostTags = (ArrayList<String>) request.get("tags");
-        String newText = (String) request.get("text");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:s");
+
+        String postTimeString = postForm.getTime() + ":" + LocalDateTime.now(ZoneId.of("UTC")).getSecond(); // КОСТЫЛЬ
+        int newPostActivity = postForm.getActive();
+        String newTitle = postForm.getTitle();
+        List<String> newPostTags = postForm.getTags();
+        String newText = postForm.getText();
 
         JSONObject message = new JSONObject();
         if (newTitle.isEmpty()) {
@@ -379,7 +376,7 @@ public class PostController {
 
         LocalDateTime newTimeOfPost;
         try {
-            newTimeOfPost = LocalDateTime.parse(timeOfPostString, formatter);
+            newTimeOfPost = LocalDateTime.parse(postTimeString, formatter);
         } catch (DateTimeParseException e) {
             message.put("message", "Необходимо указать дату!");
             message.put("result", false);
@@ -457,7 +454,6 @@ public class PostController {
             //===========================================================
             commentDTOList.add(commentDTO);
         }
-
         return commentDTOList;
     }
 
@@ -494,5 +490,4 @@ public class PostController {
 
         return fullFormat.format(utcTime);
     }
-
 }
