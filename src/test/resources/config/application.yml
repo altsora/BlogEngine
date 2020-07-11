@@ -1,0 +1,15 @@
+spring.datasource.url=jdbc:mysql://localhost:3306/test_2_blog_engine?useSSL=false&useLegacyDatetimeCode=false&serverTimezone=UTC
+spring.datasource.username=root
+spring.datasource.password=1235
+spring.jpa.hibernate.ddl-auto=validate
+spring.jpa.show-sql=true
+spring.servlet.multipart.max-file-size=10MB
+
+captcha.hour=1
+
+blog.title=DevPubzzzzzzz
+blog.subtitle=Developer Storieszzzzzzzzz
+blog.phone=+7 903 666-44-55zzzzzzzz
+blog.email=mail@mail.ru
+blog.copyright=Alexander Vergun
+blog.copyrightFrom=2007

@@ -1,0 +1,33 @@
+<!DOCTYPE hibernate-configuration PUBLIC
+        "-//Hibernate/Hibernate Configuration DTD 3.0//EN"
+        "http://www.hibernate.org/dtd/hibernate-configuration-3.0.dtd">
+<hibernate-configuration>
+    <session-factory>
+        <!-- JDBC Database connection settings -->
+        <property name="connection.driver_class">com.mysql.cj.jdbc.Driver</property>
+        <property name="connection.url">jdbc:mysql://localhost:3306/test_2_blog_engine?useSSL=false&amp;useLegacyDatetimeCode=false</property>
+        <property name="connection.username">root</property>
+        <property name="connection.password">1235</property>
+        <!-- JDBC connection pool settings ... using built-in test pool -->
+        <property name="connection.pool_size">10</property>
+        <!-- Select our SQL dialect -->
+        <property name="dialect">org.hibernate.dialect.MySQL5Dialect</property>
+        <!-- Echo the SQL to stdout -->
+        <property name="show_sql">false</property>
+        <!-- Set the current session context -->
+        <property name="current_session_context_class">thread</property>
+        <!-- Drop and re-create the database schema on startup -->
+        <!--property name="hbm2ddl.auto">validate</property-->
+        <!--property name="hibernate.hbm2ddl.auto">create-drop</property-->
+        <property name="hibernate.hbm2ddl.auto">create-drop</property>
+
+        <mapping class="main.model.entities.User"/>
+        <mapping class="main.model.entities.Post"/>
+        <mapping class="main.model.entities.PostVote"/>
+        <mapping class="main.model.entities.Tag"/>
+        <mapping class="main.model.entities.Tag2Post"/>
+        <mapping class="main.model.entities.PostComment"/>
+        <mapping class="main.model.entities.CaptchaCode"/>
+        <mapping class="main.model.entities.GlobalSetting"/>
+    </session-factory>
+</hibernate-configuration>
