@@ -1,15 +1,23 @@
 package main.services.impl;
 
 import main.MainTest;
+import main.model.entities.GlobalSetting;
 import main.model.entities.Tag;
+import main.model.entities.User;
+import main.repositories.GlobalSettingsRepository;
 import main.repositories.TagRepository;
+import main.repositories.UserRepository;
+import main.services.GlobalSettingsService;
 import main.services.TagService;
+import main.services.UserService;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentMatchers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.ArrayList;
@@ -50,7 +58,7 @@ public class TagServiceImplTest {
         search2.setName("search2");
         tearch3 = new Tag();
         tearch3.setName("tearch3");
-        
+
         tagService.createTagIfNoExistsAndReturn(search1.getName());
         tagService.createTagIfNoExistsAndReturn(search2.getName());
         tagService.createTagIfNoExistsAndReturn(tearch3.getName());

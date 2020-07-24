@@ -112,12 +112,13 @@ public class InitDB {
     //==================================================================================================================
 
     private static void randomGenerator(Session session) {
+        generationUsers(session, 5);
 //        createGlobalSettings(session);
 //        generationCaptchaCode(session);
 //        generationUsers(session);
 //        generationPosts(session);
 //        generationPostVotes(session);
-        generationTags(session);
+//        generationTags(session);
 //        generationTag2Posts(session);
 //        generationPostCommentsNoParent(session);
 //        generationPostCommentsChildren(session);
@@ -273,19 +274,29 @@ public class InitDB {
         }
     }
 
+    private static void generationUsers(Session session, int count) {
+        Random random = new Random();
+        for (int i = 0; i < count; i++) {
+            User user = new User();
+            user.setModerator(random.nextBoolean());
+            user.setName("UserName " + (i + 1));
+            user.setRegTime(randomLocalDateTimePastNow());
+            user.setEmail("email_" + (i + 1) + "@mail.ru");
+            user.setPassword("password_" + (i + 1));
+            session.saveOrUpdate(user);
+        }
+    }
+
     private static void generationUsers(Session session) {
         for (int i = 0; i < COUNT_USERS; i++) {
             Random random = new Random();
             User user = new User();
-//            user.setIsModerator((byte) (random.nextBoolean() ? 1 : 0));
             user.setModerator(random.nextBoolean());
             user.setName("UserName " + (i + 1));
             user.setRegTime(randomLocalDateTimePastNow());
 //            user.setRegTime(LocalDateTime.of(2020, 1, 1, 0, 0));
             user.setEmail("email_" + (i + 1) + "@mail.ru");
             user.setPassword("password_" + (i + 1));
-//            user.setPhoto("");
-//            user.setCode(null);
             session.saveOrUpdate(user);
         }
     }

@@ -55,7 +55,7 @@ public class PostServiceImpl implements PostService {
     @Override
     public List<Post> findAllPostBest(ActivityStatus activityStatus, ModerationStatus moderationStatus, int offset, int limit) {
         int pageNumber = offset / limit;
-        Pageable sortedByCountLikes = PageRequest.of(pageNumber, limit, Sort.by(PostRepository.COUNT_LIKES).descending());
+        Pageable sortedByCountLikes = PageRequest.of(pageNumber, limit, Sort.by(Sort.Direction.DESC, PostRepository.COUNT_LIKES));
         return postRepository.findAllPostBest(activityStatus, moderationStatus, Rating.LIKE, sortedByCountLikes);
     }
 
