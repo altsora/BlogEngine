@@ -1,16 +1,16 @@
 package main.controller;
 
 import lombok.RequiredArgsConstructor;
-import main.model.entities.CaptchaCode;
-import main.model.entities.User;
+import main.model.entity.CaptchaCode;
+import main.model.entity.User;
 import main.model.enums.ActivityStatus;
-import main.requests.LoginForm;
-import main.requests.PasswordChangeForm;
-import main.requests.RegisterForm;
-import main.responses.UserLoginDTO;
-import main.services.CaptchaCodeService;
-import main.services.PostService;
-import main.services.UserService;
+import main.request.LoginForm;
+import main.request.PasswordChangeForm;
+import main.request.RegisterForm;
+import main.response.UserLoginDTO;
+import main.service.CaptchaCodeService;
+import main.service.PostService;
+import main.service.UserService;
 import main.servlet.AuthorizeServlet;
 import org.json.simple.JSONObject;
 import org.springframework.http.ResponseEntity;

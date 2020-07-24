@@ -1,13 +1,13 @@
 package main.controller;
 
 import lombok.RequiredArgsConstructor;
-import main.model.entities.*;
+import main.model.entity.*;
 import main.model.enums.ActivityStatus;
 import main.model.enums.ModerationStatus;
 import main.model.enums.Rating;
-import main.requests.PostForm;
-import main.responses.*;
-import main.services.*;
+import main.request.PostForm;
+import main.response.*;
+import main.service.*;
 import main.servlet.AuthorizeServlet;
 import org.json.simple.JSONObject;
 import org.jsoup.Jsoup;

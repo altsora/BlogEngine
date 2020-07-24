@@ -1,17 +1,17 @@
 package main.controller;
 
 import lombok.RequiredArgsConstructor;
-import main.model.entities.*;
+import main.model.entity.*;
 import main.model.enums.ActivityStatus;
 import main.model.enums.ModerationStatus;
 import main.model.enums.SettingsCode;
 import main.model.enums.SettingsValue;
-import main.requests.ModerationForm;
-import main.requests.NewCommentForm;
-import main.requests.SettingsForm;
-import main.responses.BlogDTO;
-import main.responses.TagDTO;
-import main.services.*;
+import main.request.ModerationForm;
+import main.request.NewCommentForm;
+import main.request.SettingsForm;
+import main.response.BlogDTO;
+import main.response.TagDTO;
+import main.service.*;
 import main.servlet.AuthorizeServlet;
 import org.json.simple.JSONObject;
 import org.springframework.http.HttpHeaders;
