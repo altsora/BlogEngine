@@ -50,7 +50,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public boolean nameIsInvalid(String name, JSONObject errors) {
         String key = "name";
-        if (name.isEmpty()) {
+        if (name == null || name.isEmpty()) {
             errors.put(key, "Укажите имя");
             return true;
         }
@@ -60,11 +60,6 @@ public class UserServiceImpl implements UserService {
             return true;
         }
 
-        String containsNumbers = ".*\\d.*";
-        if (name.matches(containsNumbers)) {
-            errors.put(key, "Имя не должно содержать числа");
-            return true;
-        }
         return false;
     }
 

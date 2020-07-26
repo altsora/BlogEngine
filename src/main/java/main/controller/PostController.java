@@ -1,16 +1,20 @@
 package main.controller;
 
 import lombok.RequiredArgsConstructor;
-import main.model.entity.*;
+import main.model.entity.Post;
+import main.model.entity.Tag;
+import main.model.entity.User;
 import main.model.enums.ActivityStatus;
 import main.model.enums.ModerationStatus;
 import main.model.enums.Rating;
 import main.request.PostForm;
-import main.response.*;
+import main.response.PostFullDTO;
+import main.response.PostPublicDTO;
+import main.response.UserSimpleDTO;
 import main.service.*;
 import main.servlet.AuthorizeServlet;
+import main.util.TimeUtil;
 import org.json.simple.JSONObject;
-import org.jsoup.Jsoup;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,10 +22,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
-import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -59,7 +61,7 @@ public class PostController {
             default:
                 postListRep = postService.findAllPostSortedByDate(ActivityStatus.ACTIVE, ModerationStatus.ACCEPTED, offset, limit, Sort.Direction.DESC);
         }
-        List<PostPublicDTO> posts = getPosts(postListRep);
+        List<PostPublicDTO> posts = postService.getPostsToDisplay(postListRep);
         int count = postService.getTotalCountOfPosts(ActivityStatus.ACTIVE, ModerationStatus.ACCEPTED);
         JSONObject response = new JSONObject();
         response.put("count", count);
@@ -77,7 +79,7 @@ public class PostController {
         List<Post> postListRep = query.equals("") ?
                 postService.findAllPostSortedByDate(ActivityStatus.ACTIVE, ModerationStatus.ACCEPTED, offset, limit, Sort.Direction.DESC) :
                 postService.findAllPostByQuery(ActivityStatus.ACTIVE, ModerationStatus.ACCEPTED, offset, limit, query);
-        List<PostPublicDTO> posts = getPosts(postListRep);
+        List<PostPublicDTO> posts = postService.getPostsToDisplay(postListRep);
         int count = query.equals("") ?
                 postService.getTotalCountOfPosts(ActivityStatus.ACTIVE, ModerationStatus.ACCEPTED) :
                 postService.getTotalCountOfPostsByQuery(ActivityStatus.ACTIVE, ModerationStatus.ACCEPTED, query);
@@ -102,10 +104,9 @@ public class PostController {
         long postId = postRep.getId();
         long userId = postRep.getUser().getId();
         String userName = postRep.getUser().getName();
-
         PostFullDTO post = PostFullDTO.builder()
                 .id(postId)
-                .time(getStringTime(postRep.getTime()))
+                .time(TimeUtil.getDateAsString(postRep.getTime()))
                 .active(postRep.getActivityStatus() == ActivityStatus.ACTIVE)
                 .user(UserSimpleDTO.builder().id(userId).name(userName).build())
                 .title(postRep.getTitle())
@@ -113,8 +114,8 @@ public class PostController {
                 .likeCount(postVoteService.getCountLikesByPostId(postId))
                 .dislikeCount(postVoteService.getCountDislikesByPostId(postId))
                 .viewCount(postRep.getViewCount())
-                .comments(getCommentsByPostId(postId))
-                .tags(getTagsByPostId(postId))
+                .comments(postCommentService.getCommentsByPostId(postId))
+                .tags(tagService.getTagsByPostId(postId))
                 .build();
         return ResponseEntity.ok(post);
     }
@@ -127,7 +128,7 @@ public class PostController {
             @RequestParam(value = "date") String date
     ) {
         List<Post> postListRep = postService.findAllPostByDate(ActivityStatus.ACTIVE, ModerationStatus.ACCEPTED, offset, limit, date);
-        List<PostPublicDTO> posts = getPosts(postListRep);
+        List<PostPublicDTO> posts = postService.getPostsToDisplay(postListRep);
         int count = postService.getTotalCountOfPostsByDate(ActivityStatus.ACTIVE, ModerationStatus.ACCEPTED, date);
 
         JSONObject response = new JSONObject();
@@ -144,7 +145,7 @@ public class PostController {
             @RequestParam(value = "tag") String tag
     ) {
         List<Post> postListRep = postService.findAllPostByTag(ActivityStatus.ACTIVE, ModerationStatus.ACCEPTED, offset, limit, tag);
-        List<PostPublicDTO> posts = getPosts(postListRep);
+        List<PostPublicDTO> posts = postService.getPostsToDisplay(postListRep);
         int count = postService.getTotalCountOfPostsByTag(ActivityStatus.ACTIVE, ModerationStatus.ACCEPTED, tag);
         JSONObject response = new JSONObject();
         response.put("count", count);
@@ -294,7 +295,7 @@ public class PostController {
                 postListRep = postService.findAllNewPosts(ActivityStatus.ACTIVE, offset, limit);
                 count = postService.getTotalCountOfNewPosts(ActivityStatus.ACTIVE);
         }
-        List<PostPublicDTO> posts = getPosts(postListRep);
+        List<PostPublicDTO> posts = postService.getPostsToDisplay(postListRep);
         JSONObject response = new JSONObject();
         response.put("count", count);
         response.put("posts", posts);
@@ -328,7 +329,7 @@ public class PostController {
                 postListRep = postService.findAllPostsByUserId(ActivityStatus.ACTIVE, ModerationStatus.ACCEPTED, offset, limit, userId);
                 count = postService.getTotalCountOfPostsByUserId(ActivityStatus.ACTIVE, ModerationStatus.ACCEPTED, userId);
         }
-        List<PostPublicDTO> posts = getPosts(postListRep);
+        List<PostPublicDTO> posts = postService.getPostsToDisplay(postListRep);
         JSONObject response = new JSONObject();
         response.put("count", count);
         response.put("posts", posts);
@@ -398,96 +399,5 @@ public class PostController {
         JSONObject response = new JSONObject();
         response.put("result", true);
         return ResponseEntity.ok(response);
-    }
-
-    //==================================================================================================================
-
-    private List<PostPublicDTO> getPosts(List<Post> postListRep) {
-        List<PostPublicDTO> posts = new ArrayList<>();
-        for (Post postRep : postListRep) {
-            long postId = postRep.getId();
-            long userId = postRep.getUser().getId();
-            String userName = postRep.getUser().getName();
-
-            PostPublicDTO postPublicDTO = PostPublicDTO.builder()
-                    .id(postId)
-                    .time(getStringTime(postRep.getTime()))
-                    .title(postRep.getTitle())
-                    .announce(getAnnounce(postRep.getText()))
-                    .user(UserSimpleDTO.builder().id(userId).name(userName).build())
-                    .likeCount(postVoteService.getCountLikesByPostId(postId))
-                    .dislikeCount(postVoteService.getCountDislikesByPostId(postId))
-                    .commentCount(postCommentService.getCountCommentsByPostId(postId))
-                    .viewCount(postRep.getViewCount())
-                    .build();
-            posts.add(postPublicDTO);
-        }
-        return posts;
-    }
-
-    private List<String> getTagsByPostId(long postId) {
-        List<Tag2Post> tag2PostListRep = tag2PostService.findAllTag2PostByPostId(postId);
-        List<String> tags = new ArrayList<>();
-        for (Tag2Post tag2PostRep : tag2PostListRep) {
-            tags.add(tag2PostRep.getTag().getName());
-        }
-        return tags;
-    }
-
-    private List<CommentDTO> getCommentsByPostId(long postId) {
-        List<PostComment> postCommentListRep = postCommentService.findAllPostCommentByPostId(postId);
-        List<CommentDTO> commentDTOList = new ArrayList<>();
-
-        for (PostComment postCommentRep : postCommentListRep) {
-            long userId = postCommentRep.getUser().getId();
-            String userName = postCommentRep.getUser().getName();
-            String userPhoto = postCommentRep.getUser().getPhoto();
-            UserWithPhotoDTO userWithPhoto = new UserWithPhotoDTO(userId, userName, userPhoto);
-
-            CommentDTO commentDTO = CommentDTO.builder()
-                    .id(postCommentRep.getId())
-                    .time(getStringTime(postCommentRep.getTime()))
-                    .text(postCommentRep.getText())
-                    .user(userWithPhoto)
-                    .build();
-
-            //===========================================================
-            commentDTOList.add(commentDTO);
-        }
-        return commentDTOList;
-    }
-
-    private String getAnnounce(String text) {
-        int maxSizeAnnounce = 200;
-        String announce = Jsoup.parse(text).text();
-        if (announce.length() > maxSizeAnnounce) {
-            announce = announce.substring(0, maxSizeAnnounce);
-        }
-        return announce;
-    }
-
-    private String getStringTime(LocalDateTime localDateTime) {
-        ZonedDateTime localZone = localDateTime.atZone(ZoneId.systemDefault());
-        ZonedDateTime utcZone = localZone.withZoneSameInstant(ZoneId.of("UTC"));
-        LocalDateTime utcTime = utcZone.toLocalDateTime();
-
-        DateTimeFormatter simpleFormat = DateTimeFormatter.ofPattern("HH:mm");
-        DateTimeFormatter fullFormat = DateTimeFormatter.ofPattern("d MMM yyyy, EEE, HH:mm");
-        LocalDateTime today = LocalDateTime.now(ZoneId.of("UTC"));
-        LocalDateTime yesterday = today.minusDays(1);
-
-        if (utcTime.getYear() == today.getYear() &&
-                utcTime.getMonth() == today.getMonth() &&
-                utcTime.getDayOfMonth() == today.getDayOfMonth()) {
-            return "Сегодня, " + simpleFormat.format(utcTime);
-        }
-
-        if (utcTime.getYear() == yesterday.getYear() &&
-                utcTime.getMonth() == yesterday.getMonth() &&
-                utcTime.getDayOfMonth() == yesterday.getDayOfMonth()) {
-            return "Вчера, " + simpleFormat.format(utcTime);
-        }
-
-        return fullFormat.format(utcTime);
     }
 }

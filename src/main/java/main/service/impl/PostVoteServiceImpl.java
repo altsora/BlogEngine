@@ -1,6 +1,5 @@
 package main.service.impl;
 
-import lombok.RequiredArgsConstructor;
 import main.model.entity.Post;
 import main.model.entity.PostVote;
 import main.model.entity.User;
@@ -9,17 +8,25 @@ import main.repository.PostVoteRepository;
 import main.service.PostService;
 import main.service.PostVoteService;
 import main.service.UserService;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 
 @Service
-@RequiredArgsConstructor
 public class PostVoteServiceImpl implements PostVoteService {
     private final PostService postService;
     private final PostVoteRepository postVoteRepository;
     private final UserService userService;
+
+    public PostVoteServiceImpl(@Lazy PostService postService,
+                               @Lazy PostVoteRepository postVoteRepository,
+                               @Lazy UserService userService) {
+        this.postService = postService;
+        this.postVoteRepository = postVoteRepository;
+        this.userService = userService;
+    }
 
     //=============================================================================
 

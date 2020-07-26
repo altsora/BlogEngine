@@ -9,10 +9,12 @@ import main.model.enums.SettingsValue;
 import main.request.ModerationForm;
 import main.request.NewCommentForm;
 import main.request.SettingsForm;
+import main.request.UpdateProfileForm;
 import main.response.BlogDTO;
 import main.response.TagDTO;
 import main.service.*;
 import main.servlet.AuthorizeServlet;
+import main.util.ImageUtil;
 import org.json.simple.JSONObject;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -21,17 +23,19 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.imageio.ImageIO;
-import java.awt.*;
-import java.awt.image.BufferedImage;
-import java.io.*;
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 @RestController
 @RequiredArgsConstructor
@@ -196,7 +200,8 @@ public class GeneralController {
         String name = file.getOriginalFilename();
         String formatName = Objects.requireNonNull(name).split("\\.")[1];
         StringBuilder mainPath = new StringBuilder("src/main/resources/upload/");
-        String fileName = getRandomFileName(mainPath, formatName);
+        String fileName = ImageUtil.getRandomImageName(mainPath, formatName);
+//        String fileName = getRandomFileName(mainPath, formatName);
         if (!file.isEmpty()) {
             try {
                 byte[] bytes = file.getBytes();
@@ -303,47 +308,45 @@ public class GeneralController {
     @SuppressWarnings("unchecked")
     public ResponseEntity<JSONObject> updateProfile(
             @RequestParam(value = "email") String email,
-            @RequestParam(value = "removePhoto") Object removePhoto,
+            @RequestParam(value = "removePhoto") Object removePhotoObj,
             @RequestParam(value = "photo") MultipartFile file,
             @RequestPart(value = "name") String name,
             @RequestPart(value = "password", required = false) String password
     ) {
-        String photo = resizeImageAndUpload(file);
-        JSONObject response = new JSONObject();
-        response.put("email", email);
-        response.put("name", name);
-        response.put("password", password);
-        response.put("photo", photo);
-
-        if (removePhoto instanceof String) {
-            response.put("removePhoto", Integer.parseInt((String) removePhoto));
-        } else {
-            response.put("removePhoto", removePhoto);
-        }
-
-        return new ResponseEntity<>(updateProfile(response).getBody(), HttpStatus.OK);
+        String photo = ImageUtil.resizeImageAndUpload(file);
+        Integer removePhoto = removePhotoObj instanceof String ?
+                Integer.parseInt((String) removePhotoObj) :
+                (Integer) removePhotoObj;
+        UpdateProfileForm updateProfileForm = new UpdateProfileForm(name, email, password, removePhoto, photo);
+        return new ResponseEntity<>(updateProfile(updateProfileForm).getBody(), HttpStatus.OK);
     }
 
     // Без изображения
     @PostMapping(value = "/api/profile/my", consumes = MediaType.APPLICATION_JSON_VALUE)
     @SuppressWarnings("unchecked")
     public ResponseEntity<JSONObject> updateProfile(
-            @RequestBody JSONObject request
+            @RequestBody UpdateProfileForm updateProfileForm
+
     ) {
-        String name = (String) request.get("name");
-        String email = (String) request.get("email");
-        String password = (String) request.get("password");
-        Integer removePhoto = (Integer) request.get("removePhoto");
-        String photo = (String) request.get("photo");
+        String name = updateProfileForm.getName();
+        String email = updateProfileForm.getEmail();
+        String password = updateProfileForm.getPassword();
+        Integer removePhoto = updateProfileForm.getRemovePhoto();
+        String photo = updateProfileForm.getPhoto();
 
         boolean result = true;
         JSONObject response = new JSONObject();
         JSONObject errors = new JSONObject();
         User updatedUser = userService.findById(authorizeServlet.getAuthorizedUserId());
 
-        if (!email.equals(updatedUser.getEmail()) && userService.emailExists(email)) {
-            errors.put("email", "Этот e-mail уже зарегистрирован");
+        if (email == null) {
+            errors.put("email", "Укажите e-mail");
             result = false;
+        } else {
+            if (!email.equals(updatedUser.getEmail()) && userService.emailExists(email)) {
+                errors.put("email", "Этот e-mail уже зарегистрирован");
+                result = false;
+            }
         }
 
         if (userService.nameIsInvalid(name, errors)) {
@@ -379,84 +382,5 @@ public class GeneralController {
         }
 
         return ResponseEntity.ok(response);
-    }
-
-
-    //==================================================================================================================
-
-    private String getRandomFileName(StringBuilder mainPath, String format) {
-        String alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvxyz";
-        String numbers = "0123456789";
-        StringBuilder fileName = new StringBuilder("/upload/");
-        int lengthPath = 3;
-        int fileNameLength = 5;
-        for (int i = 0; i < 3; i++) {
-            StringBuilder folderName = new StringBuilder();
-            for (int j = 0; j < lengthPath; j++) {
-                int index = (int) (Math.random() * alphabet.length());
-                folderName.append(alphabet.charAt(index));
-            }
-            File folder = new File(mainPath.toString() + folderName);
-            if (!folder.exists()) {
-                folder.mkdir();
-            }
-            mainPath.append(folderName.toString()).append("/");
-            fileName.append(folderName.toString()).append("/");
-        }
-        for (int i = 0; i < fileNameLength; i++) {
-            int index = (int) (Math.random() * numbers.length());
-            mainPath.append(numbers.charAt(index));
-            fileName.append(numbers.charAt(index));
-        }
-
-        mainPath.append(".").append(format);
-        fileName.append(".").append(format);
-        File image = new File(mainPath.toString());
-        if (!image.exists()) {
-            try {
-                image.createNewFile();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-        return fileName.toString();
-    }
-
-    private String resizeImageAndUpload(MultipartFile file) {
-        int width = 35;
-        int height = 35;
-        String formatName = file.getOriginalFilename().split("\\.")[1];
-        // MultipartFile -> Image
-        BufferedImage image = null;
-        try (ByteArrayInputStream bais = new ByteArrayInputStream(file.getBytes())) {
-            image = ImageIO.read(bais);
-            if (image.getWidth() > width && image.getHeight() > height) {
-                int type = image.getType() == 0 ? BufferedImage.TYPE_INT_ARGB : image.getType();
-                BufferedImage resizeImage = new BufferedImage(width, height, type);
-                Graphics2D g = resizeImage.createGraphics();
-                g.drawImage(image, 0, 0, width, height, null);
-                g.dispose();
-                image = resizeImage;
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        // Image -> Bytes
-        byte[] imageBytes = null;
-        try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
-            ImageIO.write(image, formatName, baos);
-            imageBytes = baos.toByteArray();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        // Bytes -> Upload
-        StringBuilder mainPath = new StringBuilder("src/main/resources/upload/");
-        String fileName = getRandomFileName(mainPath, formatName);
-        try (BufferedOutputStream stream = new BufferedOutputStream(new FileOutputStream(new File(mainPath.toString())))) {
-            stream.write(imageBytes);
-            return fileName;
-        } catch (IOException e) {
-            return "";
-        }
     }
 }

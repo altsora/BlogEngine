@@ -7,8 +7,14 @@ import main.model.enums.ActivityStatus;
 import main.model.enums.ModerationStatus;
 import main.model.enums.Rating;
 import main.repository.PostRepository;
+import main.response.PostPublicDTO;
+import main.response.UserSimpleDTO;
+import main.service.PostCommentService;
 import main.service.PostService;
+import main.service.PostVoteService;
 import main.service.UserService;
+import main.util.TimeUtil;
+import org.jsoup.Jsoup;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -19,6 +25,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,7 +33,9 @@ import java.util.Map;
 @Service
 @RequiredArgsConstructor
 public class PostServiceImpl implements PostService {
+    private final PostCommentService postCommentService;
     private final PostRepository postRepository;
+    private final PostVoteService postVoteService;
     private final UserService userService;
 
     //==================================================================================================================
@@ -263,5 +272,39 @@ public class PostServiceImpl implements PostService {
         post.setModerationStatus(moderationStatus);
         post.setModerator(moderator);
         postRepository.saveAndFlush(post);
+    }
+
+    @Override
+    public String getAnnounce(String text) {
+        int maxSizeAnnounce = 200;
+        String announce = Jsoup.parse(text).text();
+        if (announce.length() > maxSizeAnnounce) {
+            announce = announce.substring(0, maxSizeAnnounce);
+        }
+        return announce;
+    }
+
+    @Override
+    public List<PostPublicDTO> getPostsToDisplay(List<Post> postListRep) {
+        List<PostPublicDTO> posts = new ArrayList<>();
+        for (Post postRep : postListRep) {
+            long postId = postRep.getId();
+            long userId = postRep.getUser().getId();
+            String userName = postRep.getUser().getName();
+
+            PostPublicDTO postPublicDTO = PostPublicDTO.builder()
+                    .id(postId)
+                    .time(TimeUtil.getDateAsString(postRep.getTime()))
+                    .title(postRep.getTitle())
+                    .announce(getAnnounce(postRep.getText()))
+                    .user(UserSimpleDTO.builder().id(userId).name(userName).build())
+                    .likeCount(postVoteService.getCountLikesByPostId(postId))
+                    .dislikeCount(postVoteService.getCountDislikesByPostId(postId))
+                    .commentCount(postCommentService.getCountCommentsByPostId(postId))
+                    .viewCount(postRep.getViewCount())
+                    .build();
+            posts.add(postPublicDTO);
+        }
+        return posts;
     }
 }

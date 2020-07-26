@@ -3,10 +3,14 @@ package main.service.impl;
 import lombok.RequiredArgsConstructor;
 import main.model.entity.PostComment;
 import main.repository.PostCommentRepository;
+import main.response.CommentDTO;
+import main.response.UserWithPhotoDTO;
 import main.service.PostCommentService;
+import main.util.TimeUtil;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -34,5 +38,28 @@ public class PostCommentServiceImpl implements PostCommentService {
     @Override
     public int getCountCommentsByPostId(long postId) {
         return postCommentRepository.getCountCommentsByPostId(postId);
+    }
+
+    @Override
+    public List<CommentDTO> getCommentsByPostId(long postId) {
+        List<PostComment> postCommentListRep = findAllPostCommentByPostId(postId);
+        List<CommentDTO> commentDTOList = new ArrayList<>();
+
+        for (PostComment postCommentRep : postCommentListRep) {
+            long userId = postCommentRep.getUser().getId();
+            String userName = postCommentRep.getUser().getName();
+            String userPhoto = postCommentRep.getUser().getPhoto();
+            UserWithPhotoDTO userWithPhoto = new UserWithPhotoDTO(userId, userName, userPhoto);
+
+            CommentDTO commentDTO = CommentDTO.builder()
+                    .id(postCommentRep.getId())
+                    .time(TimeUtil.getDateAsString(postCommentRep.getTime()))
+                    .text(postCommentRep.getText())
+                    .user(userWithPhoto)
+                    .build();
+
+            commentDTOList.add(commentDTO);
+        }
+        return commentDTOList;
     }
 }

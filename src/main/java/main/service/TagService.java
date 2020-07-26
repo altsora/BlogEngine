@@ -14,4 +14,6 @@ public interface TagService {
     List<Tag> findAllTagsByQuery(String query);
 
     List<Tag> findAll();
+
+    List<String> getTagsByPostId(long postId);
 }

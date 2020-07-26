@@ -4,6 +4,7 @@ import main.model.entity.Post;
 import main.model.entity.User;
 import main.model.enums.ActivityStatus;
 import main.model.enums.ModerationStatus;
+import main.response.PostPublicDTO;
 import org.springframework.data.domain.Sort;
 
 import java.time.LocalDateTime;
@@ -70,4 +71,8 @@ public interface PostService {
     Post addPost(ActivityStatus activityStatus, User user, LocalDateTime postTime, String postTitle, String postText, boolean preModeration);
 
     void setModerationStatus(long userId, long postId, ModerationStatus moderationStatus);
+
+    String getAnnounce(String text);
+
+    List<PostPublicDTO> getPostsToDisplay(List<Post> postListRep);
 }
