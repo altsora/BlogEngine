@@ -7,35 +7,19 @@ import main.model.enums.ModerationStatus;
 import main.model.enums.SettingsCode;
 import main.model.enums.SettingsValue;
 import main.request.ModerationForm;
-import main.request.NewCommentForm;
 import main.request.SettingsForm;
-import main.request.UpdateProfileForm;
 import main.response.BlogDTO;
-import main.response.TagDTO;
 import main.service.*;
 import main.servlet.AuthorizeServlet;
-import main.util.ImageUtil;
+import main.util.TimeUtil;
 import org.json.simple.JSONObject;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 @RestController
 @RequiredArgsConstructor
@@ -60,101 +44,100 @@ public class GeneralController {
     @GetMapping(value = "/api/settings")
     @SuppressWarnings("unchecked")
     public ResponseEntity<JSONObject> getSettings() {
-//        JSONObject response = new JSONObject();
-//        List<GlobalSetting> globalSettings = globalSettingsService.findAll();
-//        for (GlobalSetting setting : globalSettings) {
-//            boolean enable = setting.getValue() == SettingsValue.YES;
-//            String code = setting.getCode().name();
-//            response.put(code, enable);
-//        }
-//        return ResponseEntity.ok(response);
-        return ResponseEntity.ok(null);
+        JSONObject response = new JSONObject();
+        List<GlobalSetting> globalSettings = globalSettingsService.findAll();
+        for (GlobalSetting setting : globalSettings) {
+            boolean enable = setting.getValue() == SettingsValue.YES;
+            String code = setting.getCode().name();
+            response.put(code, enable);
+        }
+        return ResponseEntity.ok(response);
     }
 
-//    @PutMapping(value = "/api/settings")
-//    public ResponseEntity<String> saveSettings(@RequestBody SettingsForm settingsForm) {
-//        boolean multiUserModeValue = settingsForm.isMultiUserModeValue();
-//        boolean postPreModerationValue = settingsForm.isPostPreModerationValue();
-//        boolean statisticsIsPublicValue = settingsForm.isStatisticsIsPublicValue();
-//        if (authorizeServlet.isUserAuthorize()) {
-//            User user = userService.findById(authorizeServlet.getAuthorizedUserId());
-//            if (user.isModerator()) {
-//                globalSettingsService.setValue(SettingsCode.MULTIUSER_MODE, multiUserModeValue);
-//                globalSettingsService.setValue(SettingsCode.POST_PREMODERATION, postPreModerationValue);
-//                globalSettingsService.setValue(SettingsCode.STATISTICS_IS_PUBLIC, statisticsIsPublicValue);
-//            }
-//            return ResponseEntity.ok().body("Settings saved successfully");
-//        }
-//        return ResponseEntity.ok().body("Changes were not saved");
-//    }
-//
-//    @GetMapping(value = "/api/calendar")
-//    @SuppressWarnings("unchecked")
-//    public ResponseEntity<JSONObject> getCalendar(@RequestParam(value = "year", required = false) Integer year) {
-//        if (year == null) {
-//            year = LocalDateTime.now(ZoneId.of("UTC")).getYear();
-//        }
-//        Map<String, Long> datesAndCountPosts = postService.getDateAndCountPosts(ActivityStatus.ACTIVE, ModerationStatus.ACCEPTED, year);
-//        JSONObject posts = new JSONObject(datesAndCountPosts);
-//        List<Integer> years = postService.findAllYearsOfPublication(ActivityStatus.ACTIVE, ModerationStatus.ACCEPTED);
-//        JSONObject calendar = new JSONObject();
-//        calendar.put("years", years);
-//        calendar.put("posts", posts);
-//        return ResponseEntity.ok(calendar);
-//    }
-//
-//    @GetMapping(value = "/api/statistics/all")
-//    @SuppressWarnings("unchecked")
-//    public ResponseEntity<JSONObject> getBlogStatistics() {
-//        if (globalSettingsService.settingStatisticsIsPublicIsEnabled()) {
+    @PutMapping(value = "/api/settings")
+    public ResponseEntity<String> saveSettings(@RequestBody SettingsForm settingsForm) {
+        boolean multiUserModeValue = settingsForm.isMultiUserModeValue();
+        boolean postPreModerationValue = settingsForm.isPostPreModerationValue();
+        boolean statisticsIsPublicValue = settingsForm.isStatisticsIsPublicValue();
+        if (authorizeServlet.isUserAuthorize()) {
+            User user = userService.findById(authorizeServlet.getAuthorizedUserId());
+            if (user.isModerator()) {
+                globalSettingsService.setValue(SettingsCode.MULTIUSER_MODE, multiUserModeValue);
+                globalSettingsService.setValue(SettingsCode.POST_PREMODERATION, postPreModerationValue);
+                globalSettingsService.setValue(SettingsCode.STATISTICS_IS_PUBLIC, statisticsIsPublicValue);
+            }
+            return ResponseEntity.ok().body("Settings saved successfully");
+        }
+        return ResponseEntity.ok().body("Changes were not saved");
+    }
+
+    @GetMapping(value = "/api/calendar")
+    @SuppressWarnings("unchecked")
+    public ResponseEntity<JSONObject> getCalendar(@RequestParam(value = "year", required = false) Integer year) {
+        if (year == null) {
+            year = LocalDateTime.now(TimeUtil.TIME_ZONE).getYear();
+        }
+        Map<String, Long> datesAndCountPosts = postService.getDateAndCountPosts(ActivityStatus.ACTIVE, ModerationStatus.ACCEPTED, year);
+        JSONObject posts = new JSONObject(datesAndCountPosts);
+        List<Integer> years = postService.findAllYearsOfPublication(ActivityStatus.ACTIVE, ModerationStatus.ACCEPTED);
+        JSONObject calendar = new JSONObject();
+        calendar.put("years", years);
+        calendar.put("posts", posts);
+        return ResponseEntity.ok(calendar);
+    }
+
+    @GetMapping(value = "/api/statistics/all")
+    @SuppressWarnings("unchecked")
+    public ResponseEntity<JSONObject> getBlogStatistics() {
+        if (globalSettingsService.settingStatisticsIsPublicIsEnabled()) {
 //            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm");
-//            int postsCount = postService.getTotalCountOfPosts(ActivityStatus.ACTIVE, ModerationStatus.ACCEPTED);
-//            int likesCount = postVoteService.getTotalCountLikes();
-//            int dislikesCount = postVoteService.getTotalCountDislikes();
-//            int viewsCount = postService.getTotalCountView(ActivityStatus.ACTIVE, ModerationStatus.ACCEPTED);
-//            LocalDateTime localDateTime = postService.getDateOfTheEarliestPost(ActivityStatus.ACTIVE, ModerationStatus.ACCEPTED);
-//            String firstPublication = localDateTime == null ?
-//                    "-" : formatter.format(localDateTime);
-//
-//            JSONObject response = new JSONObject();
-//            response.put("postsCount", postsCount);
-//            response.put("likesCount", likesCount);
-//            response.put("dislikesCount", dislikesCount);
-//            response.put("viewsCount", viewsCount);
-//            response.put("firstPublication", firstPublication);
-//
-//            return ResponseEntity.ok(response);
-//        } else {
-//            if (authorizeServlet.isUserAuthorize()) {
-//                return new ResponseEntity<>(getMyStatistics().getBody(), HttpStatus.OK);
-//            } else {
-//                return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
-//            }
-//        }
-//    }
-//
-//    @GetMapping(value = "/api/statistics/my")
-//    @SuppressWarnings("unchecked")
-//    public ResponseEntity<JSONObject> getMyStatistics() {
-//        long userId = authorizeServlet.getAuthorizedUserId();
+            int postsCount = postService.getTotalCountOfPosts(ActivityStatus.ACTIVE, ModerationStatus.ACCEPTED);
+            int likesCount = postVoteService.getTotalCountLikes();
+            int dislikesCount = postVoteService.getTotalCountDislikes();
+            int viewsCount = postService.getTotalCountView(ActivityStatus.ACTIVE, ModerationStatus.ACCEPTED);
+            LocalDateTime localDateTime = postService.getDateOfTheEarliestPost(ActivityStatus.ACTIVE, ModerationStatus.ACCEPTED);
+            long firstPublication = localDateTime == null ?
+                    0 : TimeUtil.getTimestampFromLocalDateTime(localDateTime);
+
+            JSONObject response = new JSONObject();
+            response.put("postsCount", postsCount);
+            response.put("likesCount", likesCount);
+            response.put("dislikesCount", dislikesCount);
+            response.put("viewsCount", viewsCount);
+            response.put("firstPublication", firstPublication);
+
+            return ResponseEntity.ok(response);
+        } else {
+            if (authorizeServlet.isUserAuthorize()) {
+                return new ResponseEntity<>(getMyStatistics().getBody(), HttpStatus.OK);
+            } else {
+                return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+            }
+        }
+    }
+
+    @GetMapping(value = "/api/statistics/my")
+    @SuppressWarnings("unchecked")
+    public ResponseEntity<JSONObject> getMyStatistics() {
+        long userId = authorizeServlet.getAuthorizedUserId();
 //        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm");
-//        int postsCount = postService.getTotalCountOfPostsByUserId(userId);
-//        int likesCount = postVoteService.getTotalCountLikesByUserId(userId);
-//        int dislikesCount = postVoteService.getTotalCountDislikesByUserId(userId);
-//        int viewsCount = postService.getTotalCountViewByUserId(userId);
-//        LocalDateTime localDateTime = postService.getDateOfTheEarliestPostByUserId(userId);
-//        String firstPublication = localDateTime == null ?
-//                "-" : formatter.format(localDateTime);
-//
-//        JSONObject response = new JSONObject();
-//        response.put("postsCount", postsCount);
-//        response.put("likesCount", likesCount);
-//        response.put("dislikesCount", dislikesCount);
-//        response.put("viewsCount", viewsCount);
-//        response.put("firstPublication", firstPublication);
-//
-//        return new ResponseEntity<>(response, HttpStatus.OK);
-//    }
+        int postsCount = postService.getTotalCountOfPostsByUserId(userId);
+        int likesCount = postVoteService.getTotalCountLikesByUserId(userId);
+        int dislikesCount = postVoteService.getTotalCountDislikesByUserId(userId);
+        int viewsCount = postService.getTotalCountViewByUserId(userId);
+        LocalDateTime localDateTime = postService.getDateOfTheEarliestPostByUserId(userId);
+        long firstPublication = localDateTime == null ?
+                0 : TimeUtil.getTimestampFromLocalDateTime(localDateTime);
+
+        JSONObject response = new JSONObject();
+        response.put("postsCount", postsCount);
+        response.put("likesCount", likesCount);
+        response.put("dislikesCount", dislikesCount);
+        response.put("viewsCount", viewsCount);
+        response.put("firstPublication", firstPublication);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
 
     @GetMapping(value = "/api/tag")
     @SuppressWarnings("unchecked")
@@ -245,22 +228,22 @@ public class GeneralController {
 //            headers.setContentType(MediaType.IMAGE_GIF);
 //        return new ResponseEntity<>(buffer, headers, HttpStatus.OK);
 //    }
-//
-//    @PostMapping(value = "/api/moderation")
-//    public void moderation(@RequestBody ModerationForm moderationForm) {
-//        long postId = moderationForm.getPostId();
-//        String status = moderationForm.getDecision();
-//        long userId = authorizeServlet.getAuthorizedUserId();
-//        switch (status) {
-//            case "accept":
-//                postService.setModerationStatus(userId, postId, ModerationStatus.ACCEPTED);
-//                break;
-//            case "decline":
-//                postService.setModerationStatus(userId, postId, ModerationStatus.DECLINED);
-//                break;
-//        }
-//    }
-//
+
+    @PostMapping(value = "/api/moderation")
+    public void moderation(@RequestBody ModerationForm moderationForm) {
+        long postId = moderationForm.getPostId();
+        String status = moderationForm.getDecision();
+        long userId = authorizeServlet.getAuthorizedUserId();
+        switch (status) {
+            case "accept":
+                postService.setModerationStatus(userId, postId, ModerationStatus.ACCEPTED);
+                break;
+            case "decline":
+                postService.setModerationStatus(userId, postId, ModerationStatus.DECLINED);
+                break;
+        }
+    }
+
 //    @PostMapping(value = "/api/comment")
 //    @SuppressWarnings("unchecked")
 //    public ResponseEntity<JSONObject> addComment(@RequestBody NewCommentForm newCommentForm) {

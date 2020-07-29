@@ -13,7 +13,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class PostFullDTO {
     private final long id;
-    private final String time;
+    private final long timestamp;
     private final boolean active;
     private final UserSimpleDTO user;
     private final String title;

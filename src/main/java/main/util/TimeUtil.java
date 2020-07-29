@@ -2,10 +2,23 @@ package main.util;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 
 public final class TimeUtil {
+
+    public final static ZoneId TIME_ZONE = ZoneId.of("UTC");
+    public final static ZoneOffset ZONE_OFFSET = ZoneOffset.UTC;
+
+    public static long getTimestampFromLocalDateTime(LocalDateTime localDateTime) {
+        return localDateTime.toInstant(ZONE_OFFSET).getEpochSecond();
+    }
+
+    public static LocalDateTime getLocalDateTimeFromTimestamp(long timestamp) {
+        return null;
+    }
+
     public static String getDateAsString(LocalDateTime localDateTime) {
         ZonedDateTime localZone = localDateTime.atZone(ZoneId.systemDefault());
         ZonedDateTime utcZone = localZone.withZoneSameInstant(ZoneId.of("UTC"));

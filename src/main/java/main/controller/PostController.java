@@ -20,10 +20,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -48,6 +51,7 @@ public class PostController {
             @RequestParam(value = "mode") String mode
     ) {
         List<Post> postListRep;
+        int count = postService.getTotalCountOfPosts(ActivityStatus.ACTIVE, ModerationStatus.ACCEPTED);
         switch (mode) {
             case "popular":
                 postListRep = postService.findAllPostPopular(ActivityStatus.ACTIVE, ModerationStatus.ACCEPTED, offset, limit);
@@ -58,101 +62,111 @@ public class PostController {
             case "early":
                 postListRep = postService.findAllPostSortedByDate(ActivityStatus.ACTIVE, ModerationStatus.ACCEPTED, offset, limit, Sort.Direction.ASC);
                 break;
-            default:
+            case "recent":
                 postListRep = postService.findAllPostSortedByDate(ActivityStatus.ACTIVE, ModerationStatus.ACCEPTED, offset, limit, Sort.Direction.DESC);
+                break;
+            default:
+                postListRep = new ArrayList<>();
+                count = 0;
         }
         List<PostPublicDTO> posts = postService.getPostsToDisplay(postListRep);
-        int count = postService.getTotalCountOfPosts(ActivityStatus.ACTIVE, ModerationStatus.ACCEPTED);
         JSONObject response = new JSONObject();
         response.put("count", count);
         response.put("posts", posts);
         return ResponseEntity.ok(response);
     }
 
-//    @GetMapping(value = "/api/post/search")
-//    @SuppressWarnings("unchecked")
-//    public ResponseEntity<JSONObject> searchPost(
-//            @RequestParam(value = "offset", defaultValue = "0") int offset,
-//            @RequestParam(value = "limit") int limit,
-//            @RequestParam(value = "query") String query
-//    ) {
-//        List<Post> postListRep = query.equals("") ?
-//                postService.findAllPostSortedByDate(ActivityStatus.ACTIVE, ModerationStatus.ACCEPTED, offset, limit, Sort.Direction.DESC) :
-//                postService.findAllPostByQuery(ActivityStatus.ACTIVE, ModerationStatus.ACCEPTED, offset, limit, query);
-//        List<PostPublicDTO> posts = postService.getPostsToDisplay(postListRep);
-//        int count = query.equals("") ?
-//                postService.getTotalCountOfPosts(ActivityStatus.ACTIVE, ModerationStatus.ACCEPTED) :
-//                postService.getTotalCountOfPostsByQuery(ActivityStatus.ACTIVE, ModerationStatus.ACCEPTED, query);
-//        JSONObject response = new JSONObject();
-//        response.put("count", count);
-//        response.put("posts", posts);
-//        return ResponseEntity.ok(response);
-//    }
-//
-//    @GetMapping(value = "/api/post/{id}")
-//    @ResponseBody
-//    public ResponseEntity<PostFullDTO> getPostById(@PathVariable(value = "id") long id) {
-//        Post postRep = postService.findById(id);
-//        if (authorizeServlet.isUserAuthorize()) {
-//            User user = userService.findById(authorizeServlet.getAuthorizedUserId());
-//            if (!user.isModerator() && user.getId() != postRep.getUser().getId()) {
-//                postRep = postService.updateViewCount(postRep);
-//            }
-//        } else {
-//            postRep = postService.updateViewCount(postRep);
-//        }
-//        long postId = postRep.getId();
-//        long userId = postRep.getUser().getId();
-//        String userName = postRep.getUser().getName();
-//        PostFullDTO post = PostFullDTO.builder()
-//                .id(postId)
-//                .time(TimeUtil.getDateAsString(postRep.getTime()))
-//                .active(postRep.getActivityStatus() == ActivityStatus.ACTIVE)
-//                .user(UserSimpleDTO.builder().id(userId).name(userName).build())
-//                .title(postRep.getTitle())
-//                .text(postRep.getText())
-//                .likeCount(postVoteService.getCountLikesByPostId(postId))
-//                .dislikeCount(postVoteService.getCountDislikesByPostId(postId))
-//                .viewCount(postRep.getViewCount())
-//                .comments(postCommentService.getCommentsByPostId(postId))
-//                .tags(tagService.getTagsByPostId(postId))
-//                .build();
-//        return ResponseEntity.ok(post);
-//    }
-//
-//    @GetMapping(value = "/api/post/byDate")
-//    @SuppressWarnings("unchecked")
-//    public ResponseEntity<JSONObject> getPostsByDate(
-//            @RequestParam(value = "offset", defaultValue = "0") int offset,
-//            @RequestParam(value = "limit") int limit,
-//            @RequestParam(value = "date") String date
-//    ) {
-//        List<Post> postListRep = postService.findAllPostByDate(ActivityStatus.ACTIVE, ModerationStatus.ACCEPTED, offset, limit, date);
-//        List<PostPublicDTO> posts = postService.getPostsToDisplay(postListRep);
-//        int count = postService.getTotalCountOfPostsByDate(ActivityStatus.ACTIVE, ModerationStatus.ACCEPTED, date);
-//
-//        JSONObject response = new JSONObject();
-//        response.put("count", count);
-//        response.put("posts", posts);
-//        return ResponseEntity.ok(response);
-//    }
-//
-//    @GetMapping(value = "/api/post/byTag")
-//    @SuppressWarnings("unchecked")
-//    public ResponseEntity<JSONObject> getPostsByTag(
-//            @RequestParam(value = "offset", defaultValue = "0") int offset,
-//            @RequestParam(value = "limit") int limit,
-//            @RequestParam(value = "tag") String tag
-//    ) {
-//        List<Post> postListRep = postService.findAllPostByTag(ActivityStatus.ACTIVE, ModerationStatus.ACCEPTED, offset, limit, tag);
-//        List<PostPublicDTO> posts = postService.getPostsToDisplay(postListRep);
-//        int count = postService.getTotalCountOfPostsByTag(ActivityStatus.ACTIVE, ModerationStatus.ACCEPTED, tag);
-//        JSONObject response = new JSONObject();
-//        response.put("count", count);
-//        response.put("posts", posts);
-//        return ResponseEntity.ok(response);
-//    }
-//
+    @GetMapping(value = "/api/post/search")
+    @SuppressWarnings("unchecked")
+    public ResponseEntity<JSONObject> searchPost(
+            @RequestParam(value = "offset", defaultValue = "0") int offset,
+            @RequestParam(value = "limit") int limit,
+            @RequestParam(value = "query") String query
+    ) {
+        List<Post> postListRep = query.equals("") ?
+                postService.findAllPostSortedByDate(ActivityStatus.ACTIVE, ModerationStatus.ACCEPTED, offset, limit, Sort.Direction.DESC) :
+                postService.findAllPostByQuery(ActivityStatus.ACTIVE, ModerationStatus.ACCEPTED, offset, limit, query);
+        List<PostPublicDTO> posts = postService.getPostsToDisplay(postListRep);
+        int count = query.equals("") ?
+                postService.getTotalCountOfPosts(ActivityStatus.ACTIVE, ModerationStatus.ACCEPTED) :
+                postService.getTotalCountOfPostsByQuery(ActivityStatus.ACTIVE, ModerationStatus.ACCEPTED, query);
+        JSONObject response = new JSONObject();
+        response.put("count", count);
+        response.put("posts", posts);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping(value = "/api/post/{id}")
+    @ResponseBody
+    public ResponseEntity<PostFullDTO> getPostById(@PathVariable(value = "id") long id) {
+        Post postRep = postService.findById(id);
+        if (postRep == null) {
+            return ResponseEntity.notFound().build();
+        }
+        if (authorizeServlet.isUserAuthorize()) {
+            User user = userService.findById(authorizeServlet.getAuthorizedUserId());
+            if (!user.isModerator() && user.getId() != postRep.getUser().getId()) {
+                postRep = postService.updateViewCount(postRep);
+            }
+        } else {
+            postRep = postService.updateViewCount(postRep);
+        }
+
+        long postId = postRep.getId();
+        long userId = postRep.getUser().getId();
+        String userName = postRep.getUser().getName();
+        long timestamp = postRep.getTime().toInstant(ZoneOffset.UTC).getEpochSecond();
+
+
+        PostFullDTO post = PostFullDTO.builder()
+                .id(postId)
+                .timestamp(timestamp)
+                .active(postRep.getActivityStatus() == ActivityStatus.ACTIVE)
+                .user(UserSimpleDTO.builder().id(userId).name(userName).build())
+                .title(postRep.getTitle())
+                .text(postRep.getText())
+                .likeCount(postVoteService.getCountLikesByPostId(postId))
+                .dislikeCount(postVoteService.getCountDislikesByPostId(postId))
+                .viewCount(postRep.getViewCount())
+                .comments(postCommentService.getCommentsByPostId(postId))
+                .tags(tagService.getTagsByPostId(postId))
+                .build();
+        return ResponseEntity.ok(post);
+    }
+
+    @GetMapping(value = "/api/post/byDate")
+    @SuppressWarnings("unchecked")
+    public ResponseEntity<JSONObject> getPostsByDate(
+            @RequestParam(value = "offset", defaultValue = "0") int offset,
+            @RequestParam(value = "limit") int limit,
+            @RequestParam(value = "date") String date
+    ) {
+        List<Post> postListRep = postService.findAllPostByDate(ActivityStatus.ACTIVE, ModerationStatus.ACCEPTED, offset, limit, date);
+        List<PostPublicDTO> posts = postService.getPostsToDisplay(postListRep);
+        int count = postService.getTotalCountOfPostsByDate(ActivityStatus.ACTIVE, ModerationStatus.ACCEPTED, date);
+
+        JSONObject response = new JSONObject();
+        response.put("count", count);
+        response.put("posts", posts);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping(value = "/api/post/byTag")
+    @SuppressWarnings("unchecked")
+    public ResponseEntity<JSONObject> getPostsByTag(
+            @RequestParam(value = "offset", defaultValue = "0") int offset,
+            @RequestParam(value = "limit") int limit,
+            @RequestParam(value = "tag") String tag
+    ) {
+        List<Post> postListRep = postService.findAllPostByTag(ActivityStatus.ACTIVE, ModerationStatus.ACCEPTED, offset, limit, tag);
+        List<PostPublicDTO> posts = postService.getPostsToDisplay(postListRep);
+        int count = postService.getTotalCountOfPostsByTag(ActivityStatus.ACTIVE, ModerationStatus.ACCEPTED, tag);
+        JSONObject response = new JSONObject();
+        response.put("count", count);
+        response.put("posts", posts);
+        return ResponseEntity.ok(response);
+    }
+
 //    @PostMapping(value = "/api/post/like")
 //    @SuppressWarnings("unchecked")
 //    public ResponseEntity<JSONObject> putLike(@RequestBody JSONObject request) {
@@ -202,47 +216,45 @@ public class PostController {
 //        response.put("result", result);
 //        return ResponseEntity.ok(response);
 //    }
-//
-//    @PostMapping(value = "/api/post")
-//    @SuppressWarnings("unchecked")
-//    public ResponseEntity<JSONObject> addPost(@RequestBody PostForm postForm) {
-//        JSONObject response = new JSONObject();
-//        boolean result = false;
-//        if (globalSettingsService.settingMultiUserModeIsEnabled()) {
-//            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:s");
-//
-//            String postTimeString = postForm.getTime() + ":" + LocalDateTime.now(ZoneId.of("UTC")).getSecond(); // КОСТЫЛЬ
-//            int postActive = postForm.getActive();
-//            String postTitle = postForm.getTitle();
-//            List<String> postTags = postForm.getTags();
-//            String postText = postForm.getText();
-//
-//            JSONObject message = new JSONObject();
-//            if (postTitle.isEmpty()) {
-//                message.put("message", "Заголовок не должен быть пустым!");
-//                message.put("result", false);
-//                return new ResponseEntity<>(message, HttpStatus.BAD_REQUEST);
-//            }
-//
-//            if (postText.isEmpty()) {
-//                message.put("message", "Пост не должен быть пустым!");
-//                message.put("result", false);
-//                return new ResponseEntity<>(message, HttpStatus.BAD_REQUEST);
-//            }
-//
-//            if (postTitle.length() < 3) {
-//                message.put("message", "Минимальное количество символов в заголовке - 3!");
-//                message.put("result", false);
-//                return new ResponseEntity<>(message, HttpStatus.BAD_REQUEST);
-//            }
-//
-//            if (postText.length() < 50) {
-//                message.put("message", "Минимальное количество символов в публикации - 50!");
-//                message.put("result", false);
-//                return new ResponseEntity<>(message, HttpStatus.BAD_REQUEST);
-//            }
-//
-//            LocalDateTime postTime;
+
+    @PostMapping(value = "/api/post")
+    @SuppressWarnings("unchecked")
+    public ResponseEntity<JSONObject> addNewPost(@RequestBody PostForm postForm) {
+        JSONObject response = new JSONObject();
+        boolean result = false;
+        if (globalSettingsService.settingMultiUserModeIsEnabled()) {
+            long postTimestamp = postForm.getTimestamp();
+            int postActive = postForm.getActive();
+            String postTitle = postForm.getTitle();
+            List<String> postTags = postForm.getTags();
+            String postText = postForm.getText();
+
+            JSONObject message = new JSONObject();
+            if (postTitle.isEmpty()) {
+                message.put("message", "Заголовок не должен быть пустым!");
+                message.put("result", false);
+                return new ResponseEntity<>(message, HttpStatus.BAD_REQUEST);
+            }
+
+            if (postText.isEmpty()) {
+                message.put("message", "Пост не должен быть пустым!");
+                message.put("result", false);
+                return new ResponseEntity<>(message, HttpStatus.BAD_REQUEST);
+            }
+
+            if (postTitle.length() < 3) {
+                message.put("message", "Минимальное количество символов в заголовке - 3!");
+                message.put("result", false);
+                return new ResponseEntity<>(message, HttpStatus.BAD_REQUEST);
+            }
+
+            if (postText.length() < 50) {
+                message.put("message", "Минимальное количество символов в публикации - 50!");
+                message.put("result", false);
+                return new ResponseEntity<>(message, HttpStatus.BAD_REQUEST);
+            }
+            
+            LocalDateTime postTime = LocalDateTime.ofInstant(Instant.ofEpochSecond(postTimestamp), TimeUtil.TIME_ZONE);
 //            try {
 //                postTime = LocalDateTime.parse(postTimeString, formatter);
 //            } catch (DateTimeParseException e) {
@@ -250,92 +262,100 @@ public class PostController {
 //                message.put("result", false);
 //                return new ResponseEntity<>(message, HttpStatus.BAD_REQUEST);
 //            }
-//            if (postTime.isBefore(LocalDateTime.now(ZoneId.of("UTC")))) {
-//                postTime = LocalDateTime.now(ZoneId.of("UTC"));
-//            }
-//
-//            ActivityStatus activity = postActive == 1 ? ActivityStatus.ACTIVE : ActivityStatus.INACTIVE;
-//            User user = userService.findById(authorizeServlet.getAuthorizedUserId());
-//
-//            boolean moderation = globalSettingsService.settingPostPreModerationIsEnabled();
-//            Post newPost = postService.addPost(activity, user, postTime, postTitle, postText, moderation);
-//
-//            for (String tagName : postTags) {
-//                Tag tag = tagService.createTagIfNoExistsAndReturn(tagName);
-//                tag2PostService.addTag2Post(newPost, tag);
-//            }
-//
-//            result = true;
-//        }
-//
-//        response.put("result", result);
-//        return ResponseEntity.ok(response);
-//    }
-//
-//    @GetMapping(value = "/api/post/moderation")
-//    @SuppressWarnings("unchecked")
-//    public ResponseEntity<JSONObject> listOfPostsForModeration(
-//            @RequestParam(value = "offset", defaultValue = "0") int offset,
-//            @RequestParam(value = "limit") int limit,
-//            @RequestParam(value = "status") String status
-//    ) {
-//        long userId = authorizeServlet.getAuthorizedUserId();
-//        int count;
-//        List<Post> postListRep;
-//        switch (status) {
-//            case "declined":
-//                postListRep = postService.findAllPostsByModeratorId(ActivityStatus.ACTIVE, ModerationStatus.DECLINED, offset, limit, userId);
-//                count = postService.getTotalCountOfPostsByModeratorId(ActivityStatus.ACTIVE, ModerationStatus.DECLINED, userId);
-//                break;
-//            case "accepted":
-//                postListRep = postService.findAllPostsByModeratorId(ActivityStatus.ACTIVE, ModerationStatus.ACCEPTED, offset, limit, userId);
-//                count = postService.getTotalCountOfPostsByModeratorId(ActivityStatus.ACTIVE, ModerationStatus.ACCEPTED, userId);
-//                break;
-//            default:
-//                postListRep = postService.findAllNewPosts(ActivityStatus.ACTIVE, offset, limit);
-//                count = postService.getTotalCountOfNewPosts(ActivityStatus.ACTIVE);
-//        }
-//        List<PostPublicDTO> posts = postService.getPostsToDisplay(postListRep);
-//        JSONObject response = new JSONObject();
-//        response.put("count", count);
-//        response.put("posts", posts);
-//        return ResponseEntity.ok(response);
-//    }
-//
-//    @GetMapping(value = "/api/post/my")
-//    @SuppressWarnings("unchecked")
-//    public ResponseEntity<JSONObject> getMyPosts(
-//            @RequestParam(value = "offset", defaultValue = "0") int offset,
-//            @RequestParam(value = "limit") int limit,
-//            @RequestParam(value = "status") String status
-//    ) {
-//        long userId = authorizeServlet.getAuthorizedUserId();
-//        List<Post> postListRep;
-//        int count;
-//        switch (status) {
-//            case "inactive":
-//                postListRep = postService.findAllHiddenPostsByUserId(offset, limit, userId);
-//                count = postService.getTotalCountOfHiddenPostsByUserId(userId);
-//                break;
-//            case "pending":
-//                postListRep = postService.findAllPostsByUserId(ActivityStatus.ACTIVE, ModerationStatus.NEW, offset, limit, userId);
-//                count = postService.getTotalCountOfPostsByUserId(ActivityStatus.ACTIVE, ModerationStatus.NEW, userId);
-//                break;
-//            case "declined":
-//                postListRep = postService.findAllPostsByUserId(ActivityStatus.ACTIVE, ModerationStatus.DECLINED, offset, limit, userId);
-//                count = postService.getTotalCountOfPostsByUserId(ActivityStatus.ACTIVE, ModerationStatus.DECLINED, userId);
-//                break;
-//            default:
-//                postListRep = postService.findAllPostsByUserId(ActivityStatus.ACTIVE, ModerationStatus.ACCEPTED, offset, limit, userId);
-//                count = postService.getTotalCountOfPostsByUserId(ActivityStatus.ACTIVE, ModerationStatus.ACCEPTED, userId);
-//        }
-//        List<PostPublicDTO> posts = postService.getPostsToDisplay(postListRep);
-//        JSONObject response = new JSONObject();
-//        response.put("count", count);
-//        response.put("posts", posts);
-//        return ResponseEntity.ok(response);
-//    }
-//
+            if (postTime.isBefore(LocalDateTime.now(TimeUtil.TIME_ZONE))) {
+                postTime = LocalDateTime.now(TimeUtil.TIME_ZONE);
+            }
+
+            ActivityStatus activity = postActive == 1 ? ActivityStatus.ACTIVE : ActivityStatus.INACTIVE;
+            User user = userService.findById(authorizeServlet.getAuthorizedUserId());
+
+            boolean moderation = globalSettingsService.settingPostPreModerationIsEnabled();
+            Post newPost = postService.addPost(activity, user, postTime, postTitle, postText, moderation);
+
+            for (String tagName : postTags) {
+                Tag tag = tagService.createTagIfNoExistsAndReturn(tagName);
+                tag2PostService.addTag2Post(newPost, tag);
+            }
+
+            result = true;
+        }
+
+        response.put("result", result);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping(value = "/api/post/moderation")
+    @SuppressWarnings("unchecked")
+    public ResponseEntity<JSONObject> listOfPostsForModeration(
+            @RequestParam(value = "offset", defaultValue = "0") int offset,
+            @RequestParam(value = "limit") int limit,
+            @RequestParam(value = "status") String status
+    ) {
+        long userId = authorizeServlet.getAuthorizedUserId();
+        int count;
+        List<Post> postListRep;
+        switch (status) {
+            case "declined":
+                postListRep = postService.findAllPostsByModeratorId(ActivityStatus.ACTIVE, ModerationStatus.DECLINED, offset, limit, userId);
+                count = postService.getTotalCountOfPostsByModeratorId(ActivityStatus.ACTIVE, ModerationStatus.DECLINED, userId);
+                break;
+            case "accepted":
+                postListRep = postService.findAllPostsByModeratorId(ActivityStatus.ACTIVE, ModerationStatus.ACCEPTED, offset, limit, userId);
+                count = postService.getTotalCountOfPostsByModeratorId(ActivityStatus.ACTIVE, ModerationStatus.ACCEPTED, userId);
+                break;
+            case "new":
+                postListRep = postService.findAllNewPosts(ActivityStatus.ACTIVE, offset, limit);
+                count = postService.getTotalCountOfNewPosts(ActivityStatus.ACTIVE);
+                break;
+            default:
+                postListRep = new ArrayList<>();
+                count = 0;
+        }
+        List<PostPublicDTO> posts = postService.getPostsToDisplay(postListRep);
+        JSONObject response = new JSONObject();
+        response.put("count", count);
+        response.put("posts", posts);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping(value = "/api/post/my")
+    @SuppressWarnings("unchecked")
+    public ResponseEntity<JSONObject> getMyPosts(
+            @RequestParam(value = "offset", defaultValue = "0") int offset,
+            @RequestParam(value = "limit") int limit,
+            @RequestParam(value = "status") String status
+    ) {
+        long userId = authorizeServlet.getAuthorizedUserId();
+        List<Post> postListRep;
+        int count;
+        switch (status) {
+            case "inactive":
+                postListRep = postService.findAllHiddenPostsByUserId(offset, limit, userId);
+                count = postService.getTotalCountOfHiddenPostsByUserId(userId);
+                break;
+            case "pending":
+                postListRep = postService.findAllPostsByUserId(ActivityStatus.ACTIVE, ModerationStatus.NEW, offset, limit, userId);
+                count = postService.getTotalCountOfPostsByUserId(ActivityStatus.ACTIVE, ModerationStatus.NEW, userId);
+                break;
+            case "declined":
+                postListRep = postService.findAllPostsByUserId(ActivityStatus.ACTIVE, ModerationStatus.DECLINED, offset, limit, userId);
+                count = postService.getTotalCountOfPostsByUserId(ActivityStatus.ACTIVE, ModerationStatus.DECLINED, userId);
+                break;
+            case "published":
+                postListRep = postService.findAllPostsByUserId(ActivityStatus.ACTIVE, ModerationStatus.ACCEPTED, offset, limit, userId);
+                count = postService.getTotalCountOfPostsByUserId(ActivityStatus.ACTIVE, ModerationStatus.ACCEPTED, userId);
+                break;
+            default:
+                postListRep = new ArrayList<>();
+                count = 0;
+        }
+        List<PostPublicDTO> posts = postService.getPostsToDisplay(postListRep);
+        JSONObject response = new JSONObject();
+        response.put("count", count);
+        response.put("posts", posts);
+        return ResponseEntity.ok(response);
+    }
+
 //    @PutMapping(value = "/api/post/{id}")
 //    @SuppressWarnings("unchecked")
 //    public ResponseEntity<JSONObject> updatePost(

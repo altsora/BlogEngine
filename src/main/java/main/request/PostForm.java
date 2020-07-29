@@ -11,7 +11,7 @@ import java.util.List;
 @Setter
 @AllArgsConstructor
 public class PostForm {
-    @JsonProperty("time") private String time;
+    @JsonProperty("timestamp") private long timestamp;
     @JsonProperty("active") private int active;
     @JsonProperty("title") private String title;
     @JsonProperty("tags") private List<String> tags;

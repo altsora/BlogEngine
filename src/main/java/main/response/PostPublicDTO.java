@@ -9,7 +9,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class PostPublicDTO {
     private final long id;
-    private final String time;
+    private final long timestamp;
     private final UserSimpleDTO user;
     private final String title;
     private final String announce;

@@ -29,74 +29,74 @@ public class AuthController {
     @GetMapping(value = "/api/auth/check")
     @SuppressWarnings("unchecked")
     public ResponseEntity<JSONObject> authCheck() {
-//        JSONObject response = new JSONObject();
-//        boolean result;
-//        if (authorizeServlet.isUserAuthorize()) {
-//            long userId = authorizeServlet.getAuthorizedUserId();
-//            User userRep = userService.findById(userId);
-//            boolean userIsModerator = userRep.isModerator();
-//            int moderationCount = userIsModerator ? postService.getTotalCountOfNewPosts(ActivityStatus.ACTIVE) : 0;
-//
-//            UserLoginDTO userLogin = UserLoginDTO.builder()
-//                    .id(userId)
-//                    .name(userRep.getName())
-//                    .photo(userRep.getPhoto())
-//                    .email(userRep.getEmail())
-//                    .moderation(userIsModerator)
-//                    .moderationCount(moderationCount)
-//                    .settings(userIsModerator)
-//                    .build();
-//            response.put("user", userLogin);
-//            result = true;
-//        } else {
-//            result = false;
-//        }
-//        response.put("result", result);
-//
-//        return ResponseEntity.ok(response);
-        return ResponseEntity.ok(null);
+        JSONObject response = new JSONObject();
+        boolean result;
+        if (authorizeServlet.isUserAuthorize()) {
+            long userId = authorizeServlet.getAuthorizedUserId();
+            User userRep = userService.findById(userId);
+            boolean userIsModerator = userRep.isModerator();
+            int moderationCount = userIsModerator ? postService.getTotalCountOfNewPosts(ActivityStatus.ACTIVE) : 0;
+
+            UserLoginDTO userLogin = UserLoginDTO.builder()
+                    .id(userId)
+                    .name(userRep.getName())
+                    .photo(userRep.getPhoto())
+                    .email(userRep.getEmail())
+                    .moderation(userIsModerator)
+                    .moderationCount(moderationCount)
+                    .settings(userIsModerator)
+                    .build();
+            response.put("user", userLogin);
+            result = true;
+        } else {
+            result = false;
+        }
+        response.put("result", result);
+
+        return ResponseEntity.ok(response);
+//        return ResponseEntity.ok(null);
     }
 
-//    @PostMapping(value = "/api/auth/login")
-//    @SuppressWarnings("unchecked")
-//    public ResponseEntity<JSONObject> login(@RequestBody LoginForm loginForm) {
-//        JSONObject response = new JSONObject();
-//        User userRep = userService.findByEmailAndPassword(loginForm.getEmail(), loginForm.getPassword());
-//        boolean result;
-//        if (userRep != null) {
-//            long userId = userRep.getId();
-//            boolean userIsModerator = userRep.isModerator();
-//            int moderationCount = userIsModerator ? postService.getTotalCountOfNewPosts(ActivityStatus.ACTIVE) : 0;
-//
-//            UserLoginDTO userLogin = UserLoginDTO.builder()
-//                    .id(userId)
-//                    .name(userRep.getName())
-//                    .photo(userRep.getPhoto())
-//                    .email(userRep.getEmail())
-//                    .moderation(userIsModerator)
-//                    .moderationCount(moderationCount)
-//                    .settings(userIsModerator)
-//                    .build();
-//
-//            response.put("user", userLogin);
-//            authorizeServlet.authorizeUser(userId);
-//            result = true;
-//        } else {
-//            result = false;
-//        }
-//        response.put("result", result);
-//        return ResponseEntity.ok(response);
-//    }
-//
-//    @GetMapping(value = "/api/auth/logout")
-//    @SuppressWarnings("unchecked")
-//    public ResponseEntity<JSONObject> logout() {
-//        authorizeServlet.removeAuthorizedUser();
-//        JSONObject response = new JSONObject();
-//        response.put("result", true);
-//        return ResponseEntity.ok(response);
-//    }
-//
+    @PostMapping(value = "/api/auth/login")
+    @SuppressWarnings("unchecked")
+    public ResponseEntity<JSONObject> login(@RequestBody LoginForm loginForm) {
+        JSONObject response = new JSONObject();
+        User userRep = userService.findByEmailAndPassword(loginForm.getEmail(), loginForm.getPassword());
+        boolean result;
+        if (userRep != null) {
+            long userId = userRep.getId();
+            boolean userIsModerator = userRep.isModerator();
+            int moderationCount = userIsModerator ? postService.getTotalCountOfNewPosts(ActivityStatus.ACTIVE) : 0;
+
+            UserLoginDTO userLogin = UserLoginDTO.builder()
+                    .id(userId)
+                    .name(userRep.getName())
+                    .photo(userRep.getPhoto())
+                    .email(userRep.getEmail())
+                    .moderation(userIsModerator)
+                    .moderationCount(moderationCount)
+                    .settings(userIsModerator)
+                    .build();
+
+            response.put("user", userLogin);
+            authorizeServlet.authorizeUser(userId);
+            result = true;
+        } else {
+            result = false;
+        }
+        response.put("result", result);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping(value = "/api/auth/logout")
+    @SuppressWarnings("unchecked")
+    public ResponseEntity<JSONObject> logout() {
+        authorizeServlet.removeAuthorizedUser();
+        JSONObject response = new JSONObject();
+        response.put("result", true);
+        return ResponseEntity.ok(response);
+    }
+
 //    @PostMapping(value = "/api/auth/register")
 //    @SuppressWarnings("unchecked")
 //    public ResponseEntity<JSONObject> registration(@RequestBody RegisterForm registerForm) {

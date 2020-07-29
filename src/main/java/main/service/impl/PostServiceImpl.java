@@ -131,7 +131,7 @@ public class PostServiceImpl implements PostService {
                 LocalDateTime localTime = (LocalDateTime) pair[0];
 
                 ZonedDateTime localZone = localTime.atZone(ZoneId.systemDefault());
-                ZonedDateTime utcZone = localZone.withZoneSameInstant(ZoneId.of("UTC"));
+                ZonedDateTime utcZone = localZone.withZoneSameInstant(TimeUtil.TIME_ZONE);
                 LocalDateTime utcTime = utcZone.toLocalDateTime();
 
                 String date = formatter.format(utcTime);
@@ -234,7 +234,7 @@ public class PostServiceImpl implements PostService {
         LocalDateTime localDateTime = postRepository.getDateOfTheEarliestPost(activityStatus, moderationStatus);
         if (localDateTime != null) {
             ZonedDateTime localZone = localDateTime.atZone(ZoneId.systemDefault());
-            ZonedDateTime utcZone = localZone.withZoneSameInstant(ZoneId.of("UTC"));
+            ZonedDateTime utcZone = localZone.withZoneSameInstant(TimeUtil.TIME_ZONE);
             localDateTime = utcZone.toLocalDateTime();
         }
         return localDateTime;
@@ -245,7 +245,7 @@ public class PostServiceImpl implements PostService {
         LocalDateTime localDateTime = postRepository.getDateOfTheEarliestPostByUserId(userId);
         if (localDateTime != null) {
             ZonedDateTime localZone = localDateTime.atZone(ZoneId.systemDefault());
-            ZonedDateTime utcZone = localZone.withZoneSameInstant(ZoneId.of("UTC"));
+            ZonedDateTime utcZone = localZone.withZoneSameInstant(TimeUtil.TIME_ZONE);
             localDateTime = utcZone.toLocalDateTime();
         }
         return localDateTime;
@@ -291,10 +291,11 @@ public class PostServiceImpl implements PostService {
             long postId = postRep.getId();
             long userId = postRep.getUser().getId();
             String userName = postRep.getUser().getName();
+            long timestamp = TimeUtil.getTimestampFromLocalDateTime(postRep.getTime());
 
             PostPublicDTO postPublicDTO = PostPublicDTO.builder()
                     .id(postId)
-                    .time(TimeUtil.getDateAsString(postRep.getTime()))
+                    .timestamp(timestamp)
                     .title(postRep.getTitle())
                     .announce(getAnnounce(postRep.getText()))
                     .user(UserSimpleDTO.builder().id(userId).name(userName).build())

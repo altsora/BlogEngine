@@ -9,7 +9,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class CommentDTO {
     private final long id;
-    private final String time;
+    private final long timestamp;
     private final String text;
     private final UserWithPhotoDTO user;
 }

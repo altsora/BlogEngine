@@ -10,6 +10,7 @@ import main.util.TimeUtil;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -50,10 +51,11 @@ public class PostCommentServiceImpl implements PostCommentService {
             String userName = postCommentRep.getUser().getName();
             String userPhoto = postCommentRep.getUser().getPhoto();
             UserWithPhotoDTO userWithPhoto = new UserWithPhotoDTO(userId, userName, userPhoto);
+            long timestamp = postCommentRep.getTime().toInstant(ZoneOffset.UTC).getEpochSecond();
 
             CommentDTO commentDTO = CommentDTO.builder()
                     .id(postCommentRep.getId())
-                    .time(TimeUtil.getDateAsString(postCommentRep.getTime()))
+                    .timestamp(timestamp)
                     .text(postCommentRep.getText())
                     .user(userWithPhoto)
                     .build();
