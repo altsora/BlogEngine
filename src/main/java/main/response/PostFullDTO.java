@@ -22,8 +22,6 @@ public class PostFullDTO {
     private final int dislikeCount;
     private final int viewCount;
     private final int commentCount;
-    @Singular
-    private final List<CommentDTO> comments;
-    @Singular
-    private final List<String> tags;
+    @Singular private final List<CommentDTO> comments;
+    @Singular private final List<String> tags;
 }

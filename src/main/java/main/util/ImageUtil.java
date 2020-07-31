@@ -8,6 +8,9 @@ import java.awt.image.BufferedImage;
 import java.io.*;
 
 public final class ImageUtil {
+    private final static int AVATAR_WIDTH = 35;
+    private final static int AVATAR_HEIGHT = 35;
+
     public static String getRandomImageName(StringBuilder mainPath, String format) {
         String alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvxyz";
         String numbers = "0123456789";
@@ -47,18 +50,16 @@ public final class ImageUtil {
     }
 
     public static String resizeImageAndUpload(MultipartFile file) {
-        int width = 35;
-        int height = 35;
         String formatName = file.getOriginalFilename().split("\\.")[1];
         // MultipartFile -> Image
         BufferedImage image = null;
         try (ByteArrayInputStream bais = new ByteArrayInputStream(file.getBytes())) {
             image = ImageIO.read(bais);
-            if (image.getWidth() > width && image.getHeight() > height) {
+            if (image.getWidth() > AVATAR_WIDTH && image.getHeight() > AVATAR_HEIGHT) {
                 int type = image.getType() == 0 ? BufferedImage.TYPE_INT_ARGB : image.getType();
-                BufferedImage resizeImage = new BufferedImage(width, height, type);
+                BufferedImage resizeImage = new BufferedImage(AVATAR_WIDTH, AVATAR_HEIGHT, type);
                 Graphics2D g = resizeImage.createGraphics();
-                g.drawImage(image, 0, 0, width, height, null);
+                g.drawImage(image, 0, 0, AVATAR_WIDTH, AVATAR_HEIGHT, null);
                 g.dispose();
                 image = resizeImage;
             }

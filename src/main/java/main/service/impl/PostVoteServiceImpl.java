@@ -8,11 +8,14 @@ import main.repository.PostVoteRepository;
 import main.service.PostService;
 import main.service.PostVoteService;
 import main.service.UserService;
+import main.util.TimeUtil;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+
+import static main.model.enums.Rating.*;
 
 @Service
 public class PostVoteServiceImpl implements PostVoteService {
@@ -32,42 +35,42 @@ public class PostVoteServiceImpl implements PostVoteService {
 
     @Override
     public int getCountLikesByPostId(long postId) {
-        return postVoteRepository.getCountRatingByPostId(postId, Rating.LIKE);
+        return postVoteRepository.getCountRatingByPostId(postId, LIKE);
     }
 
     @Override
     public int getCountDislikesByPostId(long postId) {
-        return postVoteRepository.getCountRatingByPostId(postId, Rating.DISLIKE);
+        return postVoteRepository.getCountRatingByPostId(postId, DISLIKE);
     }
 
     @Override
     public int getTotalCountLikes() {
-        return postVoteRepository.getTotalCountRating(Rating.LIKE);
+        return postVoteRepository.getTotalCountRating(LIKE);
     }
 
     @Override
     public int getTotalCountDislikes() {
-        return postVoteRepository.getTotalCountRating(Rating.DISLIKE);
+        return postVoteRepository.getTotalCountRating(DISLIKE);
     }
 
     @Override
     public int getTotalCountLikesByUserId(long userId) {
-        return postVoteRepository.getTotalCountRatingByUserId(userId, Rating.LIKE);
+        return postVoteRepository.getTotalCountRatingByUserId(userId, LIKE);
     }
 
     @Override
     public int getTotalCountDislikesByUserId(long userId) {
-        return postVoteRepository.getTotalCountRatingByUserId(userId, Rating.DISLIKE);
+        return postVoteRepository.getTotalCountRatingByUserId(userId, DISLIKE);
     }
 
     @Override
     public boolean userLikeAlreadyExists(long userId, long postId) {
-        return postVoteRepository.ratingUserAlreadyExists(userId, postId, Rating.LIKE) != null;
+        return postVoteRepository.ratingUserAlreadyExists(userId, postId, LIKE) != null;
     }
 
     @Override
     public boolean userDislikeAlreadyExists(long userId, long postId) {
-        return postVoteRepository.ratingUserAlreadyExists(userId, postId, Rating.DISLIKE) != null;
+        return postVoteRepository.ratingUserAlreadyExists(userId, postId, DISLIKE) != null;
     }
 
     @Override
@@ -92,7 +95,7 @@ public class PostVoteServiceImpl implements PostVoteService {
         PostVote postVote = new PostVote();
         postVote.setUser(user);
         postVote.setPost(post);
-        postVote.setTime(LocalDateTime.now(ZoneId.of("UTC")));
+        postVote.setTime(LocalDateTime.now(TimeUtil.TIME_ZONE));
         postVote.setValue(value);
         postVoteRepository.saveAndFlush(postVote);
     }
@@ -100,10 +103,10 @@ public class PostVoteServiceImpl implements PostVoteService {
     @Override
     public void replaceValue(long postVoteId) {
         PostVote postVote = postVoteRepository.findById(postVoteId).orElseThrow();
-        Rating value = postVote.getValue() == Rating.LIKE ?
-                Rating.DISLIKE : Rating.LIKE;
+        Rating value = postVote.getValue() == LIKE ?
+                DISLIKE : LIKE;
         postVote.setValue(value);
-        postVote.setTime(LocalDateTime.now(ZoneId.of("UTC")));
+        postVote.setTime(LocalDateTime.now(TimeUtil.TIME_ZONE));
         postVoteRepository.saveAndFlush(postVote);
     }
 }

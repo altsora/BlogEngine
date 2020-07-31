@@ -3,7 +3,6 @@ package main.controller;
 import lombok.RequiredArgsConstructor;
 import main.model.entity.CaptchaCode;
 import main.model.entity.User;
-import main.model.enums.ActivityStatus;
 import main.request.LoginForm;
 import main.request.PasswordChangeForm;
 import main.request.RegisterForm;
@@ -14,8 +13,12 @@ import main.service.UserService;
 import main.servlet.AuthorizeServlet;
 import org.json.simple.JSONObject;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RestController;
 
+import static main.model.enums.ActivityStatus.ACTIVE;
 import static main.util.MessageUtil.*;
 
 @RestController
@@ -37,7 +40,7 @@ public class AuthController {
             long userId = authorizeServlet.getAuthorizedUserId();
             User userRep = userService.findById(userId);
             boolean userIsModerator = userRep.isModerator();
-            int moderationCount = userIsModerator ? postService.getTotalCountOfNewPosts(ActivityStatus.ACTIVE) : 0;
+            int moderationCount = userIsModerator ? postService.getTotalCountOfNewPosts(ACTIVE) : 0;
 
             UserLoginDTO userLogin = UserLoginDTO.builder()
                     .id(userId)
@@ -67,7 +70,7 @@ public class AuthController {
         if (userRep != null) {
             long userId = userRep.getId();
             boolean userIsModerator = userRep.isModerator();
-            int moderationCount = userIsModerator ? postService.getTotalCountOfNewPosts(ActivityStatus.ACTIVE) : 0;
+            int moderationCount = userIsModerator ? postService.getTotalCountOfNewPosts(ACTIVE) : 0;
 
             UserLoginDTO userLogin = UserLoginDTO.builder()
                     .id(userId)
@@ -96,45 +99,45 @@ public class AuthController {
         return ResponseEntity.ok(response);
     }
 
-//    @PostMapping(value = "/api/auth/register")
-//    @SuppressWarnings("unchecked")
-//    public ResponseEntity<JSONObject> registration(@RequestBody RegisterForm registerForm) {
-//        String email = registerForm.getEmail();
-//        String name = registerForm.getName();
-//        String password = registerForm.getPassword();
-//        String inputCaptchaCode = registerForm.getCaptcha();
-//        String secretCode = registerForm.getCaptchaSecret();
-//
-//        boolean result = true;
-//        JSONObject response = new JSONObject();
-//        JSONObject errors = new JSONObject();
-//
-//        if (userService.emailIsInvalid(email, errors)) {
-//            result = false;
-//        }
-//
-//        if (userService.nameIsInvalid(name, errors)) {
-//            result = false;
-//        }
-//
-//        if (userService.passwordIsInvalid(password, errors)) {
-//            result = false;
-//        }
-//
-//        if (captchaCodeService.isIncorrectCaptcha(inputCaptchaCode, secretCode)) {
-//            errors.put("captcha", "Код с картинки введён неверно");
-//            result = false;
-//        }
-//
-//        response.put("result", result);
-//        if (result) {
-//            userService.add(name, email, password);
-//        } else {
-//            response.put("errors", errors);
-//        }
-//
-//        return ResponseEntity.ok(response);
-//    }
+    @PostMapping(value = "/api/auth/register")
+    @SuppressWarnings("unchecked")
+    public ResponseEntity<JSONObject> registration(@RequestBody RegisterForm registerForm) {
+        String email = registerForm.getEmail();
+        String name = registerForm.getName();
+        String password = registerForm.getPassword();
+        String inputCaptchaCode = registerForm.getCaptcha();
+        String secretCode = registerForm.getCaptchaSecret();
+
+        boolean result = true;
+        JSONObject response = new JSONObject();
+        JSONObject errors = new JSONObject();
+
+        if (userService.emailIsInvalid(email, errors)) {
+            result = false;
+        }
+
+        if (userService.nameIsInvalid(name, errors)) {
+            result = false;
+        }
+
+        if (userService.passwordIsInvalid(password, errors)) {
+            result = false;
+        }
+
+        if (captchaCodeService.isIncorrectCaptcha(inputCaptchaCode, secretCode)) {
+            errors.put(KEY_CAPTCHA, CAPTCHA_INVALID);
+            result = false;
+        }
+
+        response.put(KEY_RESULT, result);
+        if (result) {
+            userService.add(name, email, password);
+        } else {
+            response.put(KEY_ERRORS, errors);
+        }
+
+        return ResponseEntity.ok(response);
+    }
 
     @GetMapping(value = "/api/auth/captcha")
     @SuppressWarnings("unchecked")
@@ -173,7 +176,7 @@ public class AuthController {
         }
 
         if (captchaCodeService.isIncorrectCaptcha(inputCaptchaCode, secretCode)) {
-            errors.put(KEY_CAPTCHA, INVALID_CAPTCHA);
+            errors.put(KEY_CAPTCHA, CAPTCHA_INVALID);
             result = false;
         }
 
