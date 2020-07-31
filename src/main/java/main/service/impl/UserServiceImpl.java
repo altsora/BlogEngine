@@ -4,11 +4,13 @@ import lombok.RequiredArgsConstructor;
 import main.model.entity.User;
 import main.repository.UserRepository;
 import main.service.UserService;
+import main.util.TimeUtil;
 import org.json.simple.JSONObject;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.time.ZoneId;
+
+import static main.util.MessageUtil.*;
 
 @Service
 @RequiredArgsConstructor
@@ -20,7 +22,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public User add(String name, String email, String password) {
         User user = new User();
-        user.setRegTime(LocalDateTime.now(ZoneId.of("UTC")));
+        user.setRegTime(LocalDateTime.now(TimeUtil.TIME_ZONE));
         user.setName(name);
         user.setEmail(email);
         user.setPassword(password);
@@ -49,14 +51,13 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public boolean nameIsInvalid(String name, JSONObject errors) {
-        String key = "name";
         if (name == null || name.isEmpty()) {
-            errors.put(key, "Укажите имя");
+            errors.put(KEY_NAME, NAME_EMPTY);
             return true;
         }
 
         if (name.length() < 3 || name.length() > 30) {
-            errors.put(key, "Имя должно быть длиной от 3 до 30 символов");
+            errors.put(KEY_NAME, NAME_LENGTH);
             return true;
         }
 
@@ -65,14 +66,13 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public boolean passwordIsInvalid(String password, JSONObject errors) {
-        String key = "password";
         if (password.length() < 6) {
-            errors.put(key, "Пароль короче 6-ти символов");
+            errors.put(KEY_PASSWORD, PASSWORD_SHORT);
             return true;
         }
 
         if (password.length() > 50) {
-            errors.put(key, "Максимальная длина пароля - 50 символов");
+            errors.put(KEY_PASSWORD, PASSWORD_LONG);
             return true;
         }
         return false;
@@ -80,9 +80,8 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public boolean emailIsInvalid(String email, JSONObject errors) {
-        String key = "email";
         if (emailExists(email)) {
-            errors.put(key, "Этот e-mail уже зарегистрирован");
+            errors.put(KEY_EMAIL, EMAIL_EXISTS);
             return true;
         }
         return false;

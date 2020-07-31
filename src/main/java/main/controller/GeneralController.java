@@ -7,19 +7,27 @@ import main.model.enums.ModerationStatus;
 import main.model.enums.SettingsCode;
 import main.model.enums.SettingsValue;
 import main.request.ModerationForm;
+import main.request.NewCommentForm;
 import main.request.SettingsForm;
+import main.request.UpdateProfileForm;
 import main.response.BlogDTO;
+import main.response.TagDTO;
 import main.service.*;
 import main.servlet.AuthorizeServlet;
 import main.util.TimeUtil;
 import org.json.simple.JSONObject;
+import org.jsoup.Jsoup;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+
+import static main.util.MessageUtil.*;
 
 @RestController
 @RequiredArgsConstructor
@@ -47,8 +55,8 @@ public class GeneralController {
         JSONObject response = new JSONObject();
         List<GlobalSetting> globalSettings = globalSettingsService.findAll();
         for (GlobalSetting setting : globalSettings) {
-            boolean enable = setting.getValue() == SettingsValue.YES;
             String code = setting.getCode().name();
+            boolean enable = setting.getValue() == SettingsValue.YES;
             response.put(code, enable);
         }
         return ResponseEntity.ok(response);
@@ -97,7 +105,7 @@ public class GeneralController {
             int viewsCount = postService.getTotalCountView(ActivityStatus.ACTIVE, ModerationStatus.ACCEPTED);
             LocalDateTime localDateTime = postService.getDateOfTheEarliestPost(ActivityStatus.ACTIVE, ModerationStatus.ACCEPTED);
             long firstPublication = localDateTime == null ?
-                    0 : TimeUtil.getTimestampFromLocalDateTime(localDateTime);
+                    0L : TimeUtil.getTimestampFromLocalDateTime(localDateTime);
 
             JSONObject response = new JSONObject();
             response.put("postsCount", postsCount);
@@ -120,14 +128,13 @@ public class GeneralController {
     @SuppressWarnings("unchecked")
     public ResponseEntity<JSONObject> getMyStatistics() {
         long userId = authorizeServlet.getAuthorizedUserId();
-//        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm");
         int postsCount = postService.getTotalCountOfPostsByUserId(userId);
         int likesCount = postVoteService.getTotalCountLikesByUserId(userId);
         int dislikesCount = postVoteService.getTotalCountDislikesByUserId(userId);
         int viewsCount = postService.getTotalCountViewByUserId(userId);
         LocalDateTime localDateTime = postService.getDateOfTheEarliestPostByUserId(userId);
         long firstPublication = localDateTime == null ?
-                0 : TimeUtil.getTimestampFromLocalDateTime(localDateTime);
+                0L : TimeUtil.getTimestampFromLocalDateTime(localDateTime);
 
         JSONObject response = new JSONObject();
         response.put("postsCount", postsCount);
@@ -142,41 +149,40 @@ public class GeneralController {
     @GetMapping(value = "/api/tag")
     @SuppressWarnings("unchecked")
     public ResponseEntity<JSONObject> getTagList(@RequestParam(value = "query", required = false) String query) {
-//        double minNormalizedWeight = 0.3d;
-//        List<Tag> tagListRep = (query == null || query.equals("")) ?
-//                tagService.findAll() :
-//                tagService.findAllTagsByQuery(query);
-//        List<Double> weights = new ArrayList<>();
-//        int totalNumberOfPosts = postService.getTotalCountOfPosts(ActivityStatus.ACTIVE, ModerationStatus.ACCEPTED);
-//        double maxWeight = -1, weight;
-//        int countPosts;
-//        for (Tag tagRep : tagListRep) {
-//            countPosts = postService.getTotalCountOfPostsByTag(ActivityStatus.ACTIVE, ModerationStatus.ACCEPTED, tagRep.getName());
-//            weight = (double) countPosts / totalNumberOfPosts;
-//            weights.add(weight);
-//            if (weight > maxWeight) {
-//                maxWeight = weight;
-//            }
-//        }
-//
-//        List<TagDTO> tags = new ArrayList<>();
-//        int size = tagListRep.size();
-//        for (int i = 0; i < size; i++) {
-//            String tagName = tagListRep.get(i).getName();
-//            double normalizedWeight = weights.get(i) / maxWeight;
-//            if (Double.compare(normalizedWeight, minNormalizedWeight) >= 0) {
-//                TagDTO tag = TagDTO.builder()
-//                        .name(tagName)
-//                        .weight(normalizedWeight)
-//                        .build();
-//                tags.add(tag);
-//            }
-//        }
-//
-//        JSONObject tagsCollection = new JSONObject();
-//        tagsCollection.put("tags", tags);
-//        return ResponseEntity.ok(tagsCollection);
-        return ResponseEntity.ok(null);
+        double minNormalizedWeight = 0.3d;
+        List<Tag> tagListRep = (query == null || query.equals("")) ?
+                tagService.findAll() :
+                tagService.findAllTagsByQuery(query);
+        List<Double> weights = new ArrayList<>();
+        int totalNumberOfPosts = postService.getTotalCountOfPosts(ActivityStatus.ACTIVE, ModerationStatus.ACCEPTED);
+        double maxWeight = -1, weight;
+        int countPosts;
+        for (Tag tagRep : tagListRep) {
+            countPosts = postService.getTotalCountOfPostsByTag(ActivityStatus.ACTIVE, ModerationStatus.ACCEPTED, tagRep.getName());
+            weight = (double) countPosts / totalNumberOfPosts;
+            weights.add(weight);
+            if (weight > maxWeight) {
+                maxWeight = weight;
+            }
+        }
+
+        List<TagDTO> tags = new ArrayList<>();
+        int size = tagListRep.size();
+        for (int i = 0; i < size; i++) {
+            String tagName = tagListRep.get(i).getName();
+            double normalizedWeight = weights.get(i) / maxWeight;
+            if (Double.compare(normalizedWeight, minNormalizedWeight) >= 0) {
+                TagDTO tag = TagDTO.builder()
+                        .name(tagName)
+                        .weight(normalizedWeight)
+                        .build();
+                tags.add(tag);
+            }
+        }
+
+        JSONObject tagsCollection = new JSONObject();
+        tagsCollection.put("tags", tags);
+        return ResponseEntity.ok(tagsCollection);
     }
 
 //    @PostMapping(value = "/api/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -230,10 +236,12 @@ public class GeneralController {
 //    }
 
     @PostMapping(value = "/api/moderation")
-    public void moderation(@RequestBody ModerationForm moderationForm) {
+    @SuppressWarnings("unchecked")
+    public ResponseEntity<JSONObject> moderation(@RequestBody ModerationForm moderationForm) {
         long postId = moderationForm.getPostId();
         String status = moderationForm.getDecision();
         long userId = authorizeServlet.getAuthorizedUserId();
+        boolean result = true;
         switch (status) {
             case "accept":
                 postService.setModerationStatus(userId, postId, ModerationStatus.ACCEPTED);
@@ -241,52 +249,58 @@ public class GeneralController {
             case "decline":
                 postService.setModerationStatus(userId, postId, ModerationStatus.DECLINED);
                 break;
+            default:
+                result = false;
         }
+        JSONObject response = new JSONObject();
+        response.put("result", result);
+        return ResponseEntity.ok(response);
     }
 
-//    @PostMapping(value = "/api/comment")
-//    @SuppressWarnings("unchecked")
-//    public ResponseEntity<JSONObject> addComment(@RequestBody NewCommentForm newCommentForm) {
-//        JSONObject notFoundResponse = new JSONObject();
-//        JSONObject errorResponse = new JSONObject();
-//        JSONObject successfulResponse = new JSONObject();
-//
-//        long postId = newCommentForm.getPostId();
-//        Object parentIdObj = newCommentForm.getParentIdObj();
-//        String text = newCommentForm.getText();
-//
-//        User user = userService.findById(authorizeServlet.getAuthorizedUserId());
-//        Post post = postService.findById(postId);
-//        if (post == null) {
-//            notFoundResponse.put("result", false);
-//            notFoundResponse.put("message", "Пост с ID = " + postId + " не существует.");
-//            return new ResponseEntity<>(notFoundResponse, HttpStatus.BAD_REQUEST);
-//        }
-//
-//        int minLengthText = 10;
-//        if (text.length() < minLengthText) {
-//            errorResponse.put("result", false);
-//            JSONObject errorText = new JSONObject();
-//            errorText.put("text", "Текст комментария не задан или слишком короткий");
-//            errorResponse.put("errors", errorText);
-//            return new ResponseEntity<>(errorResponse, HttpStatus.OK);
-//        }
-//
-//        PostComment comment = PostComment.create(user, post, text);
-//        if (parentIdObj instanceof Integer) {
-//            long parentId = (int) parentIdObj;
-//            PostComment parent = postCommentService.findById(parentId);
-//            if (parent == null) {
-//                notFoundResponse.put("result", false);
-//                notFoundResponse.put("message", "Комментарий с ID = " + parentId + " не существует.");
-//                return new ResponseEntity<>(notFoundResponse, HttpStatus.BAD_REQUEST);
-//            }
-//            comment.setParent(parent);
-//        }
-//        long commentId = postCommentService.add(comment).getId();
-//        successfulResponse.put("id", commentId);
-//        return ResponseEntity.ok(successfulResponse);
-//    }
+    @PostMapping(value = "/api/comment")
+    @SuppressWarnings("unchecked")
+    public ResponseEntity<JSONObject> addComment(@RequestBody NewCommentForm newCommentForm) {
+        JSONObject notFoundResponse = new JSONObject();
+        JSONObject errorResponse = new JSONObject();
+        JSONObject successfulResponse = new JSONObject();
+
+        long postId = newCommentForm.getPostId();
+        Object parentIdObj = newCommentForm.getParentIdObj();
+
+        String textWithHtml = newCommentForm.getText();
+        String textWithoutHtml = Jsoup.parse(textWithHtml).text();
+
+        User user = userService.findById(authorizeServlet.getAuthorizedUserId());
+        Post post = postService.findById(postId);
+
+        if (post == null) {
+            notFoundResponse.put(KEY_MESSAGE, POST_NOT_FOUND);
+            return ResponseEntity.badRequest().body(notFoundResponse);
+        }
+
+        int minLengthText = 5;
+        if (textWithoutHtml.length() < minLengthText) {
+            errorResponse.put(KEY_RESULT, false);
+            JSONObject errorText = new JSONObject();
+            errorText.put(KEY_TEXT, TEXT_COMMENT);
+            errorResponse.put(KEY_ERRORS, errorText);
+            return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+        }
+
+        PostComment comment = PostComment.create(user, post, textWithHtml);
+        if (parentIdObj instanceof Integer) {
+            long parentId = (int) parentIdObj;
+            PostComment parent = postCommentService.findById(parentId);
+            if (parent == null) {
+                notFoundResponse.put(KEY_MESSAGE, COMMENT_NOT_FOUND);
+                return ResponseEntity.badRequest().body(notFoundResponse);
+            }
+            comment.setParent(parent);
+        }
+        long commentId = postCommentService.add(comment).getId();
+        successfulResponse.put(KEY_ID, commentId);
+        return ResponseEntity.ok(successfulResponse);
+    }
 //
 //    // С изображением
 //    @PostMapping(value = "/api/profile/my", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -306,66 +320,66 @@ public class GeneralController {
 //        return new ResponseEntity<>(updateProfile(updateProfileForm).getBody(), HttpStatus.OK);
 //    }
 //
-//    // Без изображения
-//    @PostMapping(value = "/api/profile/my", consumes = MediaType.APPLICATION_JSON_VALUE)
-//    @SuppressWarnings("unchecked")
-//    public ResponseEntity<JSONObject> updateProfile(
-//            @RequestBody UpdateProfileForm updateProfileForm
-//
-//    ) {
-//        String name = updateProfileForm.getName();
-//        String email = updateProfileForm.getEmail();
-//        String password = updateProfileForm.getPassword();
-//        Integer removePhoto = updateProfileForm.getRemovePhoto();
-//        String photo = updateProfileForm.getPhoto();
-//
-//        boolean result = true;
-//        JSONObject response = new JSONObject();
-//        JSONObject errors = new JSONObject();
-//        User updatedUser = userService.findById(authorizeServlet.getAuthorizedUserId());
-//
-//        if (email == null) {
-//            errors.put("email", "Укажите e-mail");
-//            result = false;
-//        } else {
-//            if (!email.equals(updatedUser.getEmail()) && userService.emailExists(email)) {
-//                errors.put("email", "Этот e-mail уже зарегистрирован");
-//                result = false;
-//            }
-//        }
-//
-//        if (userService.nameIsInvalid(name, errors)) {
-//            result = false;
-//        }
-//
-//        if (password != null) {
-//            if (userService.passwordIsInvalid(password, errors)) {
-//                result = false;
-//            }
-//        }
-//
-//        response.put("result", result);
-//        if (result) {
-//            if (!email.equals(updatedUser.getEmail())) {
-//                updatedUser.setEmail(email);
-//            }
-//            if (!name.equals(updatedUser.getName())) {
-//                updatedUser.setName(name);
-//            }
-//            if (password != null) {
-//                if (!password.equals(updatedUser.getPassword())) {
-//                    updatedUser.setPassword(password);
-//                }
-//            }
-//            if (removePhoto != null) {
-//                updatedUser.setPhoto(photo);
-//            }
-//
-//            userService.update(updatedUser);
-//        } else {
-//            response.put("errors", errors);
-//        }
-//
-//        return ResponseEntity.ok(response);
-//    }
+    // Без изображения
+    @PostMapping(value = "/api/profile/my", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @SuppressWarnings("unchecked")
+    public ResponseEntity<JSONObject> updateProfile(
+            @RequestBody UpdateProfileForm updateProfileForm
+
+    ) {
+        String name = updateProfileForm.getName();
+        String email = updateProfileForm.getEmail();
+        String password = updateProfileForm.getPassword();
+        Integer removePhoto = updateProfileForm.getRemovePhoto();
+        String photo = updateProfileForm.getPhoto();
+
+        boolean result = true;
+        JSONObject response = new JSONObject();
+        JSONObject errors = new JSONObject();
+        User updatedUser = userService.findById(authorizeServlet.getAuthorizedUserId());
+
+        if (email == null) {
+            errors.put("email", "Укажите e-mail");
+            result = false;
+        } else {
+            if (!email.equals(updatedUser.getEmail()) && userService.emailExists(email)) {
+                errors.put("email", "Этот e-mail уже зарегистрирован");
+                result = false;
+            }
+        }
+
+        if (userService.nameIsInvalid(name, errors)) {
+            result = false;
+        }
+
+        if (password != null) {
+            if (userService.passwordIsInvalid(password, errors)) {
+                result = false;
+            }
+        }
+
+        response.put("result", result);
+        if (result) {
+            if (!email.equals(updatedUser.getEmail())) {
+                updatedUser.setEmail(email);
+            }
+            if (!name.equals(updatedUser.getName())) {
+                updatedUser.setName(name);
+            }
+            if (password != null) {
+                if (!password.equals(updatedUser.getPassword())) {
+                    updatedUser.setPassword(password);
+                }
+            }
+            if (removePhoto != null) {
+                updatedUser.setPhoto(photo);
+            }
+
+            userService.update(updatedUser);
+        } else {
+            response.put("errors", errors);
+        }
+
+        return ResponseEntity.ok(response);
+    }
 }

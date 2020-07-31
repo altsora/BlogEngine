@@ -3,9 +3,7 @@ spring.datasource.username=root
 spring.datasource.password=1235
 spring.jpa.hibernate.ddl-auto=validate
 spring.jpa.show-sql=true
-spring.servlet.multipart.max-file-size=10MB
-
-captcha.hour=1
+spring.servlet.multipart.max-file-size=15MB
 
 blog.title=DevPub
 blog.subtitle=Developer Stories
@@ -13,3 +11,5 @@ blog.phone=+7 903 666-44-55
 blog.email=mail@mail.ru
 blog.copyright=Alexander Vergun
 blog.copyrightFrom=2007
+
+captcha.hour=1

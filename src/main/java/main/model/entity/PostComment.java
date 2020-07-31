@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
+import main.util.TimeUtil;
 
 import javax.persistence.*;
 import java.io.Serializable;
@@ -79,7 +80,7 @@ public class PostComment implements Serializable {
         comment.setUser(user);
         comment.setPost(post);
         comment.setText(text);
-        comment.setTime(LocalDateTime.now(ZoneId.of("UTC")));
+        comment.setTime(LocalDateTime.now(TimeUtil.TIME_ZONE));
         return comment;
     }
 }

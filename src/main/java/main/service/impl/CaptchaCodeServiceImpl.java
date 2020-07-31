@@ -20,7 +20,7 @@ import java.util.Base64;
 @Service
 @RequiredArgsConstructor
 public class CaptchaCodeServiceImpl implements CaptchaCodeService {
-    @Value("#{T(java.time.LocalDateTime).now(T(java.time.ZoneId).of(\"UTC\")).minusHours('${captcha.hour}')}")
+    @Value("#{T(java.time.LocalDateTime).now(T(java.time.ZoneId).of(\"UTC\")).minusHours('${captcha.hour:1}')}")
     private LocalDateTime captchaLifetime;
     private final int CAPTCHA_CODE_LENGTH = 3;
     private final int WIDTH = 100;
