@@ -125,7 +125,7 @@ public class AuthController {
         }
 
         if (captchaCodeService.isIncorrectCaptcha(inputCaptchaCode, secretCode)) {
-            errors.put(KEY_CAPTCHA, CAPTCHA_INVALID);
+            errors.put(KEY_CAPTCHA, MESSAGE_CAPTCHA_INVALID);
             result = false;
         }
 
@@ -168,7 +168,7 @@ public class AuthController {
         User user = userService.findByCode(code);
 
         if (user == null) {
-            errors.put(KEY_CODE, OLD_LINK);
+            errors.put(KEY_CODE, MESSAGE_OLD_LINK);
             result = false;
         }
         if (userService.passwordIsInvalid(password, errors)) {
@@ -176,7 +176,7 @@ public class AuthController {
         }
 
         if (captchaCodeService.isIncorrectCaptcha(inputCaptchaCode, secretCode)) {
-            errors.put(KEY_CAPTCHA, CAPTCHA_INVALID);
+            errors.put(KEY_CAPTCHA, MESSAGE_CAPTCHA_INVALID);
             result = false;
         }
 

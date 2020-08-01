@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import main.model.entity.CaptchaCode;
 import main.repository.CaptchaCodeRepository;
 import main.service.CaptchaCodeService;
+import main.util.TimeUtil;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -20,8 +21,8 @@ import java.util.Base64;
 @Service
 @RequiredArgsConstructor
 public class CaptchaCodeServiceImpl implements CaptchaCodeService {
-    @Value("#{T(java.time.LocalDateTime).now(T(java.time.ZoneId).of(\"UTC\")).minusHours('${captcha.hour:1}')}")
-    private LocalDateTime captchaLifetime;
+    @Value("#{T(java.time.LocalDateTime).now(T(main.util.TimeUtil).TIME_ZONE).minusHours('${captcha.hour:1}')}")
+    public LocalDateTime captchaLifetime;
     private final int CAPTCHA_CODE_LENGTH = 3;
     private final int WIDTH = 100;
     private final int HEIGHT = 35;
@@ -35,7 +36,7 @@ public class CaptchaCodeServiceImpl implements CaptchaCodeService {
         String code = generateCode();
         String secretCode = Base64.getEncoder().encodeToString(code.getBytes());
         CaptchaCode captcha = new CaptchaCode();
-        captcha.setTime(LocalDateTime.now());
+        captcha.setTime(LocalDateTime.now(TimeUtil.TIME_ZONE));
         captcha.setCode(code);
         captcha.setSecretCode(secretCode);
         return captchaCodeRepository.saveAndFlush(captcha);
@@ -81,7 +82,7 @@ public class CaptchaCodeServiceImpl implements CaptchaCodeService {
     //==================================================================================================================
 
     private String generateCode() {
-        String alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890abcdefghijklmnopqrstuvxyz";
+        String alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < CAPTCHA_CODE_LENGTH; i++) {
             int index = (int) (Math.random() * alphabet.length());

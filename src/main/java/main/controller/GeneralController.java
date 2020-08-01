@@ -2,13 +2,12 @@ package main.controller;
 
 import lombok.RequiredArgsConstructor;
 import main.model.entity.*;
-import main.model.enums.SettingsCode;
-import main.model.enums.SettingsValue;
 import main.request.ModerationForm;
 import main.request.NewCommentForm;
 import main.request.SettingsForm;
 import main.request.UpdateProfileForm;
 import main.response.BlogDTO;
+import main.response.CalendarDTO;
 import main.response.StatisticDTO;
 import main.response.TagDTO;
 import main.service.*;
@@ -39,6 +38,8 @@ import java.util.Objects;
 import static main.model.enums.ActivityStatus.ACTIVE;
 import static main.model.enums.ModerationStatus.ACCEPTED;
 import static main.model.enums.ModerationStatus.DECLINED;
+import static main.model.enums.SettingsCode.*;
+import static main.model.enums.SettingsValue.YES;
 import static main.util.MessageUtil.*;
 
 @RestController
@@ -56,7 +57,6 @@ public class GeneralController {
     //==================================================================================================================
 
     @GetMapping(value = "/api/init")
-    @ResponseBody
     public BlogDTO init() {
         return blog;
     }
@@ -68,7 +68,7 @@ public class GeneralController {
         List<GlobalSetting> globalSettings = globalSettingsService.findAll();
         for (GlobalSetting setting : globalSettings) {
             String code = setting.getCode().name();
-            boolean enable = setting.getValue() == SettingsValue.YES;
+            boolean enable = setting.getValue() == YES;
             response.put(code, enable);
         }
         return ResponseEntity.ok(response);
@@ -82,9 +82,9 @@ public class GeneralController {
         if (authorizeServlet.isUserAuthorize()) {
             User user = userService.findById(authorizeServlet.getAuthorizedUserId());
             if (user.isModerator()) {
-                globalSettingsService.setValue(SettingsCode.MULTIUSER_MODE, multiUserModeValue);
-                globalSettingsService.setValue(SettingsCode.POST_PREMODERATION, postPreModerationValue);
-                globalSettingsService.setValue(SettingsCode.STATISTICS_IS_PUBLIC, statisticsIsPublicValue);
+                globalSettingsService.setValue(MULTIUSER_MODE, multiUserModeValue);
+                globalSettingsService.setValue(POST_PREMODERATION, postPreModerationValue);
+                globalSettingsService.setValue(STATISTICS_IS_PUBLIC, statisticsIsPublicValue);
             }
             return ResponseEntity.ok().body("Settings saved successfully");
         }
@@ -92,22 +92,17 @@ public class GeneralController {
     }
 
     @GetMapping(value = "/api/calendar")
-    @SuppressWarnings("unchecked")
-    public ResponseEntity<JSONObject> getCalendar(@RequestParam(value = "year", required = false) Integer year) {
+    public ResponseEntity<CalendarDTO> getCalendar(@RequestParam(value = "year", required = false) Integer year) {
         if (year == null) {
             year = LocalDateTime.now(TimeUtil.TIME_ZONE).getYear();
         }
-        Map<String, Long> datesAndCountPosts = postService.getDateAndCountPosts(ACTIVE, ACCEPTED, year);
-        JSONObject posts = new JSONObject(datesAndCountPosts);
         List<Integer> years = postService.findAllYearsOfPublication(ACTIVE, ACCEPTED);
-        JSONObject calendar = new JSONObject();
-        calendar.put("years", years);
-        calendar.put("posts", posts);
+        Map<String, Long> posts = postService.getDateAndCountPosts(ACTIVE, ACCEPTED, year);
+        CalendarDTO calendar = CalendarDTO.builder().years(years).posts(posts).build();
         return ResponseEntity.ok(calendar);
     }
 
     @GetMapping(value = "/api/statistics/all")
-    @SuppressWarnings("unchecked")
     public ResponseEntity<StatisticDTO> getBlogStatistics() {
         if (globalSettingsService.settingStatisticsIsPublicIsEnabled()) {
             int postsCount = postService.getTotalCountOfPosts(ACTIVE, ACCEPTED);
@@ -137,7 +132,6 @@ public class GeneralController {
 
     @GetMapping(value = "/api/statistics/my")
     @SuppressWarnings("unchecked")
-    @ResponseBody
     public ResponseEntity<StatisticDTO> getMyStatistics() {
         long userId = authorizeServlet.getAuthorizedUserId();
         int postsCount = postService.getTotalCountOfPostsByUserId(userId);
@@ -155,6 +149,7 @@ public class GeneralController {
                 .postsCount(postsCount)
                 .viewsCount(viewsCount)
                 .build();
+
         return ResponseEntity.ok(statistic);
     }
 
@@ -205,7 +200,7 @@ public class GeneralController {
         JSONObject response = new JSONObject();
         JSONObject errors = new JSONObject();
         if (!formatName.equalsIgnoreCase("png") && !formatName.equalsIgnoreCase("jpg")) {
-            errors.put(KEY_IMAGE, IMAGE_INVALID_FORMAT);
+            errors.put(KEY_IMAGE, MESSAGE_IMAGE_INVALID_FORMAT);
             response.put(KEY_RESULT, false);
             response.put(KEY_ERRORS, errors);
             return ResponseEntity.badRequest().body(response);
@@ -222,7 +217,7 @@ public class GeneralController {
                 stream.close();
                 return ResponseEntity.ok(fileName);
             } catch (Exception e) {
-                errors.put(KEY_IMAGE, IMAGE_ERROR_LOAD);
+                errors.put(KEY_IMAGE, MESSAGE_IMAGE_ERROR_LOAD);
                 response.put(KEY_RESULT, false);
                 response.put(KEY_ERRORS, errors);
                 return ResponseEntity.badRequest().body(response);
@@ -296,7 +291,7 @@ public class GeneralController {
         Post post = postService.findById(postId);
 
         if (post == null) {
-            notFoundResponse.put(KEY_MESSAGE, POST_NOT_FOUND);
+            notFoundResponse.put(KEY_MESSAGE, MESSAGE_POST_NOT_FOUND);
             return ResponseEntity.badRequest().body(notFoundResponse);
         }
 
@@ -304,7 +299,7 @@ public class GeneralController {
         if (textWithoutHtml.length() < minLengthText) {
             errorResponse.put(KEY_RESULT, false);
             JSONObject errorText = new JSONObject();
-            errorText.put(KEY_TEXT, TEXT_COMMENT);
+            errorText.put(KEY_TEXT, MESSAGE_COMMENT_SHORT);
             errorResponse.put(KEY_ERRORS, errorText);
             return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
         }
@@ -314,7 +309,7 @@ public class GeneralController {
             long parentId = (int) parentIdObj;
             PostComment parent = postCommentService.findById(parentId);
             if (parent == null) {
-                notFoundResponse.put(KEY_MESSAGE, COMMENT_NOT_FOUND);
+                notFoundResponse.put(KEY_MESSAGE, MESSAGE_COMMENT_NOT_FOUND);
                 return ResponseEntity.badRequest().body(notFoundResponse);
             }
             comment.setParent(parent);
@@ -327,7 +322,6 @@ public class GeneralController {
 
     // С изображением
     @PostMapping(value = "/api/profile/my", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @SuppressWarnings("unchecked")
     public ResponseEntity<JSONObject> updateProfile(
             @RequestParam(value = "email", required = false) String email,
             @RequestParam(value = "removePhoto") Object removePhotoObj,
@@ -361,11 +355,11 @@ public class GeneralController {
         User user = userService.findById(authorizeServlet.getAuthorizedUserId());
 
         if (email == null) {
-            errors.put(KEY_EMAIL, EMAIL_EMPTY);
+            errors.put(KEY_EMAIL, MESSAGE_EMAIL_EMPTY);
             result = false;
         } else {
             if (!email.equals(user.getEmail()) && userService.emailExists(email)) {
-                errors.put(KEY_EMAIL, EMAIL_EXISTS);
+                errors.put(KEY_EMAIL, MESSAGE_EMAIL_EXISTS);
                 result = false;
             }
         }

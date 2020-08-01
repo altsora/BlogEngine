@@ -5,7 +5,6 @@ import main.model.entity.Post;
 import main.model.entity.User;
 import main.model.enums.ActivityStatus;
 import main.model.enums.ModerationStatus;
-import main.model.enums.Rating;
 import main.repository.PostRepository;
 import main.response.PostPublicDTO;
 import main.response.UserSimpleDTO;
@@ -14,6 +13,7 @@ import main.service.PostService;
 import main.service.PostVoteService;
 import main.service.UserService;
 import main.util.TimeUtil;
+import org.json.simple.JSONObject;
 import org.jsoup.Jsoup;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -22,13 +22,17 @@ import org.springframework.stereotype.Service;
 
 import javax.persistence.Tuple;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import static main.model.enums.ActivityStatus.INACTIVE;
+import static main.model.enums.ModerationStatus.ACCEPTED;
+import static main.model.enums.ModerationStatus.NEW;
+import static main.model.enums.Rating.LIKE;
+import static main.util.MessageUtil.*;
 
 @Service
 @RequiredArgsConstructor
@@ -51,7 +55,7 @@ public class PostServiceImpl implements PostService {
     public List<Post> findAllHiddenPostsByUserId(int offset, int limit, long userId) {
         int pageNumber = offset / limit;
         Pageable sortedByPostTime = PageRequest.of(pageNumber, limit, Sort.by(Sort.Direction.DESC, PostRepository.POST_TIME));
-        return postRepository.findAllHiddenPostsByUserId(ActivityStatus.INACTIVE, userId, sortedByPostTime);
+        return postRepository.findAllHiddenPostsByUserId(INACTIVE, userId, sortedByPostTime);
     }
 
     @Override
@@ -65,7 +69,7 @@ public class PostServiceImpl implements PostService {
     public List<Post> findAllPostBest(ActivityStatus activityStatus, ModerationStatus moderationStatus, int offset, int limit) {
         int pageNumber = offset / limit;
         Pageable sortedByCountLikes = PageRequest.of(pageNumber, limit, Sort.by(Sort.Direction.DESC, PostRepository.COUNT_LIKES));
-        return postRepository.findAllPostBest(activityStatus, moderationStatus, Rating.LIKE, sortedByCountLikes);
+        return postRepository.findAllPostBest(activityStatus, moderationStatus, LIKE, sortedByCountLikes);
     }
 
     @Override
@@ -79,7 +83,7 @@ public class PostServiceImpl implements PostService {
     public List<Post> findAllNewPosts(ActivityStatus activityStatus, int offset, int limit) {
         int pageNumber = offset / limit;
         Pageable sortedByPostTime = PageRequest.of(pageNumber, limit, Sort.by(Sort.Direction.DESC, PostRepository.POST_TIME));
-        return postRepository.findAllPosts(activityStatus, ModerationStatus.NEW, sortedByPostTime);
+        return postRepository.findAllPosts(activityStatus, NEW, sortedByPostTime);
     }
 
     @Override
@@ -124,16 +128,13 @@ public class PostServiceImpl implements PostService {
     public Map<String, Long> getDateAndCountPosts(ActivityStatus activityStatus, ModerationStatus moderationStatus, int year) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyy-MM-dd");
         Map<String, Long> result = new HashMap<>();
-        List<Tuple> datesAndCountPosts = postRepository.getDateAndCountPosts(activityStatus, moderationStatus, year, Sort.by(Sort.Direction.ASC, PostRepository.POST_TIME));
+        List<Tuple> datesAndCountPosts = postRepository
+                .getDateAndCountPosts(activityStatus, moderationStatus, year, Sort.by(Sort.Direction.ASC, PostRepository.POST_TIME));
         for (Tuple tuple : datesAndCountPosts) {
             Object[] pair = tuple.toArray();
             try {
                 LocalDateTime localTime = (LocalDateTime) pair[0];
-
-                ZonedDateTime localZone = localTime.atZone(ZoneId.systemDefault());
-                ZonedDateTime utcZone = localZone.withZoneSameInstant(TimeUtil.TIME_ZONE);
-                LocalDateTime utcTime = utcZone.toLocalDateTime();
-
+                LocalDateTime utcTime = TimeUtil.convertLocalTimeInUtcTime(localTime);
                 String date = formatter.format(utcTime);
                 Long count = (Long) pair[1];
                 result.put(date, count);
@@ -146,7 +147,7 @@ public class PostServiceImpl implements PostService {
 
     @Override
     public int getTotalCountOfNewPosts(ActivityStatus activityStatus) {
-        return postRepository.getTotalCountOfNewPosts(activityStatus, ModerationStatus.NEW);
+        return postRepository.getTotalCountOfNewPosts(activityStatus, NEW);
     }
 
     @Override
@@ -185,7 +186,7 @@ public class PostServiceImpl implements PostService {
 
     @Override
     public int getTotalCountOfHiddenPostsByUserId(long userId) {
-        return postRepository.getTotalCountOfHiddenPostsByUserId(ActivityStatus.INACTIVE, userId);
+        return postRepository.getTotalCountOfHiddenPostsByUserId(INACTIVE, userId);
     }
 
     @Override
@@ -220,7 +221,7 @@ public class PostServiceImpl implements PostService {
         if (user.isModerator()) {
             updatedPost.setModerator(user);
         } else {
-            updatedPost.setModerationStatus(ModerationStatus.NEW);
+            updatedPost.setModerationStatus(NEW);
         }
         updatedPost.setActivityStatus(activityStatus);
         updatedPost.setTime(time);
@@ -231,36 +232,32 @@ public class PostServiceImpl implements PostService {
 
     @Override
     public LocalDateTime getDateOfTheEarliestPost(ActivityStatus activityStatus, ModerationStatus moderationStatus) {
-        LocalDateTime localDateTime = postRepository.getDateOfTheEarliestPost(activityStatus, moderationStatus);
-        if (localDateTime != null) {
-            ZonedDateTime localZone = localDateTime.atZone(ZoneId.systemDefault());
-            ZonedDateTime utcZone = localZone.withZoneSameInstant(TimeUtil.TIME_ZONE);
-            localDateTime = utcZone.toLocalDateTime();
+        LocalDateTime dateTime = postRepository.getDateOfTheEarliestPost(activityStatus, moderationStatus);
+        if (dateTime != null) {
+            dateTime = TimeUtil.convertLocalTimeInUtcTime(dateTime);
         }
-        return localDateTime;
+        return dateTime;
     }
 
     @Override
     public LocalDateTime getDateOfTheEarliestPostByUserId(long userId) {
-        LocalDateTime localDateTime = postRepository.getDateOfTheEarliestPostByUserId(userId);
-        if (localDateTime != null) {
-            ZonedDateTime localZone = localDateTime.atZone(ZoneId.systemDefault());
-            ZonedDateTime utcZone = localZone.withZoneSameInstant(TimeUtil.TIME_ZONE);
-            localDateTime = utcZone.toLocalDateTime();
+        LocalDateTime dateTime = postRepository.getDateOfTheEarliestPostByUserId(userId);
+        if (dateTime != null) {
+            dateTime = TimeUtil.convertLocalTimeInUtcTime(dateTime);
         }
-        return localDateTime;
+        return dateTime;
     }
 
     @Override
-    public Post addPost(ActivityStatus activityStatus, User user, LocalDateTime postTime, String postTitle, String postText, boolean preModeration) {
+    public Post addPost(ActivityStatus activityStatus, User user, LocalDateTime postTime, String postTitle, String postText, boolean preModerationIsEnabled) {
         Post post = new Post();
         post.setActivityStatus(activityStatus);
         post.setUser(user);
         post.setTime(postTime);
         post.setTitle(postTitle);
         post.setText(postText);
-        if (!preModeration) {
-            post.setModerationStatus(ModerationStatus.ACCEPTED);
+        if (!preModerationIsEnabled) {
+            post.setModerationStatus(ACCEPTED);
         }
         return postRepository.saveAndFlush(post);
     }
@@ -307,5 +304,30 @@ public class PostServiceImpl implements PostService {
             posts.add(postPublicDTO);
         }
         return posts;
+    }
+
+    @Override
+    public boolean postIsInvalid(String title, String text, JSONObject errors) {
+        int minTitleLength = 3;
+        int minTextLength = 50;
+        boolean result = false;
+
+        if (title.isEmpty()) {
+            result = true;
+            errors.put(KEY_TITLE, MESSAGE_TITLE_EMPTY);
+        } else if (title.length() < minTitleLength) {
+            result = true;
+            errors.put(KEY_TITLE, MESSAGE_TITLE_SHORT);
+        }
+
+        if (text.isEmpty()) {
+            result = true;
+            errors.put(KEY_TEXT, MESSAGE_POST_EMPTY);
+        } else if (text.length() < minTextLength) {
+            result = true;
+            errors.put(KEY_TEXT, MESSAGE_POST_SHORT);
+        }
+
+        return result;
     }
 }

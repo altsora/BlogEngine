@@ -5,6 +5,7 @@ import main.model.entity.User;
 import main.model.enums.ActivityStatus;
 import main.model.enums.ModerationStatus;
 import main.response.PostPublicDTO;
+import org.json.simple.JSONObject;
 import org.springframework.data.domain.Sort;
 
 import java.time.LocalDateTime;
@@ -75,4 +76,6 @@ public interface PostService {
     String getAnnounce(String text);
 
     List<PostPublicDTO> getPostsToDisplay(List<Post> postListRep);
+
+    boolean postIsInvalid(String title, String text, JSONObject errors);
 }

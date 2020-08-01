@@ -13,9 +13,9 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 
-import static main.model.enums.Rating.*;
+import static main.model.enums.Rating.DISLIKE;
+import static main.model.enums.Rating.LIKE;
 
 @Service
 public class PostVoteServiceImpl implements PostVoteService {
@@ -23,9 +23,10 @@ public class PostVoteServiceImpl implements PostVoteService {
     private final PostVoteRepository postVoteRepository;
     private final UserService userService;
 
-    public PostVoteServiceImpl(@Lazy PostService postService,
-                               @Lazy PostVoteRepository postVoteRepository,
-                               @Lazy UserService userService) {
+    public PostVoteServiceImpl(
+            @Lazy PostService postService,
+            @Lazy PostVoteRepository postVoteRepository,
+            @Lazy UserService userService) {
         this.postService = postService;
         this.postVoteRepository = postVoteRepository;
         this.userService = userService;

@@ -52,12 +52,12 @@ public class UserServiceImpl implements UserService {
     @Override
     public boolean nameIsInvalid(String name, JSONObject errors) {
         if (name == null || name.isEmpty()) {
-            errors.put(KEY_NAME, NAME_EMPTY);
+            errors.put(KEY_NAME, MESSAGE_NAME_EMPTY);
             return true;
         }
 
         if (name.length() < 3 || name.length() > 30) {
-            errors.put(KEY_NAME, NAME_LENGTH);
+            errors.put(KEY_NAME, MESSAGE_NAME_LENGTH);
             return true;
         }
 
@@ -67,12 +67,12 @@ public class UserServiceImpl implements UserService {
     @Override
     public boolean passwordIsInvalid(String password, JSONObject errors) {
         if (password.length() < 6) {
-            errors.put(KEY_PASSWORD, PASSWORD_SHORT);
+            errors.put(KEY_PASSWORD, MESSAGE_PASSWORD_SHORT);
             return true;
         }
 
         if (password.length() > 50) {
-            errors.put(KEY_PASSWORD, PASSWORD_LONG);
+            errors.put(KEY_PASSWORD, MESSAGE_PASSWORD_LONG);
             return true;
         }
         return false;
@@ -81,7 +81,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public boolean emailIsInvalid(String email, JSONObject errors) {
         if (emailExists(email)) {
-            errors.put(KEY_EMAIL, EMAIL_EXISTS);
+            errors.put(KEY_EMAIL, MESSAGE_EMAIL_EXISTS);
             return true;
         }
         return false;

@@ -5,7 +5,6 @@ import main.model.entity.Post;
 import main.model.entity.Tag;
 import main.model.entity.User;
 import main.model.enums.ActivityStatus;
-import main.model.enums.Rating;
 import main.request.PostForm;
 import main.response.PostFullDTO;
 import main.response.PostPublicDTO;
@@ -15,12 +14,11 @@ import main.service.*;
 import main.servlet.AuthorizeServlet;
 import main.util.TimeUtil;
 import org.json.simple.JSONObject;
+import org.jsoup.Jsoup;
 import org.springframework.data.domain.Sort;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -28,8 +26,10 @@ import java.util.List;
 import static main.model.enums.ActivityStatus.ACTIVE;
 import static main.model.enums.ActivityStatus.INACTIVE;
 import static main.model.enums.ModerationStatus.*;
-import static main.util.MessageUtil.*;
-import static main.model.enums.Rating.*;
+import static main.model.enums.Rating.DISLIKE;
+import static main.model.enums.Rating.LIKE;
+import static main.util.MessageUtil.KEY_ERRORS;
+import static main.util.MessageUtil.KEY_RESULT;
 
 @RestController
 @RequiredArgsConstructor
@@ -90,7 +90,6 @@ public class PostController {
     }
 
     @GetMapping(value = "/api/post/{id}")
-    @ResponseBody
     public ResponseEntity<PostFullDTO> getPostById(@PathVariable(value = "id") long id) {
         Post postRep = postService.findById(id);
         if (postRep == null) {
@@ -206,62 +205,76 @@ public class PostController {
     @PostMapping(value = "/api/post")
     @SuppressWarnings("unchecked")
     public ResponseEntity<JSONObject> addNewPost(@RequestBody PostForm postForm) {
-        JSONObject response = new JSONObject();
-        boolean result = false;
-        if (globalSettingsService.settingMultiUserModeIsEnabled()) {
-            long postTimestamp = postForm.getTimestamp();
-            int postActive = postForm.getActive();
-            String postTitle = postForm.getTitle();
-            List<String> postTags = postForm.getTags();
-            String postText = postForm.getText();
+        long postTimestamp = postForm.getTimestamp();
+        int postActive = postForm.getActive();
+        String postTitle = postForm.getTitle();
+        List<String> postTags = postForm.getTags();
+        String postTextWithHtml = postForm.getText();
+        String postTextWithoutHtml = Jsoup.parse(postTextWithHtml).text();
 
-            JSONObject message = new JSONObject();
-            if (postTitle.isEmpty()) {
-                message.put(KEY_MESSAGE, TITLE_EMPTY);
-                message.put(KEY_RESULT, false);
-                return new ResponseEntity<>(message, HttpStatus.BAD_REQUEST);
-            }
-
-            if (postText.isEmpty()) {
-                message.put(KEY_MESSAGE, POST_EMPTY);
-                message.put(KEY_RESULT, false);
-                return new ResponseEntity<>(message, HttpStatus.BAD_REQUEST);
-            }
-
-            if (postTitle.length() < 3) {
-                message.put(KEY_MESSAGE, TITLE_SHORT);
-                message.put(KEY_RESULT, false);
-                return new ResponseEntity<>(message, HttpStatus.BAD_REQUEST);
-            }
-
-            if (postText.length() < 50) {
-                message.put(KEY_MESSAGE, POST_SHORT);
-                message.put(KEY_RESULT, false);
-                return new ResponseEntity<>(message, HttpStatus.BAD_REQUEST);
-            }
-
-            LocalDateTime postTime = LocalDateTime.ofInstant(Instant.ofEpochSecond(postTimestamp), TimeUtil.TIME_ZONE);
-
-            if (postTime.isBefore(LocalDateTime.now(TimeUtil.TIME_ZONE))) {
-                postTime = LocalDateTime.now(TimeUtil.TIME_ZONE);
-            }
-
-            ActivityStatus activity = postActive == 1 ? ACTIVE : INACTIVE;
-            User user = userService.findById(authorizeServlet.getAuthorizedUserId());
-
-            boolean moderation = globalSettingsService.settingPostPreModerationIsEnabled();
-            Post newPost = postService.addPost(activity, user, postTime, postTitle, postText, moderation);
-
-            for (String tagName : postTags) {
-                Tag tag = tagService.createTagIfNoExistsAndReturn(tagName);
-                tag2PostService.addTag2Post(newPost, tag);
-            }
-
-            result = true;
+        JSONObject errorResponse = new JSONObject();
+        JSONObject errors = new JSONObject();
+        if (postService.postIsInvalid(postTitle, postTextWithoutHtml, errors)) {
+            errorResponse.put(KEY_RESULT, false);
+            errorResponse.put(KEY_ERRORS, errors);
+            return ResponseEntity.badRequest().body(errorResponse);
         }
 
-        response.put(KEY_RESULT, result);
-        return ResponseEntity.ok(response);
+        LocalDateTime postTime = TimeUtil.getLocalDateTimeFromTimestamp(postTimestamp);
+        TimeUtil.returnToPresentIfOld(postTime);
+
+        ActivityStatus activity = postActive == 1 ? ACTIVE : INACTIVE;
+        User user = userService.findById(authorizeServlet.getAuthorizedUserId());
+
+        boolean preModerationIsEnabled = globalSettingsService.settingPostPreModerationIsEnabled();
+        Post newPost = postService.addPost(activity, user, postTime, postTitle, postTextWithHtml, preModerationIsEnabled);
+
+        for (String tagName : postTags) {
+            Tag tag = tagService.createTagIfNoExistsAndReturn(tagName);
+            tag2PostService.addTag2Post(newPost, tag);
+        }
+
+        JSONObject successResponse = new JSONObject();
+        successResponse.put(KEY_RESULT, true);
+        return ResponseEntity.ok(successResponse);
+    }
+
+    @PutMapping(value = "/api/post/{id}")
+    @SuppressWarnings("unchecked")
+    public ResponseEntity<JSONObject> updatePost(
+            @PathVariable(value = "id") long postId,
+            @RequestBody PostForm postForm
+    ) {
+        long postTimestamp = postForm.getTimestamp();
+        int newPostActivity = postForm.getActive();
+        String newTitle = postForm.getTitle();
+        List<String> newPostTags = postForm.getTags();
+        String newTextWithHtml = postForm.getText();
+        String newTextWithoutHtml = Jsoup.parse(newTextWithHtml).text();
+
+        JSONObject errorResponse = new JSONObject();
+        JSONObject errors = new JSONObject();
+        if (postService.postIsInvalid(newTitle, newTextWithoutHtml, errors)) {
+            errorResponse.put(KEY_RESULT, false);
+            errorResponse.put(KEY_ERRORS, errors);
+            return ResponseEntity.badRequest().body(errorResponse);
+        }
+
+        LocalDateTime newTimeOfPost = TimeUtil.getLocalDateTimeFromTimestamp(postTimestamp);
+        TimeUtil.returnToPresentIfOld(newTimeOfPost);
+
+        ActivityStatus activityStatus = newPostActivity == 1 ? ACTIVE : INACTIVE;
+        User user = userService.findById(authorizeServlet.getAuthorizedUserId());
+        postService.updatePost(postId, user, activityStatus, newTimeOfPost, newTitle, newTextWithHtml);
+
+        for (String tagName : newPostTags) {
+            tagService.createTagIfNoExistsAndReturn(tagName);
+        }
+        tag2PostService.updateTagsByPostId(postId, newPostTags);
+
+        JSONObject successResponse = new JSONObject();
+        successResponse.put(KEY_RESULT, true);
+        return ResponseEntity.ok(successResponse);
     }
 
     @GetMapping(value = "/api/post/moderation")
@@ -293,7 +306,6 @@ public class PostController {
     }
 
     @GetMapping(value = "/api/post/my")
-    @SuppressWarnings("unchecked")
     public ResponseEntity<PublicPostsDTO> getMyPosts(
             @RequestParam(value = "offset", defaultValue = "0") int offset,
             @RequestParam(value = "limit") int limit,
@@ -324,70 +336,4 @@ public class PostController {
         PublicPostsDTO response = PublicPostsDTO.builder().count(count).posts(posts).build();
         return ResponseEntity.ok(response);
     }
-
-    //TODO
-//    @PutMapping(value = "/api/post/{id}")
-//    @SuppressWarnings("unchecked")
-//    public ResponseEntity<JSONObject> updatePost(
-//            @PathVariable(value = "id") long postId,
-//            @RequestBody PostForm postForm
-//    ) {
-//        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:s");
-//
-//        String postTimeString = postForm.getTime() + ":" + LocalDateTime.now(ZoneId.of("UTC")).getSecond(); // КОСТЫЛЬ
-//        int newPostActivity = postForm.getActive();
-//        String newTitle = postForm.getTitle();
-//        List<String> newPostTags = postForm.getTags();
-//        String newText = postForm.getText();
-//
-//        JSONObject message = new JSONObject();
-//        if (newTitle.isEmpty()) {
-//            message.put("message", "Заголовок не должен быть пустым!");
-//            message.put("result", false);
-//            return new ResponseEntity<>(message, HttpStatus.BAD_REQUEST);
-//        }
-//
-//        if (newText.isEmpty()) {
-//            message.put("message", "Пост не должен быть пустым!");
-//            message.put("result", false);
-//            return new ResponseEntity<>(message, HttpStatus.BAD_REQUEST);
-//        }
-//
-//        if (newTitle.length() < 3) {
-//            message.put("message", "Минимальное количество символов в заголовке - 3!");
-//            message.put("result", false);
-//            return new ResponseEntity<>(message, HttpStatus.BAD_REQUEST);
-//        }
-//
-//        if (newText.length() < 50) {
-//            message.put("message", "Минимальное количество символов в публикации - 50!");
-//            message.put("result", false);
-//            return new ResponseEntity<>(message, HttpStatus.BAD_REQUEST);
-//        }
-//
-//        LocalDateTime newTimeOfPost;
-//        try {
-//            newTimeOfPost = LocalDateTime.parse(postTimeString, formatter);
-//        } catch (DateTimeParseException e) {
-//            message.put("message", "Необходимо указать дату!");
-//            message.put("result", false);
-//            return new ResponseEntity<>(message, HttpStatus.BAD_REQUEST);
-//        }
-//        if (newTimeOfPost.isBefore(LocalDateTime.now(ZoneId.of("UTC")))) {
-//            newTimeOfPost = LocalDateTime.now(ZoneId.of("UTC"));
-//        }
-//
-//        ActivityStatus activityStatus = newPostActivity == 1 ? ActivityStatus.ACTIVE : ActivityStatus.INACTIVE;
-//        User user = userService.findById(authorizeServlet.getAuthorizedUserId());
-//        postService.updatePost(postId, user, activityStatus, newTimeOfPost, newTitle, newText);
-//
-//        for (String tagName : newPostTags) {
-//            tagService.createTagIfNoExistsAndReturn(tagName);
-//        }
-//        tag2PostService.updateTagsByPostId(postId, newPostTags);
-//
-//        JSONObject response = new JSONObject();
-//        response.put("result", true);
-//        return ResponseEntity.ok(response);
-//    }
 }

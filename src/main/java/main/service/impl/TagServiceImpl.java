@@ -1,6 +1,5 @@
 package main.service.impl;
 
-import lombok.RequiredArgsConstructor;
 import main.model.entity.Tag;
 import main.model.entity.Tag2Post;
 import main.repository.TagRepository;
@@ -17,8 +16,9 @@ public class TagServiceImpl implements TagService {
     private final TagRepository tagRepository;
     private final Tag2PostService tag2PostService;
 
-    public TagServiceImpl(@Lazy TagRepository tagRepository,
-                          @Lazy Tag2PostService tag2PostService) {
+    public TagServiceImpl(
+            @Lazy TagRepository tagRepository,
+            @Lazy Tag2PostService tag2PostService) {
         this.tagRepository = tagRepository;
         this.tag2PostService = tag2PostService;
     }

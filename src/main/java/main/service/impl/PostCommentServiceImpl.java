@@ -10,7 +10,6 @@ import main.util.TimeUtil;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
-import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,7 +22,8 @@ public class PostCommentServiceImpl implements PostCommentService {
 
     @Override
     public List<PostComment> findAllPostCommentByPostId(long postId) {
-        return postCommentRepository.findAllPostCommentByPostId(postId, Sort.by(Sort.Direction.ASC, PostCommentRepository.COMMENT_TIME));
+        return postCommentRepository
+                .findAllPostCommentByPostId(postId, Sort.by(Sort.Direction.ASC, PostCommentRepository.COMMENT_TIME));
     }
 
     @Override
@@ -51,7 +51,7 @@ public class PostCommentServiceImpl implements PostCommentService {
             String userName = postCommentRep.getUser().getName();
             String userPhoto = postCommentRep.getUser().getPhoto();
             UserWithPhotoDTO userWithPhoto = new UserWithPhotoDTO(userId, userName, userPhoto);
-            long timestamp = postCommentRep.getTime().toInstant(ZoneOffset.UTC).getEpochSecond();
+            long timestamp = TimeUtil.getTimestampFromLocalDateTime(postCommentRep.getTime());
 
             CommentDTO commentDTO = CommentDTO.builder()
                     .id(postCommentRep.getId())

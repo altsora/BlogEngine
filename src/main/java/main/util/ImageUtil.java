@@ -8,18 +8,19 @@ import java.awt.image.BufferedImage;
 import java.io.*;
 
 public final class ImageUtil {
-    private final static int AVATAR_WIDTH = 35;
     private final static int AVATAR_HEIGHT = 35;
+    private final static int AVATAR_WIDTH = 35;
+    private final static int IMAGE_FOLDER_NAME_LENGTH = 3;
+    private final static int IMAGE_NAME_LENGTH = 5;
 
     public static String getRandomImageName(StringBuilder mainPath, String format) {
         String alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvxyz";
         String numbers = "0123456789";
         StringBuilder fileName = new StringBuilder("/upload/");
-        int lengthPath = 3;
-        int fileNameLength = 5;
+
         for (int i = 0; i < 3; i++) {
             StringBuilder folderName = new StringBuilder();
-            for (int j = 0; j < lengthPath; j++) {
+            for (int j = 0; j < IMAGE_FOLDER_NAME_LENGTH; j++) {
                 int index = (int) (Math.random() * alphabet.length());
                 folderName.append(alphabet.charAt(index));
             }
@@ -30,7 +31,7 @@ public final class ImageUtil {
             mainPath.append(folderName.toString()).append("/");
             fileName.append(folderName.toString()).append("/");
         }
-        for (int i = 0; i < fileNameLength; i++) {
+        for (int i = 0; i < IMAGE_NAME_LENGTH; i++) {
             int index = (int) (Math.random() * numbers.length());
             mainPath.append(numbers.charAt(index));
             fileName.append(numbers.charAt(index));
@@ -64,7 +65,7 @@ public final class ImageUtil {
                 image = resizeImage;
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            return null;
         }
         // Image -> Bytes
         byte[] imageBytes = null;
@@ -72,7 +73,7 @@ public final class ImageUtil {
             ImageIO.write(image, formatName, baos);
             imageBytes = baos.toByteArray();
         } catch (IOException e) {
-            e.printStackTrace();
+            return null;
         }
         // Bytes -> Upload
         StringBuilder mainPath = new StringBuilder("src/main/resources/upload/");
@@ -81,7 +82,7 @@ public final class ImageUtil {
             stream.write(imageBytes);
             return fileName;
         } catch (IOException e) {
-            return "";
+            return null;
         }
     }
 }
