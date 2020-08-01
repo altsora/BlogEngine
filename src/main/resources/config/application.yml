@@ -3,7 +3,8 @@ spring.datasource.username=root
 spring.datasource.password=1235
 spring.jpa.hibernate.ddl-auto=validate
 spring.jpa.show-sql=true
-spring.servlet.multipart.max-file-size=15MB
+spring.servlet.multipart.max-file-size=512MB
+spring.servlet.multipart.max-request-size=512MB
 
 blog.title=DevPub
 blog.subtitle=Developer Stories

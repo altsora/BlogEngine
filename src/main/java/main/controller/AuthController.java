@@ -8,6 +8,7 @@ import main.request.PasswordChangeForm;
 import main.request.RegisterForm;
 import main.response.UserLoginDTO;
 import main.service.CaptchaCodeService;
+import main.service.GlobalSettingsService;
 import main.service.PostService;
 import main.service.UserService;
 import main.servlet.AuthorizeServlet;
@@ -26,6 +27,7 @@ import static main.util.MessageUtil.*;
 public class AuthController {
     private final AuthorizeServlet authorizeServlet;
     private final CaptchaCodeService captchaCodeService;
+    private final GlobalSettingsService globalSettingsService;
     private final PostService postService;
     private final UserService userService;
 
@@ -102,6 +104,10 @@ public class AuthController {
     @PostMapping(value = "/api/auth/register")
     @SuppressWarnings("unchecked")
     public ResponseEntity<JSONObject> registration(@RequestBody RegisterForm registerForm) {
+        if (!globalSettingsService.settingMultiUserModeIsEnabled()) {
+            return ResponseEntity.notFound().build();
+        }
+
         String email = registerForm.getEmail();
         String name = registerForm.getName();
         String password = registerForm.getPassword();

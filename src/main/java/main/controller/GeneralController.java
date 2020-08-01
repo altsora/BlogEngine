@@ -30,10 +30,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 import static main.model.enums.ActivityStatus.ACTIVE;
 import static main.model.enums.ModerationStatus.ACCEPTED;
@@ -46,13 +43,13 @@ import static main.util.MessageUtil.*;
 @RequiredArgsConstructor
 public class GeneralController {
     private final AuthorizeServlet authorizeServlet;
+    private final BlogDTO blog;
     private final GlobalSettingsService globalSettingsService;
     private final PostCommentService postCommentService;
     private final PostService postService;
     private final PostVoteService postVoteService;
     private final TagService tagService;
     private final UserService userService;
-    private final BlogDTO blog;
 
     //==================================================================================================================
 
@@ -62,16 +59,15 @@ public class GeneralController {
     }
 
     @GetMapping(value = "/api/settings")
-    @SuppressWarnings("unchecked")
-    public ResponseEntity<JSONObject> getSettings() {
-        JSONObject response = new JSONObject();
+    public Map<String, Boolean> getSettings() {
+        Map<String, Boolean> settings = new HashMap<>();
         List<GlobalSetting> globalSettings = globalSettingsService.findAll();
         for (GlobalSetting setting : globalSettings) {
             String code = setting.getCode().name();
             boolean enable = setting.getValue() == YES;
-            response.put(code, enable);
+            settings.put(code, enable);
         }
-        return ResponseEntity.ok(response);
+        return settings;
     }
 
     @PutMapping(value = "/api/settings")
@@ -126,7 +122,7 @@ public class GeneralController {
         if (authorizeServlet.isUserAuthorize()) {
             return new ResponseEntity<>(getMyStatistics().getBody(), HttpStatus.OK);
         }
-        return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
 
     }
 
