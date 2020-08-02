@@ -9,7 +9,7 @@ spring.servlet.multipart.max-request-size=512MB
 blog.title=DevPub
 blog.subtitle=Developer Stories
 blog.phone=+7 903 666-44-55
-blog.email=mail@mail.ru
+blog.email=java@mail.ru
 blog.copyright=Alexander Vergun
 blog.copyrightFrom=2007
 

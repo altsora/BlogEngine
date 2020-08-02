@@ -6,14 +6,11 @@ import main.model.entity.Tag;
 import main.model.entity.User;
 import main.model.enums.ActivityStatus;
 import main.request.PostForm;
-import main.response.PostFullDTO;
-import main.response.PostPublicDTO;
-import main.response.PublicPostsDTO;
-import main.response.UserSimpleDTO;
+import main.request.RatingForm;
+import main.response.*;
 import main.service.*;
 import main.servlet.AuthorizeServlet;
 import main.util.TimeUtil;
-import org.json.simple.JSONObject;
 import org.jsoup.Jsoup;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
@@ -28,8 +25,6 @@ import static main.model.enums.ActivityStatus.INACTIVE;
 import static main.model.enums.ModerationStatus.*;
 import static main.model.enums.Rating.DISLIKE;
 import static main.model.enums.Rating.LIKE;
-import static main.util.MessageUtil.KEY_ERRORS;
-import static main.util.MessageUtil.KEY_RESULT;
 
 @RestController
 @RequiredArgsConstructor
@@ -98,16 +93,16 @@ public class PostController {
         if (authorizeServlet.isUserAuthorize()) {
             User user = userService.findById(authorizeServlet.getAuthorizedUserId());
             if (!user.isModerator() && user.getId() != postRep.getUser().getId()) {
-                postRep = postService.updateViewCount(postRep);
+                postRep = postService.increaseViewCount(postRep);
             }
         } else {
-            postRep = postService.updateViewCount(postRep);
+            postRep = postService.increaseViewCount(postRep);
         }
 
         long postId = postRep.getId();
         long userId = postRep.getUser().getId();
         String userName = postRep.getUser().getName();
-        long timestamp = postRep.getTime().toInstant(TimeUtil.ZONE_OFFSET).getEpochSecond();
+        long timestamp = TimeUtil.getTimestampFromLocalDateTime(postRep.getTime());
 
         PostFullDTO post = PostFullDTO.builder()
                 .id(postId)
@@ -134,7 +129,6 @@ public class PostController {
         List<Post> postListRep = postService.findAllPostByDate(ACTIVE, ACCEPTED, offset, limit, date);
         List<PostPublicDTO> posts = postService.getPostsToDisplay(postListRep);
         int count = postService.getTotalCountOfPostsByDate(ACTIVE, ACCEPTED, date);
-
         PublicPostsDTO response = PublicPostsDTO.builder().count(count).posts(posts).build();
         return ResponseEntity.ok(response);
     }
@@ -153,12 +147,11 @@ public class PostController {
     }
 
     @PostMapping(value = "/api/post/like")
-    @SuppressWarnings("unchecked")
-    public ResponseEntity<JSONObject> putLike(@RequestBody JSONObject request) {
+    public ResponseEntity<ResultDTO> putLike(@RequestBody RatingForm ratingForm) {
         boolean result = false;
         if (authorizeServlet.isUserAuthorize()) {
             long userId = authorizeServlet.getAuthorizedUserId();
-            long postId = (int) request.get("post_id");
+            long postId = ratingForm.getPostId();
             if (postVoteService.userDislikeAlreadyExists(userId, postId)) {
                 long postVoteId = postVoteService.getIdByUserIdAndPostId(userId, postId);
                 postVoteService.replaceValue(postVoteId);
@@ -172,18 +165,15 @@ public class PostController {
                 result = true;
             }
         }
-        JSONObject response = new JSONObject();
-        response.put(KEY_RESULT, result);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(new ResultDTO(result));
     }
 
     @PostMapping(value = "/api/post/dislike")
-    @SuppressWarnings("unchecked")
-    public ResponseEntity<JSONObject> putDislike(@RequestBody JSONObject request) {
+    public ResponseEntity<ResultDTO> putDislike(@RequestBody RatingForm ratingForm) {
         boolean result = false;
         if (authorizeServlet.isUserAuthorize()) {
             long userId = authorizeServlet.getAuthorizedUserId();
-            long postId = (int) request.get("post_id");
+            long postId = ratingForm.getPostId();
             if (postVoteService.userLikeAlreadyExists(userId, postId)) {
                 long postVoteId = postVoteService.getIdByUserIdAndPostId(userId, postId);
                 postVoteService.replaceValue(postVoteId);
@@ -197,14 +187,11 @@ public class PostController {
                 result = true;
             }
         }
-        JSONObject response = new JSONObject();
-        response.put(KEY_RESULT, result);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(new ResultDTO(result));
     }
 
     @PostMapping(value = "/api/post")
-    @SuppressWarnings("unchecked")
-    public ResponseEntity<JSONObject> addNewPost(@RequestBody PostForm postForm) {
+    public ResponseEntity<ResultDTO> addNewPost(@RequestBody PostForm postForm) {
         long postTimestamp = postForm.getTimestamp();
         int postActive = postForm.getActive();
         String postTitle = postForm.getTitle();
@@ -212,20 +199,16 @@ public class PostController {
         String postTextWithHtml = postForm.getText();
         String postTextWithoutHtml = Jsoup.parse(postTextWithHtml).text();
 
-        JSONObject errorResponse = new JSONObject();
-        JSONObject errors = new JSONObject();
+        ErrorsDTO errors = new ErrorsDTO();
         if (postService.postIsInvalid(postTitle, postTextWithoutHtml, errors)) {
-            errorResponse.put(KEY_RESULT, false);
-            errorResponse.put(KEY_ERRORS, errors);
+            ResultDTO errorResponse = new ResultDTO(errors);
             return ResponseEntity.badRequest().body(errorResponse);
         }
 
         LocalDateTime postTime = TimeUtil.getLocalDateTimeFromTimestamp(postTimestamp);
         TimeUtil.returnToPresentIfOld(postTime);
-
         ActivityStatus activity = postActive == 1 ? ACTIVE : INACTIVE;
         User user = userService.findById(authorizeServlet.getAuthorizedUserId());
-
         boolean preModerationIsEnabled = globalSettingsService.settingPostPreModerationIsEnabled();
         Post newPost = postService.addPost(activity, user, postTime, postTitle, postTextWithHtml, preModerationIsEnabled);
 
@@ -234,14 +217,12 @@ public class PostController {
             tag2PostService.addTag2Post(newPost, tag);
         }
 
-        JSONObject successResponse = new JSONObject();
-        successResponse.put(KEY_RESULT, true);
+        ResultDTO successResponse = new ResultDTO(true);
         return ResponseEntity.ok(successResponse);
     }
 
     @PutMapping(value = "/api/post/{id}")
-    @SuppressWarnings("unchecked")
-    public ResponseEntity<JSONObject> updatePost(
+    public ResponseEntity<ResultDTO> updatePost(
             @PathVariable(value = "id") long postId,
             @RequestBody PostForm postForm
     ) {
@@ -252,17 +233,14 @@ public class PostController {
         String newTextWithHtml = postForm.getText();
         String newTextWithoutHtml = Jsoup.parse(newTextWithHtml).text();
 
-        JSONObject errorResponse = new JSONObject();
-        JSONObject errors = new JSONObject();
+        ErrorsDTO errors = new ErrorsDTO();
         if (postService.postIsInvalid(newTitle, newTextWithoutHtml, errors)) {
-            errorResponse.put(KEY_RESULT, false);
-            errorResponse.put(KEY_ERRORS, errors);
+            ResultDTO errorResponse = new ResultDTO(errors);
             return ResponseEntity.badRequest().body(errorResponse);
         }
 
         LocalDateTime newTimeOfPost = TimeUtil.getLocalDateTimeFromTimestamp(postTimestamp);
         TimeUtil.returnToPresentIfOld(newTimeOfPost);
-
         ActivityStatus activityStatus = newPostActivity == 1 ? ACTIVE : INACTIVE;
         User user = userService.findById(authorizeServlet.getAuthorizedUserId());
         postService.updatePost(postId, user, activityStatus, newTimeOfPost, newTitle, newTextWithHtml);
@@ -272,8 +250,7 @@ public class PostController {
         }
         tag2PostService.updateTagsByPostId(postId, newPostTags);
 
-        JSONObject successResponse = new JSONObject();
-        successResponse.put(KEY_RESULT, true);
+        ResultDTO successResponse = new ResultDTO(true);
         return ResponseEntity.ok(successResponse);
     }
 
@@ -312,8 +289,8 @@ public class PostController {
             @RequestParam(value = "status") String status
     ) {
         long userId = authorizeServlet.getAuthorizedUserId();
-        List<Post> postListRep = new ArrayList<>();
         int count = 0;
+        List<Post> postListRep = new ArrayList<>();
         switch (status) {
             case "inactive":
                 postListRep = postService.findAllHiddenPostsByUserId(offset, limit, userId);

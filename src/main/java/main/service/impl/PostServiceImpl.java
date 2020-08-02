@@ -6,6 +6,7 @@ import main.model.entity.User;
 import main.model.enums.ActivityStatus;
 import main.model.enums.ModerationStatus;
 import main.repository.PostRepository;
+import main.response.ErrorsDTO;
 import main.response.PostPublicDTO;
 import main.response.UserSimpleDTO;
 import main.service.PostCommentService;
@@ -13,7 +14,6 @@ import main.service.PostService;
 import main.service.PostVoteService;
 import main.service.UserService;
 import main.util.TimeUtil;
-import org.json.simple.JSONObject;
 import org.jsoup.Jsoup;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -210,13 +210,13 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    public Post updateViewCount(Post post) {
+    public Post increaseViewCount(Post post) {
         post.setViewCount(post.getViewCount() + 1);
         return postRepository.saveAndFlush(post);
     }
 
     @Override
-    public Post updatePost(long postId, User user, ActivityStatus activityStatus, LocalDateTime time, String title, String text) {
+    public void updatePost(long postId, User user, ActivityStatus activityStatus, LocalDateTime time, String title, String text) {
         Post updatedPost = findById(postId);
         if (user.isModerator()) {
             updatedPost.setModerator(user);
@@ -227,7 +227,7 @@ public class PostServiceImpl implements PostService {
         updatedPost.setTime(time);
         updatedPost.setTitle(title);
         updatedPost.setText(text);
-        return postRepository.saveAndFlush(updatedPost);
+        postRepository.saveAndFlush(updatedPost);
     }
 
     @Override
@@ -307,25 +307,25 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    public boolean postIsInvalid(String title, String text, JSONObject errors) {
+    public boolean postIsInvalid(String title, String text, ErrorsDTO errors) {
         int minTitleLength = 3;
         int minTextLength = 50;
         boolean result = false;
 
         if (title.isEmpty()) {
             result = true;
-            errors.put(KEY_TITLE, MESSAGE_TITLE_EMPTY);
+            errors.setTitle(MESSAGE_TITLE_EMPTY);
         } else if (title.length() < minTitleLength) {
             result = true;
-            errors.put(KEY_TITLE, MESSAGE_TITLE_SHORT);
+            errors.setTitle(MESSAGE_TITLE_SHORT);
         }
 
         if (text.isEmpty()) {
             result = true;
-            errors.put(KEY_TEXT, MESSAGE_POST_EMPTY);
+            errors.setText(MESSAGE_POST_EMPTY);
         } else if (text.length() < minTextLength) {
             result = true;
-            errors.put(KEY_TEXT, MESSAGE_POST_SHORT);
+            errors.setText(MESSAGE_POST_SHORT);
         }
 
         return result;

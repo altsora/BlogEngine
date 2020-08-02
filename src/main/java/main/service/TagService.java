@@ -5,15 +5,15 @@ import main.model.entity.Tag;
 import java.util.List;
 
 public interface TagService {
-    Tag createTagIfNoExistsAndReturn(String tagName);
-
-    Tag findByName(String tagName);
-
     void removeByTagName(String tagName);
 
-    List<Tag> findAllTagsByQuery(String query);
+    List<String> getTagsByPostId(long postId);
 
     List<Tag> findAll();
 
-    List<String> getTagsByPostId(long postId);
+    List<Tag> findAllTagsByQuery(String query);
+
+    Tag createTagIfNoExistsAndReturn(String tagName);
+
+    Tag findByName(String tagName);
 }

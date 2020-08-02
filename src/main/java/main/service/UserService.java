@@ -1,24 +1,24 @@
 package main.service;
 
 import main.model.entity.User;
-import org.json.simple.JSONObject;
+import main.response.ErrorsDTO;
 
 public interface UserService {
+    boolean emailExists(String email);
+
+    boolean emailIsInvalid(String email, ErrorsDTO errors);
+
+    boolean nameIsInvalid(String name, ErrorsDTO errors);
+
+    boolean passwordIsInvalid(String password, ErrorsDTO errors);
+
     User add(String name, String email, String password);
+
+    User findByCode(String code);
 
     User findByEmailAndPassword(String email, String password);
 
-    User update(User updatedUser);
-
-    boolean emailExists(String email);
-
     User findById(long userId);
 
-    boolean nameIsInvalid(String name, JSONObject errors);
-
-    boolean passwordIsInvalid(String password, JSONObject errors);
-
-    boolean emailIsInvalid(String email, JSONObject errors);
-
-    User findByCode(String code);
+    User update(User updatedUser);
 }

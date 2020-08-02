@@ -6,15 +6,11 @@ import main.request.ModerationForm;
 import main.request.NewCommentForm;
 import main.request.SettingsForm;
 import main.request.UpdateProfileForm;
-import main.response.BlogDTO;
-import main.response.CalendarDTO;
-import main.response.StatisticDTO;
-import main.response.TagDTO;
+import main.response.*;
 import main.service.*;
 import main.servlet.AuthorizeServlet;
 import main.util.ImageUtil;
 import main.util.TimeUtil;
-import org.json.simple.JSONObject;
 import org.jsoup.Jsoup;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -72,17 +68,18 @@ public class GeneralController {
 
     @PutMapping(value = "/api/settings")
     public ResponseEntity<String> saveSettings(@RequestBody SettingsForm settingsForm) {
-        boolean multiUserModeValue = settingsForm.isMultiUserModeValue();
-        boolean postPreModerationValue = settingsForm.isPostPreModerationValue();
-        boolean statisticsIsPublicValue = settingsForm.isStatisticsIsPublicValue();
         if (authorizeServlet.isUserAuthorize()) {
             User user = userService.findById(authorizeServlet.getAuthorizedUserId());
             if (user.isModerator()) {
+                boolean multiUserModeValue = settingsForm.isMultiUserModeValue();
+                boolean postPreModerationValue = settingsForm.isPostPreModerationValue();
+                boolean statisticsIsPublicValue = settingsForm.isStatisticsIsPublicValue();
+
                 globalSettingsService.setValue(MULTIUSER_MODE, multiUserModeValue);
                 globalSettingsService.setValue(POST_PREMODERATION, postPreModerationValue);
                 globalSettingsService.setValue(STATISTICS_IS_PUBLIC, statisticsIsPublicValue);
+                return ResponseEntity.ok().body("Settings saved successfully");
             }
-            return ResponseEntity.ok().body("Settings saved successfully");
         }
         return ResponseEntity.ok().body("Changes were not saved");
     }
@@ -101,9 +98,9 @@ public class GeneralController {
     @GetMapping(value = "/api/statistics/all")
     public ResponseEntity<StatisticDTO> getBlogStatistics() {
         if (globalSettingsService.settingStatisticsIsPublicIsEnabled()) {
-            int postsCount = postService.getTotalCountOfPosts(ACTIVE, ACCEPTED);
-            int likesCount = postVoteService.getTotalCountLikes();
             int dislikesCount = postVoteService.getTotalCountDislikes();
+            int likesCount = postVoteService.getTotalCountLikes();
+            int postsCount = postService.getTotalCountOfPosts(ACTIVE, ACCEPTED);
             int viewsCount = postService.getTotalCountView(ACTIVE, ACCEPTED);
             LocalDateTime localDateTime = postService.getDateOfTheEarliestPost(ACTIVE, ACCEPTED);
             long firstPublication = localDateTime == null ?
@@ -127,12 +124,11 @@ public class GeneralController {
     }
 
     @GetMapping(value = "/api/statistics/my")
-    @SuppressWarnings("unchecked")
     public ResponseEntity<StatisticDTO> getMyStatistics() {
         long userId = authorizeServlet.getAuthorizedUserId();
-        int postsCount = postService.getTotalCountOfPostsByUserId(userId);
         int likesCount = postVoteService.getTotalCountLikesByUserId(userId);
         int dislikesCount = postVoteService.getTotalCountDislikesByUserId(userId);
+        int postsCount = postService.getTotalCountOfPostsByUserId(userId);
         int viewsCount = postService.getTotalCountViewByUserId(userId);
         LocalDateTime localDateTime = postService.getDateOfTheEarliestPostByUserId(userId);
         long firstPublication = localDateTime == null ?
@@ -150,8 +146,7 @@ public class GeneralController {
     }
 
     @GetMapping(value = "/api/tag")
-    @SuppressWarnings("unchecked")
-    public ResponseEntity<JSONObject> getTagList(@RequestParam(value = "query", required = false) String query) {
+    public ResponseEntity<ResultDTO> getTagList(@RequestParam(value = "query", required = false) String query) {
         double minNormalizedWeight = 0.3d;
         List<Tag> tagListRep = (query == null || query.equals("")) ?
                 tagService.findAll() :
@@ -183,22 +178,19 @@ public class GeneralController {
             }
         }
 
-        JSONObject tagsCollection = new JSONObject();
-        tagsCollection.put(KEY_TAGS, tags);
+        ResultDTO tagsCollection = new ResultDTO(tags);
         return ResponseEntity.ok(tagsCollection);
     }
 
     @PostMapping(value = "/api/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @SuppressWarnings("unchecked")
     public ResponseEntity uploadImage(@RequestPart(value = "image") MultipartFile file) {
         String name = file.getOriginalFilename();
         String formatName = Objects.requireNonNull(name).split("\\.")[1];
-        JSONObject response = new JSONObject();
-        JSONObject errors = new JSONObject();
+
         if (!formatName.equalsIgnoreCase("png") && !formatName.equalsIgnoreCase("jpg")) {
-            errors.put(KEY_IMAGE, MESSAGE_IMAGE_INVALID_FORMAT);
-            response.put(KEY_RESULT, false);
-            response.put(KEY_ERRORS, errors);
+            ErrorsDTO errors = new ErrorsDTO();
+            errors.setImage(MESSAGE_IMAGE_INVALID_FORMAT);
+            ResultDTO response = new ResultDTO(errors);
             return ResponseEntity.badRequest().body(response);
         }
 
@@ -213,9 +205,9 @@ public class GeneralController {
                 stream.close();
                 return ResponseEntity.ok(fileName);
             } catch (Exception e) {
-                errors.put(KEY_IMAGE, MESSAGE_IMAGE_ERROR_LOAD);
-                response.put(KEY_RESULT, false);
-                response.put(KEY_ERRORS, errors);
+                ErrorsDTO errors = new ErrorsDTO();
+                errors.setImage(MESSAGE_IMAGE_ERROR_LOAD);
+                ResultDTO response = new ResultDTO(errors);
                 return ResponseEntity.badRequest().body(response);
             }
         }
@@ -249,8 +241,7 @@ public class GeneralController {
     }
 
     @PostMapping(value = "/api/moderation")
-    @SuppressWarnings("unchecked")
-    public ResponseEntity<JSONObject> moderation(@RequestBody ModerationForm moderationForm) {
+    public ResponseEntity<ResultDTO> moderation(@RequestBody ModerationForm moderationForm) {
         long postId = moderationForm.getPostId();
         String status = moderationForm.getDecision();
         long userId = authorizeServlet.getAuthorizedUserId();
@@ -265,21 +256,13 @@ public class GeneralController {
             default:
                 result = false;
         }
-        JSONObject response = new JSONObject();
-        response.put(KEY_RESULT, result);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(new ResultDTO(result));
     }
 
     @PostMapping(value = "/api/comment")
-    @SuppressWarnings("unchecked")
-    public ResponseEntity<JSONObject> addComment(@RequestBody NewCommentForm newCommentForm) {
-        JSONObject notFoundResponse = new JSONObject();
-        JSONObject errorResponse = new JSONObject();
-        JSONObject successfulResponse = new JSONObject();
-
+    public ResponseEntity<ResultDTO> addComment(@RequestBody NewCommentForm newCommentForm) {
         long postId = newCommentForm.getPostId();
         Object parentIdObj = newCommentForm.getParentIdObj();
-
         String textWithHtml = newCommentForm.getText();
         String textWithoutHtml = Jsoup.parse(textWithHtml).text();
 
@@ -287,17 +270,16 @@ public class GeneralController {
         Post post = postService.findById(postId);
 
         if (post == null) {
-            notFoundResponse.put(KEY_MESSAGE, MESSAGE_POST_NOT_FOUND);
-            return ResponseEntity.badRequest().body(notFoundResponse);
+            ResultDTO message = new ResultDTO(MESSAGE_COMMENT_SHORT);
+            return ResponseEntity.badRequest().body(message);
         }
 
         int minLengthText = 5;
         if (textWithoutHtml.length() < minLengthText) {
-            errorResponse.put(KEY_RESULT, false);
-            JSONObject errorText = new JSONObject();
-            errorText.put(KEY_TEXT, MESSAGE_COMMENT_SHORT);
-            errorResponse.put(KEY_ERRORS, errorText);
-            return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+            ErrorsDTO errors = new ErrorsDTO();
+            errors.setText(MESSAGE_COMMENT_SHORT);
+            ResultDTO errorResponse = new ResultDTO(errors);
+            return ResponseEntity.badRequest().body(errorResponse);
         }
 
         PostComment comment = PostComment.create(user, post, textWithHtml);
@@ -305,20 +287,19 @@ public class GeneralController {
             long parentId = (int) parentIdObj;
             PostComment parent = postCommentService.findById(parentId);
             if (parent == null) {
-                notFoundResponse.put(KEY_MESSAGE, MESSAGE_COMMENT_NOT_FOUND);
-                return ResponseEntity.badRequest().body(notFoundResponse);
+                ResultDTO message = new ResultDTO(MESSAGE_COMMENT_NOT_FOUND);
+                return ResponseEntity.badRequest().body(message);
             }
             comment.setParent(parent);
         }
         long commentId = postCommentService.add(comment).getId();
-        successfulResponse.put(KEY_ID, commentId);
+        ResultDTO successfulResponse = new ResultDTO(commentId);
         return ResponseEntity.ok(successfulResponse);
     }
 
-
     // С изображением
     @PostMapping(value = "/api/profile/my", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<JSONObject> updateProfile(
+    public ResponseEntity<ResultDTO> updateProfile(
             @RequestParam(value = "email", required = false) String email,
             @RequestParam(value = "removePhoto") Object removePhotoObj,
             @RequestParam(value = "photo") MultipartFile file,
@@ -335,8 +316,7 @@ public class GeneralController {
 
     // Без изображения
     @PostMapping(value = "/api/profile/my", consumes = MediaType.APPLICATION_JSON_VALUE)
-    @SuppressWarnings("unchecked")
-    public ResponseEntity<JSONObject> updateProfile(
+    public ResponseEntity<ResultDTO> updateProfile(
             @RequestBody UpdateProfileForm updateProfileForm
     ) {
         String name = updateProfileForm.getName();
@@ -345,17 +325,16 @@ public class GeneralController {
         Integer removePhoto = updateProfileForm.getRemovePhoto();
         String photo = updateProfileForm.getPhoto();
 
-        boolean result = true;
-        JSONObject response = new JSONObject();
-        JSONObject errors = new JSONObject();
         User user = userService.findById(authorizeServlet.getAuthorizedUserId());
+        boolean result = true;
+        ErrorsDTO errors = new ErrorsDTO();
 
         if (email == null) {
-            errors.put(KEY_EMAIL, MESSAGE_EMAIL_EMPTY);
+            errors.setEmail(MESSAGE_EMAIL_EMPTY);
             result = false;
         } else {
             if (!email.equals(user.getEmail()) && userService.emailExists(email)) {
-                errors.put(KEY_EMAIL, MESSAGE_EMAIL_EXISTS);
+                errors.setEmail(MESSAGE_EMAIL_EXISTS);
                 result = false;
             }
         }
@@ -370,7 +349,7 @@ public class GeneralController {
             }
         }
 
-        response.put(KEY_RESULT, result);
+        ResultDTO response = new ResultDTO(result);
         if (result) {
             if (!email.equals(user.getEmail())) {
                 user.setEmail(email);
@@ -389,7 +368,7 @@ public class GeneralController {
 
             userService.update(user);
         } else {
-            response.put(KEY_ERRORS, errors);
+            response.setErrors(errors);
         }
 
         return ResponseEntity.ok(response);

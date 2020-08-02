@@ -4,9 +4,13 @@ import main.model.entity.PostVote;
 import main.model.enums.Rating;
 
 public interface PostVoteService {
-    int getCountLikesByPostId(long postId);
+    boolean userDislikeAlreadyExists(long userId, long postId);
+
+    boolean userLikeAlreadyExists(long userId, long postId);
 
     int getCountDislikesByPostId(long postId);
+
+    int getCountLikesByPostId(long postId);
 
     int getIdByUserIdAndPostId(long userId, long postId);
 
@@ -18,15 +22,11 @@ public interface PostVoteService {
 
     int getTotalCountLikesByUserId(long userId);
 
-    boolean userDislikeAlreadyExists(long userId, long postId);
-
-    boolean userLikeAlreadyExists(long userId, long postId);
-
     void deleteById(long postVoteId);
 
-    PostVote findById(long postVoteId);
+    void replaceValue(long postVoteId);
 
     void setRating(long userId, long postId, Rating value);
 
-    void replaceValue(long postVoteId);
+    PostVote findById(long postVoteId);
 }
