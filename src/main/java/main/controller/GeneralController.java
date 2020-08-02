@@ -270,7 +270,7 @@ public class GeneralController {
         Post post = postService.findById(postId);
 
         if (post == null) {
-            ResultDTO message = new ResultDTO(MESSAGE_COMMENT_SHORT);
+            ResultDTO message = new ResultDTO(MESSAGE_POST_NOT_FOUND);
             return ResponseEntity.badRequest().body(message);
         }
 

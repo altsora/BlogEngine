@@ -98,7 +98,6 @@ public class AuthController {
     }
 
     @PostMapping(value = "/api/auth/register")
-    @SuppressWarnings("unchecked")
     public ResponseEntity<ResultDTO> registration(@RequestBody RegisterForm registerForm) {
         if (!globalSettingsService.settingMultiUserModeIsEnabled()) {
             return ResponseEntity.notFound().build();
@@ -111,9 +110,6 @@ public class AuthController {
         String secretCode = registerForm.getCaptchaSecret();
 
         boolean result = true;
-//        JSONObject response = new JSONObject();
-//        JSONObject errors = new JSONObject();
-
         ErrorsDTO errors = new ErrorsDTO();
         ResultDTO response = new ResultDTO();
 
@@ -130,21 +126,17 @@ public class AuthController {
         }
 
         if (captchaCodeService.isIncorrectCaptcha(inputCaptchaCode, secretCode)) {
-//            errors.put(KEY_CAPTCHA, MESSAGE_CAPTCHA_INVALID);
             errors.setCaptcha(MESSAGE_CAPTCHA_INVALID);
             result = false;
         }
 
-//        response.put(KEY_RESULT, result);
         response.setResult(result);
         if (result) {
             userService.add(name, email, password);
         } else {
-//            response.put(KEY_ERRORS, errors);
             response.setErrors(errors);
         }
 
-//        return ResponseEntity.ok(response);
         return ResponseEntity.ok(response);
     }
 
@@ -162,7 +154,6 @@ public class AuthController {
     }
 
     @PostMapping(value = "/api/auth/password")
-    @SuppressWarnings("unchecked")
     public ResponseEntity<ResultDTO> changePassword(@RequestBody PasswordChangeForm passwordChangeForm) {
         String code = passwordChangeForm.getCode();
         String password = passwordChangeForm.getPassword();
@@ -170,16 +161,12 @@ public class AuthController {
         String secretCode = passwordChangeForm.getCaptchaSecret();
 
         boolean result = true;
-//        JSONObject response = new JSONObject();
-//        JSONObject errors = new JSONObject();
-
         ErrorsDTO errors = new ErrorsDTO();
         ResultDTO response = new ResultDTO();
 
         User user = userService.findByCode(code);
 
         if (user == null) {
-//            errors.put(KEY_CODE, MESSAGE_OLD_LINK);
             errors.setCode(MESSAGE_OLD_LINK);
             result = false;
         }
@@ -188,17 +175,14 @@ public class AuthController {
         }
 
         if (captchaCodeService.isIncorrectCaptcha(inputCaptchaCode, secretCode)) {
-//            errors.put(KEY_CAPTCHA, MESSAGE_CAPTCHA_INVALID);
             errors.setCaptcha(MESSAGE_CAPTCHA_INVALID);
             result = false;
         }
 
-//        response.put(KEY_RESULT, result);
         response.setResult(result);
         if (result) {
             user.setPassword(password);
         } else {
-//            response.put(KEY_ERRORS, errors);
             response.setErrors(errors);
         }
 
