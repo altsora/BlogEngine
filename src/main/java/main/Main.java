@@ -1,6 +1,6 @@
 package main;
 
-import main.response.BlogDTO;
+import main.api.responses.BlogDTO;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;

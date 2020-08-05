@@ -6,13 +6,12 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
-import main.util.TimeUtil;
+import main.utils.TimeUtil;
 
 import javax.persistence.*;
 import java.io.Serializable;
 
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.Set;
 
 @Entity

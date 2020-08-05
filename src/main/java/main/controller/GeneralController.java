@@ -1,16 +1,16 @@
 package main.controller;
 
 import lombok.RequiredArgsConstructor;
+import main.api.requests.ModerationForm;
+import main.api.requests.NewCommentForm;
+import main.api.requests.SettingsForm;
+import main.api.requests.UpdateProfileForm;
+import main.api.responses.*;
 import main.model.entity.*;
-import main.request.ModerationForm;
-import main.request.NewCommentForm;
-import main.request.SettingsForm;
-import main.request.UpdateProfileForm;
-import main.response.*;
-import main.service.*;
-import main.servlet.AuthorizeServlet;
-import main.util.ImageUtil;
-import main.util.TimeUtil;
+import main.services.*;
+import main.services.impl.AuthServiceImpl;
+import main.utils.ImageUtil;
+import main.utils.TimeUtil;
 import org.jsoup.Jsoup;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -33,12 +33,12 @@ import static main.model.enums.ModerationStatus.ACCEPTED;
 import static main.model.enums.ModerationStatus.DECLINED;
 import static main.model.enums.SettingsCode.*;
 import static main.model.enums.SettingsValue.YES;
-import static main.util.MessageUtil.*;
+import static main.utils.MessageUtil.*;
 
 @RestController
 @RequiredArgsConstructor
 public class GeneralController {
-    private final AuthorizeServlet authorizeServlet;
+    private final AuthServiceImpl authServiceImpl;
     private final BlogDTO blog;
     private final GlobalSettingsService globalSettingsService;
     private final PostCommentService postCommentService;
@@ -68,8 +68,8 @@ public class GeneralController {
 
     @PutMapping(value = "/api/settings")
     public ResponseEntity<String> saveSettings(@RequestBody SettingsForm settingsForm) {
-        if (authorizeServlet.isUserAuthorize()) {
-            User user = userService.findById(authorizeServlet.getAuthorizedUserId());
+        if (authServiceImpl.isUserAuthorize()) {
+            User user = userService.findById(authServiceImpl.getAuthorizedUserId());
             if (user.isModerator()) {
                 boolean multiUserModeValue = settingsForm.isMultiUserModeValue();
                 boolean postPreModerationValue = settingsForm.isPostPreModerationValue();
@@ -116,7 +116,7 @@ public class GeneralController {
 
             return ResponseEntity.ok(statistic);
         }
-        if (authorizeServlet.isUserAuthorize()) {
+        if (authServiceImpl.isUserAuthorize()) {
             return new ResponseEntity<>(getMyStatistics().getBody(), HttpStatus.OK);
         }
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
@@ -125,7 +125,7 @@ public class GeneralController {
 
     @GetMapping(value = "/api/statistics/my")
     public ResponseEntity<StatisticDTO> getMyStatistics() {
-        long userId = authorizeServlet.getAuthorizedUserId();
+        long userId = authServiceImpl.getAuthorizedUserId();
         int likesCount = postVoteService.getTotalCountLikesByUserId(userId);
         int dislikesCount = postVoteService.getTotalCountDislikesByUserId(userId);
         int postsCount = postService.getTotalCountOfPostsByUserId(userId);
@@ -244,7 +244,7 @@ public class GeneralController {
     public ResponseEntity<ResultDTO> moderation(@RequestBody ModerationForm moderationForm) {
         long postId = moderationForm.getPostId();
         String status = moderationForm.getDecision();
-        long userId = authorizeServlet.getAuthorizedUserId();
+        long userId = authServiceImpl.getAuthorizedUserId();
         boolean result = true;
         switch (status) {
             case "accept":
@@ -266,7 +266,7 @@ public class GeneralController {
         String textWithHtml = newCommentForm.getText();
         String textWithoutHtml = Jsoup.parse(textWithHtml).text();
 
-        User user = userService.findById(authorizeServlet.getAuthorizedUserId());
+        User user = userService.findById(authServiceImpl.getAuthorizedUserId());
         Post post = postService.findById(postId);
 
         if (post == null) {
@@ -325,7 +325,7 @@ public class GeneralController {
         Integer removePhoto = updateProfileForm.getRemovePhoto();
         String photo = updateProfileForm.getPhoto();
 
-        User user = userService.findById(authorizeServlet.getAuthorizedUserId());
+        User user = userService.findById(authServiceImpl.getAuthorizedUserId());
         boolean result = true;
         ErrorsDTO errors = new ErrorsDTO();
 

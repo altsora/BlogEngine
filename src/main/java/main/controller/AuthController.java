@@ -1,19 +1,19 @@
 package main.controller;
 
 import lombok.RequiredArgsConstructor;
+import main.api.requests.LoginForm;
+import main.api.requests.PasswordChangeForm;
+import main.api.requests.RegisterForm;
+import main.api.responses.ErrorsDTO;
+import main.api.responses.ResultDTO;
+import main.api.responses.UserLoginDTO;
 import main.model.entity.CaptchaCode;
 import main.model.entity.User;
-import main.request.LoginForm;
-import main.request.PasswordChangeForm;
-import main.request.RegisterForm;
-import main.response.ErrorsDTO;
-import main.response.ResultDTO;
-import main.response.UserLoginDTO;
-import main.service.CaptchaCodeService;
-import main.service.GlobalSettingsService;
-import main.service.PostService;
-import main.service.UserService;
-import main.servlet.AuthorizeServlet;
+import main.services.CaptchaCodeService;
+import main.services.GlobalSettingsService;
+import main.services.PostService;
+import main.services.UserService;
+import main.services.impl.AuthServiceImpl;
 import org.json.simple.JSONObject;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,12 +22,12 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import static main.model.enums.ActivityStatus.ACTIVE;
-import static main.util.MessageUtil.*;
+import static main.utils.MessageUtil.*;
 
 @RestController
 @RequiredArgsConstructor
 public class AuthController {
-    private final AuthorizeServlet authorizeServlet;
+    private final AuthServiceImpl authServiceImpl;
     private final CaptchaCodeService captchaCodeService;
     private final GlobalSettingsService globalSettingsService;
     private final PostService postService;
@@ -39,8 +39,8 @@ public class AuthController {
     public ResponseEntity<ResultDTO> authCheck() {
         ResultDTO response = new ResultDTO();
         boolean result = false;
-        if (authorizeServlet.isUserAuthorize()) {
-            long userId = authorizeServlet.getAuthorizedUserId();
+        if (authServiceImpl.isUserAuthorize()) {
+            long userId = authServiceImpl.getAuthorizedUserId();
             User userRep = userService.findById(userId);
             boolean userIsModerator = userRep.isModerator();
             int moderationCount = userIsModerator ? postService.getTotalCountOfNewPosts(ACTIVE) : 0;
@@ -82,7 +82,7 @@ public class AuthController {
                     .moderationCount(moderationCount)
                     .settings(userIsModerator)
                     .build();
-            authorizeServlet.authorizeUser(userId);
+            authServiceImpl.authorizeUser(userId);
             result = true;
             response.setUser(userLogin);
         }
@@ -93,7 +93,7 @@ public class AuthController {
     @GetMapping(value = "/api/auth/logout")
     public ResponseEntity<ResultDTO> logout() {
         ResultDTO response = new ResultDTO(true);
-        authorizeServlet.removeAuthorizedUser();
+        authServiceImpl.removeAuthorizedUser();
         return ResponseEntity.ok(response);
     }
 
