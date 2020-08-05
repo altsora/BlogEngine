@@ -5,12 +5,3 @@ spring.jpa.hibernate.ddl-auto=validate
 spring.jpa.show-sql=true
 spring.servlet.multipart.max-file-size=512MB
 spring.servlet.multipart.max-request-size=512MB
-
-blog.title=DevPub
-blog.subtitle=Developer Stories
-blog.phone=+7 903 666-44-55
-blog.email=java@mail.ru
-blog.copyright=Alexander Vergun
-blog.copyrightFrom=2007
-
-captcha.hour=1

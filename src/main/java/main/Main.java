@@ -1,14 +1,16 @@
 package main;
 
-import main.api.responses.BlogDTO;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.PropertySource;
+import org.springframework.context.annotation.PropertySources;
 
 @SpringBootApplication
-@PropertySource(value = "classpath:config/application.yml")
-@EnableConfigurationProperties(value = BlogDTO.class)
+@PropertySources({
+        @PropertySource(value = "classpath:config/application.yml"),
+        @PropertySource(value = "classpath:config/blog.properties"),
+        @PropertySource(value = "classpath:config/captcha.properties")
+})
 public class Main {
     public static void main(String[] args) {
         SpringApplication.run(Main.class, args);

@@ -22,7 +22,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class CaptchaCodeServiceImpl implements CaptchaCodeService {
     @Value("#{T(java.time.LocalDateTime).now(T(main.utils.TimeUtil).TIME_ZONE).minusHours('${captcha.hour:1}')}")
-    public LocalDateTime captchaLifetime;
+    private LocalDateTime captchaLifetime;
     private final int CAPTCHA_CODE_LENGTH = 3;
     private final int WIDTH = 100;
     private final int HEIGHT = 35;

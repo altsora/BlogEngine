@@ -1,21 +1,22 @@
 package main.api.responses;
 
-import lombok.ToString;
-import lombok.RequiredArgsConstructor;
 import lombok.Getter;
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.boot.context.properties.ConstructorBinding;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
-@ConfigurationProperties(prefix = "blog")
-@ConstructorBinding
-@RequiredArgsConstructor
-@ToString
+@Component
 @Getter
 public class BlogDTO {
-    private final String title;
-    private final String subtitle;
-    private final String phone;
-    private final String email;
-    private final String copyright;
-    private final String copyrightFrom;
+    @Value("${blog.title}")
+    private String title;
+    @Value("${blog.subtitle}")
+    private String subtitle;
+    @Value("${blog.phone}")
+    private String phone;
+    @Value("${blog.email}")
+    private String email;
+    @Value("${blog.copyright}")
+    private String copyright;
+    @Value("${blog.copyrightFrom}")
+    private String copyrightFrom;
 }
