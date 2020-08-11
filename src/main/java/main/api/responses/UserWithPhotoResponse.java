@@ -3,10 +3,10 @@ package main.api.responses;
 import lombok.Getter;
 
 @Getter
-public class UserWithPhotoDTO extends UserSimpleDTO {
+public class UserWithPhotoResponse extends UserSimpleResponse {
     private String photo;
 
-    public UserWithPhotoDTO(long id, String name, String photo) {
+    public UserWithPhotoResponse(long id, String name, String photo) {
         super(id, name);
         this.photo = photo;
     }

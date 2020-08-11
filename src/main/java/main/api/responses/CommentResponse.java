@@ -7,9 +7,9 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @Builder
 @RequiredArgsConstructor
-public class CommentDTO {
+public class CommentResponse {
     private final long id;
     private final long timestamp;
     private final String text;
-    private final UserWithPhotoDTO user;
+    private final UserWithPhotoResponse user;
 }

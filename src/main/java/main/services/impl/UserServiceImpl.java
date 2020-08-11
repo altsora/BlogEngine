@@ -1,7 +1,7 @@
 package main.services.impl;
 
 import lombok.RequiredArgsConstructor;
-import main.api.responses.ErrorsDTO;
+import main.api.responses.ErrorResponse;
 import main.model.entities.User;
 import main.repositories.UserRepository;
 import main.services.UserService;
@@ -50,7 +50,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public boolean nameIsInvalid(String name, ErrorsDTO errors) {
+    public boolean nameIsInvalid(String name, ErrorResponse errors) {
         if (name == null || name.isEmpty()) {
             errors.setName(MESSAGE_NAME_EMPTY);
             return true;
@@ -65,7 +65,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public boolean passwordIsInvalid(String password, ErrorsDTO errors) {
+    public boolean passwordIsInvalid(String password, ErrorResponse errors) {
         if (password.length() < 6) {
             errors.setPassword(MESSAGE_PASSWORD_SHORT);
             return true;
@@ -79,7 +79,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public boolean emailIsInvalid(String email, ErrorsDTO errors) {
+    public boolean emailIsInvalid(String email, ErrorResponse errors) {
         if (emailExists(email)) {
             errors.setEmail(MESSAGE_EMAIL_EXISTS);
             return true;

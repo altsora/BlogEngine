@@ -7,7 +7,7 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @Builder
 @RequiredArgsConstructor
-public class UserLoginDTO {
+public class UserLoginResponse {
     private final long id;
     private final String name;
     private final String photo;

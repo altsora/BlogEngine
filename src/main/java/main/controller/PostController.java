@@ -27,6 +27,7 @@ import static main.model.enums.Rating.LIKE;
 
 @RestController
 @RequiredArgsConstructor
+@RequestMapping("/api/post")
 public class PostController {
     private final AuthService authService;
     private final GlobalSettingsService globalSettingsService;
@@ -39,8 +40,8 @@ public class PostController {
 
     //==================================================================================================================
 
-    @GetMapping(value = "/api/post")
-    public ResponseEntity<PublicPostsDTO> getAllPosts(
+    @GetMapping
+    public ResponseEntity<AbstractResponse> getAllPosts(
             @RequestParam(value = "offset", defaultValue = "0") int offset,
             @RequestParam(value = "limit") int limit,
             @RequestParam(value = "mode") String mode
@@ -61,13 +62,13 @@ public class PostController {
                 postListRep = postService.findAllPostSortedByDate(ACTIVE, ACCEPTED, offset, limit, Sort.Direction.DESC);
                 break;
         }
-        List<PostPublicDTO> posts = postService.getPostsToDisplay(postListRep);
-        PublicPostsDTO response = PublicPostsDTO.builder().count(count).posts(posts).build();
+        List<PostResponse> posts = postService.getPostsToDisplay(postListRep);
+        PublicPostsResponse response = PublicPostsResponse.builder().count(count).posts(posts).build();
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping(value = "/api/post/search")
-    public ResponseEntity<PublicPostsDTO> searchPost(
+    @GetMapping("/search")
+    public ResponseEntity<AbstractResponse> searchPost(
             @RequestParam(value = "offset", defaultValue = "0") int offset,
             @RequestParam(value = "limit") int limit,
             @RequestParam(value = "query") String query
@@ -75,16 +76,16 @@ public class PostController {
         List<Post> postListRep = query.equals("") ?
                 postService.findAllPostSortedByDate(ACTIVE, ACCEPTED, offset, limit, Sort.Direction.DESC) :
                 postService.findAllPostByQuery(ACTIVE, ACCEPTED, offset, limit, query);
-        List<PostPublicDTO> posts = postService.getPostsToDisplay(postListRep);
+        List<PostResponse> posts = postService.getPostsToDisplay(postListRep);
         int count = query.equals("") ?
                 postService.getTotalCountOfPosts(ACTIVE, ACCEPTED) :
                 postService.getTotalCountOfPostsByQuery(ACTIVE, ACCEPTED, query);
-        PublicPostsDTO response = PublicPostsDTO.builder().count(count).posts(posts).build();
+        PublicPostsResponse response = PublicPostsResponse.builder().count(count).posts(posts).build();
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping(value = "/api/post/{id}")
-    public ResponseEntity<PostFullDTO> getPostById(@PathVariable(value = "id") long id) {
+    @GetMapping("/{id}")
+    public ResponseEntity<AbstractResponse> getPostById(@PathVariable(value = "id") long id) {
         Post postRep = postService.findById(id);
         if (postRep == null) {
             return ResponseEntity.notFound().build();
@@ -103,11 +104,11 @@ public class PostController {
         String userName = postRep.getUser().getName();
         long timestamp = TimeUtil.getTimestampFromLocalDateTime(postRep.getTime());
 
-        PostFullDTO post = PostFullDTO.builder()
+        PostFullResponse post = PostFullResponse.builder()
                 .id(postId)
                 .timestamp(timestamp)
                 .active(postRep.getActivityStatus() == ACTIVE)
-                .user(UserSimpleDTO.builder().id(userId).name(userName).build())
+                .user(UserSimpleResponse.builder().id(userId).name(userName).build())
                 .title(postRep.getTitle())
                 .text(postRep.getText())
                 .likeCount(postVoteService.getCountLikesByPostId(postId))
@@ -119,34 +120,34 @@ public class PostController {
         return ResponseEntity.ok(post);
     }
 
-    @GetMapping(value = "/api/post/byDate")
-    public ResponseEntity<PublicPostsDTO> getPostsByDate(
+    @GetMapping("/byDate")
+    public ResponseEntity<AbstractResponse> getPostsByDate(
             @RequestParam(value = "offset", defaultValue = "0") int offset,
             @RequestParam(value = "limit") int limit,
             @RequestParam(value = "date") String date
     ) {
         List<Post> postListRep = postService.findAllPostByDate(ACTIVE, ACCEPTED, offset, limit, date);
-        List<PostPublicDTO> posts = postService.getPostsToDisplay(postListRep);
+        List<PostResponse> posts = postService.getPostsToDisplay(postListRep);
         int count = postService.getTotalCountOfPostsByDate(ACTIVE, ACCEPTED, date);
-        PublicPostsDTO response = PublicPostsDTO.builder().count(count).posts(posts).build();
+        PublicPostsResponse response = PublicPostsResponse.builder().count(count).posts(posts).build();
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping(value = "/api/post/byTag")
-    public ResponseEntity<PublicPostsDTO> getPostsByTag(
+    @GetMapping("/byTag")
+    public ResponseEntity<AbstractResponse> getPostsByTag(
             @RequestParam(value = "offset", defaultValue = "0") int offset,
             @RequestParam(value = "limit") int limit,
             @RequestParam(value = "tag") String tag
     ) {
         List<Post> postListRep = postService.findAllPostByTag(ACTIVE, ACCEPTED, offset, limit, tag);
-        List<PostPublicDTO> posts = postService.getPostsToDisplay(postListRep);
+        List<PostResponse> posts = postService.getPostsToDisplay(postListRep);
         int count = postService.getTotalCountOfPostsByTag(ACTIVE, ACCEPTED, tag);
-        PublicPostsDTO response = PublicPostsDTO.builder().count(count).posts(posts).build();
+        PublicPostsResponse response = PublicPostsResponse.builder().count(count).posts(posts).build();
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping(value = "/api/post/like")
-    public ResponseEntity<ResultDTO> putLike(@RequestBody RatingForm ratingForm) {
+    @PostMapping("/like")
+    public ResponseEntity<AbstractResponse> putLike(@RequestBody RatingForm ratingForm) {
         boolean result = false;
         if (authService.isUserAuthorize()) {
             long userId = authService.getAuthorizedUserId();
@@ -164,11 +165,11 @@ public class PostController {
                 result = true;
             }
         }
-        return ResponseEntity.ok(new ResultDTO(result));
+        return ResponseEntity.ok(new ResultResponse(result));
     }
 
-    @PostMapping(value = "/api/post/dislike")
-    public ResponseEntity<ResultDTO> putDislike(@RequestBody RatingForm ratingForm) {
+    @PostMapping("/dislike")
+    public ResponseEntity<AbstractResponse> putDislike(@RequestBody RatingForm ratingForm) {
         boolean result = false;
         if (authService.isUserAuthorize()) {
             long userId = authService.getAuthorizedUserId();
@@ -186,11 +187,11 @@ public class PostController {
                 result = true;
             }
         }
-        return ResponseEntity.ok(new ResultDTO(result));
+        return ResponseEntity.ok(new ResultResponse(result));
     }
 
-    @PostMapping(value = "/api/post")
-    public ResponseEntity<ResultDTO> addNewPost(@RequestBody PostForm postForm) {
+    @PostMapping
+    public ResponseEntity<AbstractResponse> addNewPost(@RequestBody PostForm postForm) {
         long postTimestamp = postForm.getTimestamp();
         int postActive = postForm.getActive();
         String postTitle = postForm.getTitle();
@@ -198,9 +199,9 @@ public class PostController {
         String postTextWithHtml = postForm.getText();
         String postTextWithoutHtml = Jsoup.parse(postTextWithHtml).text();
 
-        ErrorsDTO errors = new ErrorsDTO();
+        ErrorResponse errors = new ErrorResponse();
         if (postService.postIsInvalid(postTitle, postTextWithoutHtml, errors)) {
-            ResultDTO errorResponse = new ResultDTO(errors);
+            ResultResponse errorResponse = new ResultResponse(errors);
             return ResponseEntity.badRequest().body(errorResponse);
         }
 
@@ -216,12 +217,12 @@ public class PostController {
             tag2PostService.addTag2Post(newPost, tag);
         }
 
-        ResultDTO successResponse = new ResultDTO(true);
+        ResultResponse successResponse = new ResultResponse(true);
         return ResponseEntity.ok(successResponse);
     }
 
-    @PutMapping(value = "/api/post/{id}")
-    public ResponseEntity<ResultDTO> updatePost(
+    @PutMapping("/{id}")
+    public ResponseEntity<AbstractResponse> updatePost(
             @PathVariable(value = "id") long postId,
             @RequestBody PostForm postForm
     ) {
@@ -232,9 +233,9 @@ public class PostController {
         String newTextWithHtml = postForm.getText();
         String newTextWithoutHtml = Jsoup.parse(newTextWithHtml).text();
 
-        ErrorsDTO errors = new ErrorsDTO();
+        ErrorResponse errors = new ErrorResponse();
         if (postService.postIsInvalid(newTitle, newTextWithoutHtml, errors)) {
-            ResultDTO errorResponse = new ResultDTO(errors);
+            ResultResponse errorResponse = new ResultResponse(errors);
             return ResponseEntity.badRequest().body(errorResponse);
         }
 
@@ -249,12 +250,12 @@ public class PostController {
         }
         tag2PostService.updateTagsByPostId(postId, newPostTags);
 
-        ResultDTO successResponse = new ResultDTO(true);
+        ResultResponse successResponse = new ResultResponse(true);
         return ResponseEntity.ok(successResponse);
     }
 
-    @GetMapping(value = "/api/post/moderation")
-    public ResponseEntity<PublicPostsDTO> listOfPostsForModeration(
+    @GetMapping("/moderation")
+    public ResponseEntity<AbstractResponse> listOfPostsForModeration(
             @RequestParam(value = "offset", defaultValue = "0") int offset,
             @RequestParam(value = "limit") int limit,
             @RequestParam(value = "status") String status
@@ -276,13 +277,13 @@ public class PostController {
                 count = postService.getTotalCountOfNewPosts(ACTIVE);
                 break;
         }
-        List<PostPublicDTO> posts = postService.getPostsToDisplay(postListRep);
-        PublicPostsDTO response = PublicPostsDTO.builder().count(count).posts(posts).build();
+        List<PostResponse> posts = postService.getPostsToDisplay(postListRep);
+        PublicPostsResponse response = PublicPostsResponse.builder().count(count).posts(posts).build();
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping(value = "/api/post/my")
-    public ResponseEntity<PublicPostsDTO> getMyPosts(
+    @GetMapping("/my")
+    public ResponseEntity<AbstractResponse> getMyPosts(
             @RequestParam(value = "offset", defaultValue = "0") int offset,
             @RequestParam(value = "limit") int limit,
             @RequestParam(value = "status") String status
@@ -308,8 +309,8 @@ public class PostController {
                 count = postService.getTotalCountOfPostsByUserId(ACTIVE, ACCEPTED, userId);
                 break;
         }
-        List<PostPublicDTO> posts = postService.getPostsToDisplay(postListRep);
-        PublicPostsDTO response = PublicPostsDTO.builder().count(count).posts(posts).build();
+        List<PostResponse> posts = postService.getPostsToDisplay(postListRep);
+        PublicPostsResponse response = PublicPostsResponse.builder().count(count).posts(posts).build();
         return ResponseEntity.ok(response);
     }
 }

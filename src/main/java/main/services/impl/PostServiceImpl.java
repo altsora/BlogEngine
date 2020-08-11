@@ -1,9 +1,9 @@
 package main.services.impl;
 
 import lombok.RequiredArgsConstructor;
-import main.api.responses.ErrorsDTO;
-import main.api.responses.PostPublicDTO;
-import main.api.responses.UserSimpleDTO;
+import main.api.responses.ErrorResponse;
+import main.api.responses.PostResponse;
+import main.api.responses.UserSimpleResponse;
 import main.model.entities.Post;
 import main.model.entities.User;
 import main.model.enums.ActivityStatus;
@@ -282,32 +282,32 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    public List<PostPublicDTO> getPostsToDisplay(List<Post> postListRep) {
-        List<PostPublicDTO> posts = new ArrayList<>();
+    public List<PostResponse> getPostsToDisplay(List<Post> postListRep) {
+        List<PostResponse> posts = new ArrayList<>();
         for (Post postRep : postListRep) {
             long postId = postRep.getId();
             long userId = postRep.getUser().getId();
             String userName = postRep.getUser().getName();
             long timestamp = TimeUtil.getTimestampFromLocalDateTime(postRep.getTime());
 
-            PostPublicDTO postPublicDTO = PostPublicDTO.builder()
+            PostResponse postResponse = PostResponse.builder()
                     .id(postId)
                     .timestamp(timestamp)
                     .title(postRep.getTitle())
                     .announce(getAnnounce(postRep.getText()))
-                    .user(UserSimpleDTO.builder().id(userId).name(userName).build())
+                    .user(UserSimpleResponse.builder().id(userId).name(userName).build())
                     .likeCount(postVoteService.getCountLikesByPostId(postId))
                     .dislikeCount(postVoteService.getCountDislikesByPostId(postId))
                     .commentCount(postCommentService.getCountCommentsByPostId(postId))
                     .viewCount(postRep.getViewCount())
                     .build();
-            posts.add(postPublicDTO);
+            posts.add(postResponse);
         }
         return posts;
     }
 
     @Override
-    public boolean postIsInvalid(String title, String text, ErrorsDTO errors) {
+    public boolean postIsInvalid(String title, String text, ErrorResponse errors) {
         int minTitleLength = 3;
         int minTextLength = 50;
         boolean result = false;

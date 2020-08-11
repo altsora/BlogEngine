@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 @Getter
-public class BlogDTO {
+public class BlogResponse extends AbstractResponse {
     @Value("${blog.title}")
     private String title;
     @Value("${blog.subtitle}")

@@ -11,35 +11,35 @@ import java.util.List;
 @Setter
 @NoArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class ResultDTO {
-    private ErrorsDTO errors;
+public class ResultResponse extends AbstractResponse{
+    private ErrorResponse errors;
     private Long id;
     private String image;
     private String message;
     private Boolean result;
     private String secret;
-    private List<TagDTO> tags;
-    private UserLoginDTO user;
+    private List<TagResponse> tags;
+    private UserLoginResponse user;
 
-    public ResultDTO(boolean result) {
+    public ResultResponse(boolean result) {
         this.result = result;
     }
 
-    public ResultDTO(String message) {
+    public ResultResponse(String message) {
         this.result = false;
         this.message = message;
     }
 
-    public ResultDTO(ErrorsDTO errors) {
+    public ResultResponse(ErrorResponse errors) {
         this.result = false;
         this.errors = errors;
     }
 
-    public ResultDTO(long id) {
+    public ResultResponse(long id) {
         this.id = id;
     }
 
-    public ResultDTO(List<TagDTO> tags) {
+    public ResultResponse(List<TagResponse> tags) {
         this.tags = tags;
     }
 }

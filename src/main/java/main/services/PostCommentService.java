@@ -1,6 +1,6 @@
 package main.services;
 
-import main.api.responses.CommentDTO;
+import main.api.responses.CommentResponse;
 import main.model.entities.PostComment;
 
 import java.util.List;
@@ -8,7 +8,7 @@ import java.util.List;
 public interface PostCommentService {
     int getCountCommentsByPostId(long postId);
 
-    List<CommentDTO> getCommentsByPostId(long postId);
+    List<CommentResponse> getCommentsByPostId(long postId);
 
     List<PostComment> findAllPostCommentByPostId(long postId);
 

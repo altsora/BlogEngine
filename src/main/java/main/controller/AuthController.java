@@ -4,9 +4,10 @@ import lombok.RequiredArgsConstructor;
 import main.api.requests.LoginForm;
 import main.api.requests.PasswordChangeForm;
 import main.api.requests.RegisterForm;
-import main.api.responses.ErrorsDTO;
-import main.api.responses.ResultDTO;
-import main.api.responses.UserLoginDTO;
+import main.api.responses.AbstractResponse;
+import main.api.responses.ErrorResponse;
+import main.api.responses.ResultResponse;
+import main.api.responses.UserLoginResponse;
 import main.model.entities.CaptchaCode;
 import main.model.entities.User;
 import main.services.*;
@@ -30,8 +31,8 @@ public class AuthController {
     //==================================================================================================================
 
     @GetMapping(value = "/check")
-    public ResponseEntity<ResultDTO> authCheck() {
-        ResultDTO response = new ResultDTO();
+    public ResponseEntity<AbstractResponse> authCheck() {
+        ResultResponse response = new ResultResponse();
         boolean result = false;
         if (authService.isUserAuthorize()) {
             long userId = authService.getAuthorizedUserId();
@@ -39,7 +40,7 @@ public class AuthController {
             boolean userIsModerator = userRep.isModerator();
             int moderationCount = userIsModerator ? postService.getTotalCountOfNewPosts(ACTIVE) : 0;
 
-            UserLoginDTO userLogin = UserLoginDTO.builder()
+            UserLoginResponse userLogin = UserLoginResponse.builder()
                     .id(userId)
                     .name(userRep.getName())
                     .photo(userRep.getPhoto())
@@ -56,8 +57,8 @@ public class AuthController {
     }
 
     @PostMapping(value = "/login")
-    public ResponseEntity<ResultDTO> login(@RequestBody LoginForm loginForm) {
-        ResultDTO response = new ResultDTO();
+    public ResponseEntity<AbstractResponse> login(@RequestBody LoginForm loginForm) {
+        ResultResponse response = new ResultResponse();
         String email = loginForm.getEmail();
         String password = loginForm.getPassword();
         User userRep = userService.findByEmailAndPassword(email, password);
@@ -67,7 +68,7 @@ public class AuthController {
             boolean userIsModerator = userRep.isModerator();
             int moderationCount = userIsModerator ? postService.getTotalCountOfNewPosts(ACTIVE) : 0;
 
-            UserLoginDTO userLogin = UserLoginDTO.builder()
+            UserLoginResponse userLogin = UserLoginResponse.builder()
                     .id(userId)
                     .name(userRep.getName())
                     .photo(userRep.getPhoto())
@@ -85,14 +86,14 @@ public class AuthController {
     }
 
     @GetMapping(value = "/logout")
-    public ResponseEntity<ResultDTO> logout() {
-        ResultDTO response = new ResultDTO(true);
+    public ResponseEntity<AbstractResponse> logout() {
+        ResultResponse response = new ResultResponse(true);
         authService.removeAuthorizedUser();
         return ResponseEntity.ok(response);
     }
 
     @PostMapping(value = "/register")
-    public ResponseEntity<ResultDTO> registration(@RequestBody RegisterForm registerForm) {
+    public ResponseEntity<AbstractResponse> registration(@RequestBody RegisterForm registerForm) {
         if (!globalSettingsService.settingMultiUserModeIsEnabled()) {
             return ResponseEntity.notFound().build();
         }
@@ -104,8 +105,8 @@ public class AuthController {
         String secretCode = registerForm.getCaptchaSecret();
 
         boolean result = true;
-        ErrorsDTO errors = new ErrorsDTO();
-        ResultDTO response = new ResultDTO();
+        ErrorResponse errors = new ErrorResponse();
+        ResultResponse response = new ResultResponse();
 
         if (userService.emailIsInvalid(email, errors)) {
             result = false;
@@ -135,28 +136,28 @@ public class AuthController {
     }
 
     @GetMapping(value = "/captcha")
-    public ResponseEntity<ResultDTO> getCaptcha() {
+    public ResponseEntity<AbstractResponse> getCaptcha() {
         captchaCodeService.checkLifetimeCaptcha();
         CaptchaCode captcha = captchaCodeService.generateCaptcha();
         String code = captcha.getCode();
         String secretCode = captcha.getSecretCode();
         String imageCode = captchaCodeService.getCaptchaImageCode(code);
-        ResultDTO response = new ResultDTO();
+        ResultResponse response = new ResultResponse();
         response.setImage(IMAGE_ENCODING + imageCode);
         response.setSecret(secretCode);
         return ResponseEntity.ok(response);
     }
 
     @PostMapping(value = "/password")
-    public ResponseEntity<ResultDTO> changePassword(@RequestBody PasswordChangeForm passwordChangeForm) {
+    public ResponseEntity<AbstractResponse> changePassword(@RequestBody PasswordChangeForm passwordChangeForm) {
         String code = passwordChangeForm.getCode();
         String password = passwordChangeForm.getPassword();
         String inputCaptchaCode = passwordChangeForm.getCode();
         String secretCode = passwordChangeForm.getCaptchaSecret();
 
         boolean result = true;
-        ErrorsDTO errors = new ErrorsDTO();
-        ResultDTO response = new ResultDTO();
+        ErrorResponse errors = new ErrorResponse();
+        ResultResponse response = new ResultResponse();
 
         User user = userService.findByCode(code);
 
@@ -184,10 +185,10 @@ public class AuthController {
     }
 
     @PostMapping(value = "/restore")
-    public ResponseEntity<ResultDTO> restorePassword(@RequestBody JSONObject request) {
+    public ResponseEntity<AbstractResponse> restorePassword(@RequestBody JSONObject request) {
         //TODO
         String email = (String) request.get("email");
         boolean result = userService.emailExists(email);
-        return ResponseEntity.ok(new ResultDTO(result));
+        return ResponseEntity.ok(new ResultResponse(result));
     }
 }

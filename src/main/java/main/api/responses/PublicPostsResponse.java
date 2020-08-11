@@ -10,7 +10,8 @@ import java.util.List;
 @Getter
 @Builder
 @RequiredArgsConstructor
-public class PublicPostsDTO {
+public class PublicPostsResponse extends AbstractResponse {
     private final int count;
-    @Singular private final List<PostPublicDTO> posts;
+    @Singular
+    private final List<PostResponse> posts;
 }

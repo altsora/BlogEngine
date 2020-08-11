@@ -7,7 +7,7 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @Builder
 @RequiredArgsConstructor
-public class TagDTO {
+public class TagResponse {
     private final String name;
     private final double weight;
 }

@@ -11,7 +11,7 @@ import java.util.Map;
 @Getter
 @Builder
 @RequiredArgsConstructor
-public class CalendarDTO {
+public class CalendarResponse  extends AbstractResponse {
     @Singular
     private final List<Integer> years;
     @Singular

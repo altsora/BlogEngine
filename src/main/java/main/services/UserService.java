@@ -1,16 +1,16 @@
 package main.services;
 
-import main.api.responses.ErrorsDTO;
+import main.api.responses.ErrorResponse;
 import main.model.entities.User;
 
 public interface UserService {
     boolean emailExists(String email);
 
-    boolean emailIsInvalid(String email, ErrorsDTO errors);
+    boolean emailIsInvalid(String email, ErrorResponse errors);
 
-    boolean nameIsInvalid(String name, ErrorsDTO errors);
+    boolean nameIsInvalid(String name, ErrorResponse errors);
 
-    boolean passwordIsInvalid(String password, ErrorsDTO errors);
+    boolean passwordIsInvalid(String password, ErrorResponse errors);
 
     User add(String name, String email, String password);
 

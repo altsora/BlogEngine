@@ -1,7 +1,7 @@
 package main.services;
 
-import main.api.responses.ErrorsDTO;
-import main.api.responses.PostPublicDTO;
+import main.api.responses.ErrorResponse;
+import main.api.responses.PostResponse;
 import main.model.entities.Post;
 import main.model.entities.User;
 import main.model.enums.ActivityStatus;
@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.Map;
 
 public interface PostService {
-    boolean postIsInvalid(String title, String text, ErrorsDTO errors);
+    boolean postIsInvalid(String title, String text, ErrorResponse errors);
 
     int getTotalCountOfNewPosts(ActivityStatus activityStatus);
 
@@ -63,7 +63,7 @@ public interface PostService {
 
     List<Post> findAllPostsByModeratorId(ActivityStatus activityStatus, ModerationStatus moderationStatus, int offset, int limit, long moderatorId);
 
-    List<PostPublicDTO> getPostsToDisplay(List<Post> postListRep);
+    List<PostResponse> getPostsToDisplay(List<Post> postListRep);
 
     LocalDateTime getDateOfTheEarliestPost(ActivityStatus activityStatus, ModerationStatus moderationStatus);
 
@@ -78,4 +78,8 @@ public interface PostService {
     Post increaseViewCount(Post post);
 
     String getAnnounce(String text);
+
+    //===================================
+
+
 }

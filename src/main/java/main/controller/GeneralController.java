@@ -38,7 +38,7 @@ import static main.utils.MessageUtil.*;
 @RequiredArgsConstructor
 public class GeneralController {
     private final AuthService authService;
-    private final BlogDTO blog;
+    private final BlogResponse blog;
     private final GlobalSettingsService globalSettingsService;
     private final PostCommentService postCommentService;
     private final PostService postService;
@@ -49,7 +49,7 @@ public class GeneralController {
     //==================================================================================================================
 
     @GetMapping(value = "/api/init")
-    public BlogDTO init() {
+    public AbstractResponse init() {
         return blog;
     }
 
@@ -84,18 +84,18 @@ public class GeneralController {
     }
 
     @GetMapping(value = "/api/calendar")
-    public ResponseEntity<CalendarDTO> getCalendar(@RequestParam(value = "year", required = false) Integer year) {
+    public ResponseEntity<AbstractResponse> getCalendar(@RequestParam(value = "year", required = false) Integer year) {
         if (year == null) {
             year = LocalDateTime.now(TimeUtil.TIME_ZONE).getYear();
         }
         List<Integer> years = postService.findAllYearsOfPublication(ACTIVE, ACCEPTED);
         Map<String, Long> posts = postService.getDateAndCountPosts(ACTIVE, ACCEPTED, year);
-        CalendarDTO calendar = CalendarDTO.builder().years(years).posts(posts).build();
+        CalendarResponse calendar = CalendarResponse.builder().years(years).posts(posts).build();
         return ResponseEntity.ok(calendar);
     }
 
     @GetMapping(value = "/api/statistics/all")
-    public ResponseEntity<StatisticDTO> getBlogStatistics() {
+    public ResponseEntity<AbstractResponse> getBlogStatistics() {
         if (globalSettingsService.settingStatisticsIsPublicIsEnabled()) {
             int dislikesCount = postVoteService.getTotalCountDislikes();
             int likesCount = postVoteService.getTotalCountLikes();
@@ -105,7 +105,7 @@ public class GeneralController {
             long firstPublication = localDateTime == null ?
                     0L : TimeUtil.getTimestampFromLocalDateTime(localDateTime);
 
-            StatisticDTO statistic = StatisticDTO.builder()
+            StatisticResponse statistic = StatisticResponse.builder()
                     .dislikesCount(dislikesCount)
                     .firstPublication(firstPublication)
                     .likesCount(likesCount)
@@ -123,7 +123,7 @@ public class GeneralController {
     }
 
     @GetMapping(value = "/api/statistics/my")
-    public ResponseEntity<StatisticDTO> getMyStatistics() {
+    public ResponseEntity<AbstractResponse> getMyStatistics() {
         long userId = authService.getAuthorizedUserId();
         int likesCount = postVoteService.getTotalCountLikesByUserId(userId);
         int dislikesCount = postVoteService.getTotalCountDislikesByUserId(userId);
@@ -133,7 +133,7 @@ public class GeneralController {
         long firstPublication = localDateTime == null ?
                 0L : TimeUtil.getTimestampFromLocalDateTime(localDateTime);
 
-        StatisticDTO statistic = StatisticDTO.builder()
+        StatisticResponse statistic = StatisticResponse.builder()
                 .dislikesCount(dislikesCount)
                 .firstPublication(firstPublication)
                 .likesCount(likesCount)
@@ -145,7 +145,7 @@ public class GeneralController {
     }
 
     @GetMapping(value = "/api/tag")
-    public ResponseEntity<ResultDTO> getTagList(@RequestParam(value = "query", required = false) String query) {
+    public ResponseEntity<AbstractResponse> getTagList(@RequestParam(value = "query", required = false) String query) {
         double minNormalizedWeight = 0.3d;
         List<Tag> tagListRep = (query == null || query.equals("")) ?
                 tagService.findAll() :
@@ -163,13 +163,13 @@ public class GeneralController {
             }
         }
 
-        List<TagDTO> tags = new ArrayList<>();
+        List<TagResponse> tags = new ArrayList<>();
         int size = tagListRep.size();
         for (int i = 0; i < size; i++) {
             String tagName = tagListRep.get(i).getName();
             double normalizedWeight = weights.get(i) / maxWeight;
             if (Double.compare(normalizedWeight, minNormalizedWeight) >= 0) {
-                TagDTO tag = TagDTO.builder()
+                TagResponse tag = TagResponse.builder()
                         .name(tagName)
                         .weight(normalizedWeight)
                         .build();
@@ -177,7 +177,7 @@ public class GeneralController {
             }
         }
 
-        ResultDTO tagsCollection = new ResultDTO(tags);
+        ResultResponse tagsCollection = new ResultResponse(tags);
         return ResponseEntity.ok(tagsCollection);
     }
 
@@ -187,9 +187,9 @@ public class GeneralController {
         String formatName = Objects.requireNonNull(name).split("\\.")[1];
 
         if (!formatName.equalsIgnoreCase("png") && !formatName.equalsIgnoreCase("jpg")) {
-            ErrorsDTO errors = new ErrorsDTO();
+            ErrorResponse errors = new ErrorResponse();
             errors.setImage(MESSAGE_IMAGE_INVALID_FORMAT);
-            ResultDTO response = new ResultDTO(errors);
+            ResultResponse response = new ResultResponse(errors);
             return ResponseEntity.badRequest().body(response);
         }
 
@@ -204,9 +204,9 @@ public class GeneralController {
                 stream.close();
                 return ResponseEntity.ok(fileName);
             } catch (Exception e) {
-                ErrorsDTO errors = new ErrorsDTO();
+                ErrorResponse errors = new ErrorResponse();
                 errors.setImage(MESSAGE_IMAGE_ERROR_LOAD);
-                ResultDTO response = new ResultDTO(errors);
+                ResultResponse response = new ResultResponse(errors);
                 return ResponseEntity.badRequest().body(response);
             }
         }
@@ -240,7 +240,7 @@ public class GeneralController {
     }
 
     @PostMapping(value = "/api/moderation")
-    public ResponseEntity<ResultDTO> moderation(@RequestBody ModerationForm moderationForm) {
+    public ResponseEntity<AbstractResponse> moderation(@RequestBody ModerationForm moderationForm) {
         long postId = moderationForm.getPostId();
         String status = moderationForm.getDecision();
         long userId = authService.getAuthorizedUserId();
@@ -255,11 +255,11 @@ public class GeneralController {
             default:
                 result = false;
         }
-        return ResponseEntity.ok(new ResultDTO(result));
+        return ResponseEntity.ok(new ResultResponse(result));
     }
 
     @PostMapping(value = "/api/comment")
-    public ResponseEntity<ResultDTO> addComment(@RequestBody NewCommentForm newCommentForm) {
+    public ResponseEntity<AbstractResponse> addComment(@RequestBody NewCommentForm newCommentForm) {
         long postId = newCommentForm.getPostId();
         Object parentIdObj = newCommentForm.getParentIdObj();
         String textWithHtml = newCommentForm.getText();
@@ -269,15 +269,15 @@ public class GeneralController {
         Post post = postService.findById(postId);
 
         if (post == null) {
-            ResultDTO message = new ResultDTO(MESSAGE_POST_NOT_FOUND);
+            ResultResponse message = new ResultResponse(MESSAGE_POST_NOT_FOUND);
             return ResponseEntity.badRequest().body(message);
         }
 
         int minLengthText = 5;
         if (textWithoutHtml.length() < minLengthText) {
-            ErrorsDTO errors = new ErrorsDTO();
+            ErrorResponse errors = new ErrorResponse();
             errors.setText(MESSAGE_COMMENT_SHORT);
-            ResultDTO errorResponse = new ResultDTO(errors);
+            ResultResponse errorResponse = new ResultResponse(errors);
             return ResponseEntity.badRequest().body(errorResponse);
         }
 
@@ -286,19 +286,19 @@ public class GeneralController {
             long parentId = (int) parentIdObj;
             PostComment parent = postCommentService.findById(parentId);
             if (parent == null) {
-                ResultDTO message = new ResultDTO(MESSAGE_COMMENT_NOT_FOUND);
+                ResultResponse message = new ResultResponse(MESSAGE_COMMENT_NOT_FOUND);
                 return ResponseEntity.badRequest().body(message);
             }
             comment.setParent(parent);
         }
         long commentId = postCommentService.add(comment).getId();
-        ResultDTO successfulResponse = new ResultDTO(commentId);
+        ResultResponse successfulResponse = new ResultResponse(commentId);
         return ResponseEntity.ok(successfulResponse);
     }
 
     // С изображением
     @PostMapping(value = "/api/profile/my", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<ResultDTO> updateProfile(
+    public ResponseEntity<AbstractResponse> updateProfile(
             @RequestParam(value = "email", required = false) String email,
             @RequestParam(value = "removePhoto") Object removePhotoObj,
             @RequestParam(value = "photo") MultipartFile file,
@@ -315,7 +315,7 @@ public class GeneralController {
 
     // Без изображения
     @PostMapping(value = "/api/profile/my", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<ResultDTO> updateProfile(
+    public ResponseEntity<AbstractResponse> updateProfile(
             @RequestBody UpdateProfileForm updateProfileForm
     ) {
         String name = updateProfileForm.getName();
@@ -326,7 +326,7 @@ public class GeneralController {
 
         User user = userService.findById(authService.getAuthorizedUserId());
         boolean result = true;
-        ErrorsDTO errors = new ErrorsDTO();
+        ErrorResponse errors = new ErrorResponse();
 
         if (email == null) {
             errors.setEmail(MESSAGE_EMAIL_EMPTY);
@@ -348,7 +348,7 @@ public class GeneralController {
             }
         }
 
-        ResultDTO response = new ResultDTO(result);
+        ResultResponse response = new ResultResponse(result);
         if (result) {
             if (!email.equals(user.getEmail())) {
                 user.setEmail(email);

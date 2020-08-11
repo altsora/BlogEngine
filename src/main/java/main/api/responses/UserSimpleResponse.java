@@ -7,7 +7,7 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @Builder
 @RequiredArgsConstructor
-public class UserSimpleDTO {
+public class UserSimpleResponse {
     private final long id;
     private final String name;
 }

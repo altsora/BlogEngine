@@ -7,7 +7,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class ErrorsDTO {
+public class ErrorResponse {
     private String captcha;
     private String email;
     private String code;

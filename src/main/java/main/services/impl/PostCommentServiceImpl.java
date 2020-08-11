@@ -1,8 +1,8 @@
 package main.services.impl;
 
 import lombok.RequiredArgsConstructor;
-import main.api.responses.CommentDTO;
-import main.api.responses.UserWithPhotoDTO;
+import main.api.responses.CommentResponse;
+import main.api.responses.UserWithPhotoResponse;
 import main.model.entities.PostComment;
 import main.repositories.PostCommentRepository;
 import main.services.PostCommentService;
@@ -42,26 +42,26 @@ public class PostCommentServiceImpl implements PostCommentService {
     }
 
     @Override
-    public List<CommentDTO> getCommentsByPostId(long postId) {
+    public List<CommentResponse> getCommentsByPostId(long postId) {
         List<PostComment> postCommentListRep = findAllPostCommentByPostId(postId);
-        List<CommentDTO> commentDTOList = new ArrayList<>();
+        List<CommentResponse> commentResponseList = new ArrayList<>();
 
         for (PostComment postCommentRep : postCommentListRep) {
             long userId = postCommentRep.getUser().getId();
             String userName = postCommentRep.getUser().getName();
             String userPhoto = postCommentRep.getUser().getPhoto();
-            UserWithPhotoDTO userWithPhoto = new UserWithPhotoDTO(userId, userName, userPhoto);
+            UserWithPhotoResponse userWithPhoto = new UserWithPhotoResponse(userId, userName, userPhoto);
             long timestamp = TimeUtil.getTimestampFromLocalDateTime(postCommentRep.getTime());
 
-            CommentDTO commentDTO = CommentDTO.builder()
+            CommentResponse commentResponse = CommentResponse.builder()
                     .id(postCommentRep.getId())
                     .timestamp(timestamp)
                     .text(postCommentRep.getText())
                     .user(userWithPhoto)
                     .build();
 
-            commentDTOList.add(commentDTO);
+            commentResponseList.add(commentResponse);
         }
-        return commentDTOList;
+        return commentResponseList;
     }
 }
