@@ -1,7 +1,7 @@
 package main.services.impl;
 
 import main.MainTest;
-import main.model.entity.Tag;
+import main.model.entities.Tag;
 import main.repositories.TagRepository;
 import main.services.TagService;
 import org.junit.After;

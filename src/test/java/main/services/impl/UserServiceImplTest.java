@@ -1,7 +1,7 @@
 package main.services.impl;
 
 import main.MainTest;
-import main.model.entity.User;
+import main.model.entities.User;
 import main.repositories.UserRepository;
 import main.services.UserService;
 import org.junit.After;

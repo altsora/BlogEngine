@@ -1,7 +1,7 @@
 package main.services;
 
 import main.api.responses.ErrorsDTO;
-import main.model.entity.User;
+import main.model.entities.User;
 
 public interface UserService {
     boolean emailExists(String email);

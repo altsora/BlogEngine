@@ -1,7 +1,7 @@
 package main.services.impl;
 
-import main.model.entity.Tag;
-import main.model.entity.Tag2Post;
+import main.model.entities.Tag;
+import main.model.entities.Tag2Post;
 import main.repositories.TagRepository;
 import main.services.Tag2PostService;
 import main.services.TagService;

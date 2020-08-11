@@ -1,6 +1,7 @@
 package main.services.impl;
 
-import org.springframework.stereotype.Component;
+import main.services.AuthService;
+import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
@@ -8,15 +9,16 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpSession;
 import java.util.concurrent.ConcurrentHashMap;
 
-@Component
-public class AuthServiceImpl extends HttpServlet {
-    private ConcurrentHashMap<String, Long> activeSessions;
+//@Component
+@Service
+public class AuthServiceImpl extends HttpServlet implements AuthService {
+    private ConcurrentHashMap<String, Long> activeSessions = new ConcurrentHashMap<>();
 
-    public AuthServiceImpl() {
-        this.activeSessions = new ConcurrentHashMap<>();
-    }
+//    public AuthServiceImpl() {
+//        this.activeSessions = new ConcurrentHashMap<>();
+//    }
 
-    public HttpSession getSession() {
+    private HttpSession getSession() {
         ServletRequestAttributes attr = (ServletRequestAttributes)
                 RequestContextHolder.currentRequestAttributes();
         return attr.getRequest().getSession(true);

@@ -1,8 +1,8 @@
 package main.services.impl;
 
-import main.model.entity.Post;
-import main.model.entity.PostVote;
-import main.model.entity.User;
+import main.model.entities.Post;
+import main.model.entities.PostVote;
+import main.model.entities.User;
 import main.model.enums.Rating;
 import main.repositories.PostVoteRepository;
 import main.services.PostService;

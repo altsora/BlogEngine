@@ -1,6 +1,6 @@
 package main.repositories;
 
-import main.model.entity.PostVote;
+import main.model.entities.PostVote;
 import main.model.enums.Rating;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;

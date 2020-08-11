@@ -6,9 +6,8 @@ import main.api.requests.NewCommentForm;
 import main.api.requests.SettingsForm;
 import main.api.requests.UpdateProfileForm;
 import main.api.responses.*;
-import main.model.entity.*;
+import main.model.entities.*;
 import main.services.*;
-import main.services.impl.AuthServiceImpl;
 import main.utils.ImageUtil;
 import main.utils.TimeUtil;
 import org.jsoup.Jsoup;
@@ -38,7 +37,7 @@ import static main.utils.MessageUtil.*;
 @RestController
 @RequiredArgsConstructor
 public class GeneralController {
-    private final AuthServiceImpl authServiceImpl;
+    private final AuthService authService;
     private final BlogDTO blog;
     private final GlobalSettingsService globalSettingsService;
     private final PostCommentService postCommentService;
@@ -68,8 +67,8 @@ public class GeneralController {
 
     @PutMapping(value = "/api/settings")
     public ResponseEntity<String> saveSettings(@RequestBody SettingsForm settingsForm) {
-        if (authServiceImpl.isUserAuthorize()) {
-            User user = userService.findById(authServiceImpl.getAuthorizedUserId());
+        if (authService.isUserAuthorize()) {
+            User user = userService.findById(authService.getAuthorizedUserId());
             if (user.isModerator()) {
                 boolean multiUserModeValue = settingsForm.isMultiUserModeValue();
                 boolean postPreModerationValue = settingsForm.isPostPreModerationValue();
@@ -116,7 +115,7 @@ public class GeneralController {
 
             return ResponseEntity.ok(statistic);
         }
-        if (authServiceImpl.isUserAuthorize()) {
+        if (authService.isUserAuthorize()) {
             return new ResponseEntity<>(getMyStatistics().getBody(), HttpStatus.OK);
         }
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
@@ -125,7 +124,7 @@ public class GeneralController {
 
     @GetMapping(value = "/api/statistics/my")
     public ResponseEntity<StatisticDTO> getMyStatistics() {
-        long userId = authServiceImpl.getAuthorizedUserId();
+        long userId = authService.getAuthorizedUserId();
         int likesCount = postVoteService.getTotalCountLikesByUserId(userId);
         int dislikesCount = postVoteService.getTotalCountDislikesByUserId(userId);
         int postsCount = postService.getTotalCountOfPostsByUserId(userId);
@@ -244,7 +243,7 @@ public class GeneralController {
     public ResponseEntity<ResultDTO> moderation(@RequestBody ModerationForm moderationForm) {
         long postId = moderationForm.getPostId();
         String status = moderationForm.getDecision();
-        long userId = authServiceImpl.getAuthorizedUserId();
+        long userId = authService.getAuthorizedUserId();
         boolean result = true;
         switch (status) {
             case "accept":
@@ -266,7 +265,7 @@ public class GeneralController {
         String textWithHtml = newCommentForm.getText();
         String textWithoutHtml = Jsoup.parse(textWithHtml).text();
 
-        User user = userService.findById(authServiceImpl.getAuthorizedUserId());
+        User user = userService.findById(authService.getAuthorizedUserId());
         Post post = postService.findById(postId);
 
         if (post == null) {
@@ -325,7 +324,7 @@ public class GeneralController {
         Integer removePhoto = updateProfileForm.getRemovePhoto();
         String photo = updateProfileForm.getPhoto();
 
-        User user = userService.findById(authServiceImpl.getAuthorizedUserId());
+        User user = userService.findById(authService.getAuthorizedUserId());
         boolean result = true;
         ErrorsDTO errors = new ErrorsDTO();
 

@@ -1,7 +1,7 @@
 package main.services.impl;
 
 import lombok.RequiredArgsConstructor;
-import main.model.entity.GlobalSetting;
+import main.model.entities.GlobalSetting;
 import main.model.enums.SettingsCode;
 import main.model.enums.SettingsValue;
 import main.repositories.GlobalSettingsRepository;

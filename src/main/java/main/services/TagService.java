@@ -1,6 +1,6 @@
 package main.services;
 
-import main.model.entity.Tag;
+import main.model.entities.Tag;
 
 import java.util.List;
 

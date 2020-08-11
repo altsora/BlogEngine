@@ -2,7 +2,7 @@ package main.repositories;
 
 import main.model.enums.ActivityStatus;
 import main.model.enums.ModerationStatus;
-import main.model.entity.Post;
+import main.model.entities.Post;
 import main.model.enums.Rating;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;

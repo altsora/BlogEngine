@@ -1,6 +1,6 @@
 package main.repositories;
 
-import main.model.entity.GlobalSetting;
+import main.model.entities.GlobalSetting;
 import main.model.enums.SettingsCode;
 import main.model.enums.SettingsValue;
 import org.springframework.data.jpa.repository.JpaRepository;

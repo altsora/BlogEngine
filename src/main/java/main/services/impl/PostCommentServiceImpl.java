@@ -3,7 +3,7 @@ package main.services.impl;
 import lombok.RequiredArgsConstructor;
 import main.api.responses.CommentDTO;
 import main.api.responses.UserWithPhotoDTO;
-import main.model.entity.PostComment;
+import main.model.entities.PostComment;
 import main.repositories.PostCommentRepository;
 import main.services.PostCommentService;
 import main.utils.TimeUtil;

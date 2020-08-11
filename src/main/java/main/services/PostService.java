@@ -2,8 +2,8 @@ package main.services;
 
 import main.api.responses.ErrorsDTO;
 import main.api.responses.PostPublicDTO;
-import main.model.entity.Post;
-import main.model.entity.User;
+import main.model.entities.Post;
+import main.model.entities.User;
 import main.model.enums.ActivityStatus;
 import main.model.enums.ModerationStatus;
 import org.springframework.data.domain.Sort;

@@ -1,7 +1,7 @@
 package main.services;
 
 import main.api.responses.CommentDTO;
-import main.model.entity.PostComment;
+import main.model.entities.PostComment;
 
 import java.util.List;
 

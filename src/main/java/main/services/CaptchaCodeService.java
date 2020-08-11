@@ -1,6 +1,6 @@
 package main.services;
 
-import main.model.entity.CaptchaCode;
+import main.model.entities.CaptchaCode;
 
 public interface CaptchaCodeService {
     boolean isIncorrectCaptcha(String captcha, String secretCode);

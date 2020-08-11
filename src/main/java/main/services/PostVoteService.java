@@ -1,6 +1,6 @@
 package main.services;
 
-import main.model.entity.PostVote;
+import main.model.entities.PostVote;
 import main.model.enums.Rating;
 
 public interface PostVoteService {

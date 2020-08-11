@@ -2,7 +2,7 @@ package main.services.impl;
 
 import lombok.RequiredArgsConstructor;
 import main.api.responses.ErrorsDTO;
-import main.model.entity.User;
+import main.model.entities.User;
 import main.repositories.UserRepository;
 import main.services.UserService;
 import main.utils.TimeUtil;

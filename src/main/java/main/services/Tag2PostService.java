@@ -1,8 +1,8 @@
 package main.services;
 
-import main.model.entity.Post;
-import main.model.entity.Tag;
-import main.model.entity.Tag2Post;
+import main.model.entities.Post;
+import main.model.entities.Tag;
+import main.model.entities.Tag2Post;
 
 import java.util.List;
 

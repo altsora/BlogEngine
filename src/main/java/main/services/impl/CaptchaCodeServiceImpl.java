@@ -2,7 +2,7 @@ package main.services.impl;
 
 import com.github.cage.YCage;
 import lombok.RequiredArgsConstructor;
-import main.model.entity.CaptchaCode;
+import main.model.entities.CaptchaCode;
 import main.repositories.CaptchaCodeRepository;
 import main.services.CaptchaCodeService;
 import main.utils.TimeUtil;

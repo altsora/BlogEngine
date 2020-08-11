@@ -1,6 +1,6 @@
 package hibernate;
 
-import main.model.entity.*;
+import main.model.entities.*;
 import main.model.enums.*;
 import org.hibernate.Session;
 import org.hibernate.query.Query;

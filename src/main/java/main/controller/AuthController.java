@@ -7,27 +7,21 @@ import main.api.requests.RegisterForm;
 import main.api.responses.ErrorsDTO;
 import main.api.responses.ResultDTO;
 import main.api.responses.UserLoginDTO;
-import main.model.entity.CaptchaCode;
-import main.model.entity.User;
-import main.services.CaptchaCodeService;
-import main.services.GlobalSettingsService;
-import main.services.PostService;
-import main.services.UserService;
-import main.services.impl.AuthServiceImpl;
+import main.model.entities.CaptchaCode;
+import main.model.entities.User;
+import main.services.*;
 import org.json.simple.JSONObject;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import static main.model.enums.ActivityStatus.ACTIVE;
 import static main.utils.MessageUtil.*;
 
 @RestController
 @RequiredArgsConstructor
+@RequestMapping("/api/auth")
 public class AuthController {
-    private final AuthServiceImpl authServiceImpl;
+    private final AuthService authService;
     private final CaptchaCodeService captchaCodeService;
     private final GlobalSettingsService globalSettingsService;
     private final PostService postService;
@@ -35,12 +29,12 @@ public class AuthController {
 
     //==================================================================================================================
 
-    @GetMapping(value = "/api/auth/check")
+    @GetMapping(value = "/check")
     public ResponseEntity<ResultDTO> authCheck() {
         ResultDTO response = new ResultDTO();
         boolean result = false;
-        if (authServiceImpl.isUserAuthorize()) {
-            long userId = authServiceImpl.getAuthorizedUserId();
+        if (authService.isUserAuthorize()) {
+            long userId = authService.getAuthorizedUserId();
             User userRep = userService.findById(userId);
             boolean userIsModerator = userRep.isModerator();
             int moderationCount = userIsModerator ? postService.getTotalCountOfNewPosts(ACTIVE) : 0;
@@ -61,7 +55,7 @@ public class AuthController {
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping(value = "/api/auth/login")
+    @PostMapping(value = "/login")
     public ResponseEntity<ResultDTO> login(@RequestBody LoginForm loginForm) {
         ResultDTO response = new ResultDTO();
         String email = loginForm.getEmail();
@@ -82,7 +76,7 @@ public class AuthController {
                     .moderationCount(moderationCount)
                     .settings(userIsModerator)
                     .build();
-            authServiceImpl.authorizeUser(userId);
+            authService.authorizeUser(userId);
             result = true;
             response.setUser(userLogin);
         }
@@ -90,14 +84,14 @@ public class AuthController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping(value = "/api/auth/logout")
+    @GetMapping(value = "/logout")
     public ResponseEntity<ResultDTO> logout() {
         ResultDTO response = new ResultDTO(true);
-        authServiceImpl.removeAuthorizedUser();
+        authService.removeAuthorizedUser();
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping(value = "/api/auth/register")
+    @PostMapping(value = "/register")
     public ResponseEntity<ResultDTO> registration(@RequestBody RegisterForm registerForm) {
         if (!globalSettingsService.settingMultiUserModeIsEnabled()) {
             return ResponseEntity.notFound().build();
@@ -140,7 +134,7 @@ public class AuthController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping(value = "/api/auth/captcha")
+    @GetMapping(value = "/captcha")
     public ResponseEntity<ResultDTO> getCaptcha() {
         captchaCodeService.checkLifetimeCaptcha();
         CaptchaCode captcha = captchaCodeService.generateCaptcha();
@@ -153,7 +147,7 @@ public class AuthController {
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping(value = "/api/auth/password")
+    @PostMapping(value = "/password")
     public ResponseEntity<ResultDTO> changePassword(@RequestBody PasswordChangeForm passwordChangeForm) {
         String code = passwordChangeForm.getCode();
         String password = passwordChangeForm.getPassword();
@@ -189,7 +183,7 @@ public class AuthController {
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping(value = "/api/auth/restore")
+    @PostMapping(value = "/restore")
     public ResponseEntity<ResultDTO> restorePassword(@RequestBody JSONObject request) {
         //TODO
         String email = (String) request.get("email");

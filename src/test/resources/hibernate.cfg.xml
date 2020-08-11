@@ -21,13 +21,13 @@
         <!--property name="hibernate.hbm2ddl.auto">create-drop</property-->
         <property name="hibernate.hbm2ddl.auto">create-drop</property>
 
-        <mapping class="main.model.entity.User"/>
-        <mapping class="main.model.entity.Post"/>
-        <mapping class="main.model.entity.PostVote"/>
-        <mapping class="main.model.entity.Tag"/>
-        <mapping class="main.model.entity.Tag2Post"/>
-        <mapping class="main.model.entity.PostComment"/>
-        <mapping class="main.model.entity.CaptchaCode"/>
-        <mapping class="main.model.entity.GlobalSetting"/>
+        <mapping class="main.model.entities.User"/>
+        <mapping class="main.model.entities.Post"/>
+        <mapping class="main.model.entities.PostVote"/>
+        <mapping class="main.model.entities.Tag"/>
+        <mapping class="main.model.entities.Tag2Post"/>
+        <mapping class="main.model.entities.PostComment"/>
+        <mapping class="main.model.entities.CaptchaCode"/>
+        <mapping class="main.model.entities.GlobalSetting"/>
     </session-factory>
 </hibernate-configuration>

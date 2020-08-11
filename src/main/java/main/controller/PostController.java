@@ -4,12 +4,11 @@ import lombok.RequiredArgsConstructor;
 import main.api.requests.PostForm;
 import main.api.requests.RatingForm;
 import main.api.responses.*;
-import main.model.entity.Post;
-import main.model.entity.Tag;
-import main.model.entity.User;
+import main.model.entities.Post;
+import main.model.entities.Tag;
+import main.model.entities.User;
 import main.model.enums.ActivityStatus;
 import main.services.*;
-import main.services.impl.AuthServiceImpl;
 import main.utils.TimeUtil;
 import org.jsoup.Jsoup;
 import org.springframework.data.domain.Sort;
@@ -29,7 +28,7 @@ import static main.model.enums.Rating.LIKE;
 @RestController
 @RequiredArgsConstructor
 public class PostController {
-    private final AuthServiceImpl authServiceImpl;
+    private final AuthService authService;
     private final GlobalSettingsService globalSettingsService;
     private final PostService postService;
     private final PostVoteService postVoteService;
@@ -90,8 +89,8 @@ public class PostController {
         if (postRep == null) {
             return ResponseEntity.notFound().build();
         }
-        if (authServiceImpl.isUserAuthorize()) {
-            User user = userService.findById(authServiceImpl.getAuthorizedUserId());
+        if (authService.isUserAuthorize()) {
+            User user = userService.findById(authService.getAuthorizedUserId());
             if (!user.isModerator() && user.getId() != postRep.getUser().getId()) {
                 postRep = postService.increaseViewCount(postRep);
             }
@@ -149,8 +148,8 @@ public class PostController {
     @PostMapping(value = "/api/post/like")
     public ResponseEntity<ResultDTO> putLike(@RequestBody RatingForm ratingForm) {
         boolean result = false;
-        if (authServiceImpl.isUserAuthorize()) {
-            long userId = authServiceImpl.getAuthorizedUserId();
+        if (authService.isUserAuthorize()) {
+            long userId = authService.getAuthorizedUserId();
             long postId = ratingForm.getPostId();
             if (postVoteService.userDislikeAlreadyExists(userId, postId)) {
                 long postVoteId = postVoteService.getIdByUserIdAndPostId(userId, postId);
@@ -171,8 +170,8 @@ public class PostController {
     @PostMapping(value = "/api/post/dislike")
     public ResponseEntity<ResultDTO> putDislike(@RequestBody RatingForm ratingForm) {
         boolean result = false;
-        if (authServiceImpl.isUserAuthorize()) {
-            long userId = authServiceImpl.getAuthorizedUserId();
+        if (authService.isUserAuthorize()) {
+            long userId = authService.getAuthorizedUserId();
             long postId = ratingForm.getPostId();
             if (postVoteService.userLikeAlreadyExists(userId, postId)) {
                 long postVoteId = postVoteService.getIdByUserIdAndPostId(userId, postId);
@@ -208,7 +207,7 @@ public class PostController {
         LocalDateTime postTime = TimeUtil.getLocalDateTimeFromTimestamp(postTimestamp);
         TimeUtil.returnToPresentIfOld(postTime);
         ActivityStatus activity = postActive == 1 ? ACTIVE : INACTIVE;
-        User user = userService.findById(authServiceImpl.getAuthorizedUserId());
+        User user = userService.findById(authService.getAuthorizedUserId());
         boolean preModerationIsEnabled = globalSettingsService.settingPostPreModerationIsEnabled();
         Post newPost = postService.addPost(activity, user, postTime, postTitle, postTextWithHtml, preModerationIsEnabled);
 
@@ -242,7 +241,7 @@ public class PostController {
         LocalDateTime newTimeOfPost = TimeUtil.getLocalDateTimeFromTimestamp(postTimestamp);
         TimeUtil.returnToPresentIfOld(newTimeOfPost);
         ActivityStatus activityStatus = newPostActivity == 1 ? ACTIVE : INACTIVE;
-        User user = userService.findById(authServiceImpl.getAuthorizedUserId());
+        User user = userService.findById(authService.getAuthorizedUserId());
         postService.updatePost(postId, user, activityStatus, newTimeOfPost, newTitle, newTextWithHtml);
 
         for (String tagName : newPostTags) {
@@ -260,7 +259,7 @@ public class PostController {
             @RequestParam(value = "limit") int limit,
             @RequestParam(value = "status") String status
     ) {
-        long userId = authServiceImpl.getAuthorizedUserId();
+        long userId = authService.getAuthorizedUserId();
         int count = 0;
         List<Post> postListRep = new ArrayList<>();
         switch (status) {
@@ -288,7 +287,7 @@ public class PostController {
             @RequestParam(value = "limit") int limit,
             @RequestParam(value = "status") String status
     ) {
-        long userId = authServiceImpl.getAuthorizedUserId();
+        long userId = authService.getAuthorizedUserId();
         int count = 0;
         List<Post> postListRep = new ArrayList<>();
         switch (status) {

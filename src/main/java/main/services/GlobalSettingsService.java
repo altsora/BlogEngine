@@ -1,6 +1,6 @@
 package main.services;
 
-import main.model.entity.GlobalSetting;
+import main.model.entities.GlobalSetting;
 import main.model.enums.SettingsCode;
 
 import java.util.List;
