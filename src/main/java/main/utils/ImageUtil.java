@@ -6,12 +6,16 @@ import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
+import java.util.Random;
 
 public final class ImageUtil {
-    private final static int AVATAR_HEIGHT = 35;
-    private final static int AVATAR_WIDTH = 35;
-    private final static int IMAGE_FOLDER_NAME_LENGTH = 3;
-    private final static int IMAGE_NAME_LENGTH = 5;
+    private static final int AVATAR_HEIGHT = 35;
+    private static final int AVATAR_WIDTH = 35;
+    private static final int IMAGE_FOLDER_NAME_LENGTH = 3;
+    private static final int IMAGE_NAME_LENGTH = 5;
+
+    private ImageUtil() {
+    }
 
     public static String getRandomImageName(StringBuilder mainPath, String format) {
         String alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvxyz";
@@ -21,7 +25,7 @@ public final class ImageUtil {
         for (int i = 0; i < 3; i++) {
             StringBuilder folderName = new StringBuilder();
             for (int j = 0; j < IMAGE_FOLDER_NAME_LENGTH; j++) {
-                int index = (int) (Math.random() * alphabet.length());
+                int index = new Random().nextInt(alphabet.length());
                 folderName.append(alphabet.charAt(index));
             }
             File folder = new File(mainPath.toString() + folderName);
@@ -32,7 +36,7 @@ public final class ImageUtil {
             fileName.append(folderName.toString()).append("/");
         }
         for (int i = 0; i < IMAGE_NAME_LENGTH; i++) {
-            int index = (int) (Math.random() * numbers.length());
+            int index = new Random().nextInt(numbers.length());
             mainPath.append(numbers.charAt(index));
             fileName.append(numbers.charAt(index));
         }

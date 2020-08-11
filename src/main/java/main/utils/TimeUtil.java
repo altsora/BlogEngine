@@ -3,8 +3,8 @@ package main.utils;
 import java.time.*;
 
 public final class TimeUtil {
-    public final static ZoneId TIME_ZONE = ZoneId.of("UTC");
-    public final static ZoneOffset ZONE_OFFSET = ZoneOffset.UTC;
+    public static final ZoneId TIME_ZONE = ZoneId.of("UTC");
+    public static final ZoneOffset ZONE_OFFSET = ZoneOffset.UTC;
 
     public static long getTimestampFromLocalDateTime(LocalDateTime localDateTime) {
         return localDateTime.toInstant(ZONE_OFFSET).getEpochSecond();
@@ -24,5 +24,8 @@ public final class TimeUtil {
         ZonedDateTime localZone = localDateTime.atZone(ZoneId.systemDefault());
         ZonedDateTime utcZone = localZone.withZoneSameInstant(TIME_ZONE);
         return utcZone.toLocalDateTime();
+    }
+
+    private TimeUtil() {
     }
 }

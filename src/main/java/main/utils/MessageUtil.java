@@ -21,4 +21,6 @@ public class MessageUtil {
     public static final String MESSAGE_POST_SHORT = "Минимальное количество символов в публикации - 50";
     public static final String MESSAGE_TITLE_EMPTY = "Заголовок не должен быть пустым";
     public static final String MESSAGE_TITLE_SHORT = "Минимальное количество символов в заголовке - 3";
+
+    private MessageUtil() {}
 }

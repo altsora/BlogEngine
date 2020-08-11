@@ -17,15 +17,17 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.Base64;
 import java.util.List;
+import java.util.Random;
 
 @Service
 @RequiredArgsConstructor
 public class CaptchaCodeServiceImpl implements CaptchaCodeService {
     @Value("#{T(java.time.LocalDateTime).now(T(main.utils.TimeUtil).TIME_ZONE).minusHours('${captcha.hour:1}')}")
     private LocalDateTime captchaLifetime;
-    private final int CAPTCHA_CODE_LENGTH = 3;
-    private final int WIDTH = 100;
-    private final int HEIGHT = 35;
+
+    private static final int CAPTCHA_CODE_LENGTH = 3;
+    private static final int WIDTH = 100;
+    private static final int HEIGHT = 35;
 
     private final CaptchaCodeRepository captchaCodeRepository;
 
@@ -85,11 +87,9 @@ public class CaptchaCodeServiceImpl implements CaptchaCodeService {
         String alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < CAPTCHA_CODE_LENGTH; i++) {
-            int index = (int) (Math.random() * alphabet.length());
+            int index = new Random().nextInt(alphabet.length());
             sb.append(alphabet.charAt(index));
         }
         return sb.toString();
     }
-
-
 }

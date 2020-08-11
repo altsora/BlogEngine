@@ -33,30 +33,6 @@ public class UserServiceImplTest {
 
     //==================================================================================================================
 
-    @Before
-    public void setUp() throws Exception {
-    }
-
-    @After
-    public void tearDown() throws Exception {
-    }
-
-    @Test
-    public void add() {
-    }
-
-    @Test
-    public void findByEmailAndPassword() {
-    }
-
-    @Test
-    public void update() {
-    }
-
-    @Test
-    public void emailExists() {
-    }
-
     @Test
     public void findById() {
         long userId = 1;
@@ -71,21 +47,5 @@ public class UserServiceImplTest {
         assertNotNull(user);
         assertThat(userId, equalTo(user.getId()));
         assertThat(name, equalTo(user.getName()));
-    }
-
-    @Test
-    public void nameIsInvalid() {
-    }
-
-    @Test
-    public void passwordIsInvalid() {
-    }
-
-    @Test
-    public void emailIsInvalid() {
-    }
-
-    @Test
-    public void findByCode() {
     }
 }

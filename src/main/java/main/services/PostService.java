@@ -78,8 +78,4 @@ public interface PostService {
     Post increaseViewCount(Post post);
 
     String getAnnounce(String text);
-
-    //===================================
-
-
 }

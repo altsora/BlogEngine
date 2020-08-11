@@ -9,14 +9,9 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpSession;
 import java.util.concurrent.ConcurrentHashMap;
 
-//@Component
 @Service
 public class AuthServiceImpl extends HttpServlet implements AuthService {
-    private ConcurrentHashMap<String, Long> activeSessions = new ConcurrentHashMap<>();
-
-//    public AuthServiceImpl() {
-//        this.activeSessions = new ConcurrentHashMap<>();
-//    }
+    private final ConcurrentHashMap<String, Long> activeSessions = new ConcurrentHashMap<>();
 
     private HttpSession getSession() {
         ServletRequestAttributes attr = (ServletRequestAttributes)

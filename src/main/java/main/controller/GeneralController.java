@@ -152,7 +152,8 @@ public class GeneralController {
                 tagService.findAllTagsByQuery(query);
         List<Double> weights = new ArrayList<>();
         int totalNumberOfPosts = postService.getTotalCountOfPosts(ACTIVE, ACCEPTED);
-        double maxWeight = -1, weight;
+        double maxWeight = -1;
+        double weight;
         int countPosts;
         for (Tag tagRep : tagListRep) {
             countPosts = postService.getTotalCountOfPostsByTag(ACTIVE, ACCEPTED, tagRep.getName());
@@ -196,12 +197,10 @@ public class GeneralController {
         if (!file.isEmpty()) {
             StringBuilder mainPath = new StringBuilder("src/main/resources/upload/");
             String fileName = ImageUtil.getRandomImageName(mainPath, formatName);
-            try {
+            try (BufferedOutputStream stream =
+                         new BufferedOutputStream(new FileOutputStream(new File(mainPath.toString())));) {
                 byte[] bytes = file.getBytes();
-                BufferedOutputStream stream =
-                        new BufferedOutputStream(new FileOutputStream(new File(mainPath.toString())));
                 stream.write(bytes);
-                stream.close();
                 return ResponseEntity.ok(fileName);
             } catch (Exception e) {
                 ErrorResponse errors = new ErrorResponse();
@@ -331,21 +330,17 @@ public class GeneralController {
         if (email == null) {
             errors.setEmail(MESSAGE_EMAIL_EMPTY);
             result = false;
-        } else {
-            if (!email.equals(user.getEmail()) && userService.emailExists(email)) {
-                errors.setEmail(MESSAGE_EMAIL_EXISTS);
-                result = false;
-            }
+        } else if (!email.equals(user.getEmail()) && userService.emailExists(email)) {
+            errors.setEmail(MESSAGE_EMAIL_EXISTS);
+            result = false;
         }
 
         if (userService.nameIsInvalid(name, errors)) {
             result = false;
         }
 
-        if (password != null) {
-            if (userService.passwordIsInvalid(password, errors)) {
-                result = false;
-            }
+        if (password != null && userService.passwordIsInvalid(password, errors)) {
+            result = false;
         }
 
         ResultResponse response = new ResultResponse(result);
@@ -356,10 +351,8 @@ public class GeneralController {
             if (!name.equals(user.getName())) {
                 user.setName(name);
             }
-            if (password != null) {
-                if (!password.equals(user.getPassword())) {
-                    user.setPassword(password);
-                }
+            if (password != null && !password.equals(user.getPassword())) {
+                user.setPassword(password);
             }
             if (removePhoto != null) {
                 user.setPhoto(photo);

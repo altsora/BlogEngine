@@ -46,7 +46,7 @@ public class PostController {
             @RequestParam(value = "limit") int limit,
             @RequestParam(value = "mode") String mode
     ) {
-        List<Post> postListRep = new ArrayList<>();
+        List<Post> postListRep;
         int count = postService.getTotalCountOfPosts(ACTIVE, ACCEPTED);
         switch (mode) {
             case "popular":
@@ -61,6 +61,8 @@ public class PostController {
             case "recent":
                 postListRep = postService.findAllPostSortedByDate(ACTIVE, ACCEPTED, offset, limit, Sort.Direction.DESC);
                 break;
+            default:
+                postListRep = new ArrayList<>();
         }
         List<PostResponse> posts = postService.getPostsToDisplay(postListRep);
         PublicPostsResponse response = PublicPostsResponse.builder().count(count).posts(posts).build();
@@ -262,7 +264,7 @@ public class PostController {
     ) {
         long userId = authService.getAuthorizedUserId();
         int count = 0;
-        List<Post> postListRep = new ArrayList<>();
+        List<Post> postListRep;
         switch (status) {
             case "declined":
                 postListRep = postService.findAllPostsByModeratorId(ACTIVE, DECLINED, offset, limit, userId);
@@ -276,6 +278,8 @@ public class PostController {
                 postListRep = postService.findAllNewPosts(ACTIVE, offset, limit);
                 count = postService.getTotalCountOfNewPosts(ACTIVE);
                 break;
+            default:
+                postListRep = new ArrayList<>();
         }
         List<PostResponse> posts = postService.getPostsToDisplay(postListRep);
         PublicPostsResponse response = PublicPostsResponse.builder().count(count).posts(posts).build();
@@ -290,7 +294,7 @@ public class PostController {
     ) {
         long userId = authService.getAuthorizedUserId();
         int count = 0;
-        List<Post> postListRep = new ArrayList<>();
+        List<Post> postListRep;
         switch (status) {
             case "inactive":
                 postListRep = postService.findAllHiddenPostsByUserId(offset, limit, userId);
@@ -308,6 +312,8 @@ public class PostController {
                 postListRep = postService.findAllPostsByUserId(ACTIVE, ACCEPTED, offset, limit, userId);
                 count = postService.getTotalCountOfPostsByUserId(ACTIVE, ACCEPTED, userId);
                 break;
+            default:
+                postListRep = new ArrayList<>();
         }
         List<PostResponse> posts = postService.getPostsToDisplay(postListRep);
         PublicPostsResponse response = PublicPostsResponse.builder().count(count).posts(posts).build();
