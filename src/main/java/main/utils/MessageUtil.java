@@ -10,6 +10,7 @@ public class MessageUtil {
     public static final String MESSAGE_EMAIL_EXISTS = "Этот e-mail уже зарегистрирован";
     public static final String MESSAGE_IMAGE_ERROR_LOAD = "Не удалось загрузить изображение";
     public static final String MESSAGE_IMAGE_INVALID_FORMAT = "Изображение должно быть формата JPG/PNG";
+    public static final String MESSAGE_MAX_UPLOAD_SIZE = "Файл слишком большой! Максимальный допустимый размер: ";
     public static final String MESSAGE_NAME_EMPTY = "Укажите имя";
     public static final String MESSAGE_NAME_LENGTH = "Имя должно быть длиной от 3 до 30 символов";
     public static final String MESSAGE_OLD_LINK = "Ссылка для восстановления пароля устарела.\n" +
