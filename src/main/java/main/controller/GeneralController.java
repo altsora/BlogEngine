@@ -101,15 +101,8 @@ public class GeneralController {
             LocalDateTime localDateTime = postService.getDateOfTheEarliestPost(ACTIVE, ACCEPTED);
             long firstPublication = localDateTime == null ?
                     0L : TimeUtil.getTimestampFromLocalDateTime(localDateTime);
-
-            StatisticResponse statistic = StatisticResponse.builder()
-                    .dislikesCount(dislikesCount)
-                    .firstPublication(firstPublication)
-                    .likesCount(likesCount)
-                    .postsCount(postsCount)
-                    .viewsCount(viewsCount)
-                    .build();
-
+            StatisticResponse statistic = globalSettingsService
+                    .getStatisticResponse(dislikesCount, likesCount, postsCount, viewsCount, firstPublication);
             return ResponseEntity.ok(statistic);
         }
         if (authService.isUserAuthorize()) {
@@ -122,22 +115,15 @@ public class GeneralController {
     @GetMapping(value = "/statistics/my")
     public ResponseEntity<AbstractResponse> getMyStatistics() {
         long userId = authService.getAuthorizedUserId();
-        int likesCount = postVoteService.getTotalCountLikesByUserId(userId);
         int dislikesCount = postVoteService.getTotalCountDislikesByUserId(userId);
+        int likesCount = postVoteService.getTotalCountLikesByUserId(userId);
         int postsCount = postService.getTotalCountOfPostsByUserId(userId);
         int viewsCount = postService.getTotalCountViewByUserId(userId);
         LocalDateTime localDateTime = postService.getDateOfTheEarliestPostByUserId(userId);
         long firstPublication = localDateTime == null ?
                 0L : TimeUtil.getTimestampFromLocalDateTime(localDateTime);
-
-        StatisticResponse statistic = StatisticResponse.builder()
-                .dislikesCount(dislikesCount)
-                .firstPublication(firstPublication)
-                .likesCount(likesCount)
-                .postsCount(postsCount)
-                .viewsCount(viewsCount)
-                .build();
-
+        StatisticResponse statistic = globalSettingsService
+                .getStatisticResponse(dislikesCount, likesCount, postsCount, viewsCount, firstPublication);
         return ResponseEntity.ok(statistic);
     }
 

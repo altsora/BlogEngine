@@ -1,6 +1,7 @@
 package main.services;
 
 import main.api.responses.ErrorResponse;
+import main.api.responses.UserLoginResponse;
 import main.model.entities.User;
 
 public interface UserService {
@@ -21,4 +22,6 @@ public interface UserService {
     User findById(long userId);
 
     User update(User updatedUser);
+
+    UserLoginResponse createUserLogin(User user);
 }

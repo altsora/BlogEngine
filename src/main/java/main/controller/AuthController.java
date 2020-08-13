@@ -7,15 +7,16 @@ import main.api.requests.RegisterForm;
 import main.api.responses.AbstractResponse;
 import main.api.responses.ErrorResponse;
 import main.api.responses.ResultResponse;
-import main.api.responses.UserLoginResponse;
 import main.model.entities.CaptchaCode;
 import main.model.entities.User;
-import main.services.*;
+import main.services.AuthService;
+import main.services.CaptchaCodeService;
+import main.services.GlobalSettingsService;
+import main.services.UserService;
 import org.json.simple.JSONObject;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import static main.model.enums.ActivityStatus.ACTIVE;
 import static main.utils.MessageUtil.*;
 
 @RestController
@@ -25,7 +26,6 @@ public class AuthController {
     private final AuthService authService;
     private final CaptchaCodeService captchaCodeService;
     private final GlobalSettingsService globalSettingsService;
-    private final PostService postService;
     private final UserService userService;
 
     //==================================================================================================================
@@ -37,20 +37,8 @@ public class AuthController {
         if (authService.isUserAuthorize()) {
             long userId = authService.getAuthorizedUserId();
             User userRep = userService.findById(userId);
-            boolean userIsModerator = userRep.isModerator();
-            int moderationCount = userIsModerator ? postService.getTotalCountOfNewPosts(ACTIVE) : 0;
-
-            UserLoginResponse userLogin = UserLoginResponse.builder()
-                    .id(userId)
-                    .name(userRep.getName())
-                    .photo(userRep.getPhoto())
-                    .email(userRep.getEmail())
-                    .moderation(userIsModerator)
-                    .moderationCount(moderationCount)
-                    .settings(userIsModerator)
-                    .build();
             result = true;
-            response.setUser(userLogin);
+            response.setUser(userService.createUserLogin(userRep));
         }
         response.setResult(result);
         return ResponseEntity.ok(response);
@@ -65,21 +53,9 @@ public class AuthController {
         boolean result = false;
         if (userRep != null) {
             long userId = userRep.getId();
-            boolean userIsModerator = userRep.isModerator();
-            int moderationCount = userIsModerator ? postService.getTotalCountOfNewPosts(ACTIVE) : 0;
-
-            UserLoginResponse userLogin = UserLoginResponse.builder()
-                    .id(userId)
-                    .name(userRep.getName())
-                    .photo(userRep.getPhoto())
-                    .email(userRep.getEmail())
-                    .moderation(userIsModerator)
-                    .moderationCount(moderationCount)
-                    .settings(userIsModerator)
-                    .build();
             authService.authorizeUser(userId);
             result = true;
-            response.setUser(userLogin);
+            response.setUser(userService.createUserLogin(userRep));
         }
         response.setResult(result);
         return ResponseEntity.ok(response);

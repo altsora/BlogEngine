@@ -2,19 +2,23 @@ package main.services.impl;
 
 import lombok.RequiredArgsConstructor;
 import main.api.responses.ErrorResponse;
+import main.api.responses.UserLoginResponse;
 import main.model.entities.User;
 import main.repositories.UserRepository;
+import main.services.PostService;
 import main.services.UserService;
 import main.utils.TimeUtil;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 
+import static main.model.enums.ActivityStatus.ACTIVE;
 import static main.utils.MessageUtil.*;
 
 @Service
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
+    private final PostService postService;
     private final UserRepository userRepository;
 
     //==================================================================================================================
@@ -37,6 +41,21 @@ public class UserServiceImpl implements UserService {
     @Override
     public User update(User updatedUser) {
         return userRepository.saveAndFlush(updatedUser);
+    }
+
+    @Override
+    public UserLoginResponse createUserLogin(User user) {
+        boolean userIsModerator = user.isModerator();
+        int moderationCount = userIsModerator ? postService.getTotalCountOfNewPosts(ACTIVE) : 0;
+        return UserLoginResponse.builder()
+                .id(user.getId())
+                .name(user.getName())
+                .photo(user.getPhoto())
+                .email(user.getEmail())
+                .moderation(userIsModerator)
+                .moderationCount(moderationCount)
+                .settings(userIsModerator)
+                .build();
     }
 
     @Override

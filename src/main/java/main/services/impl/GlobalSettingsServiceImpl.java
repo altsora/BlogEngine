@@ -1,6 +1,7 @@
 package main.services.impl;
 
 import lombok.RequiredArgsConstructor;
+import main.api.responses.StatisticResponse;
 import main.model.entities.GlobalSetting;
 import main.model.enums.SettingsCode;
 import main.model.enums.SettingsValue;
@@ -54,5 +55,16 @@ public class GlobalSettingsServiceImpl implements GlobalSettingsService {
     @Override
     public List<GlobalSetting> findAll() {
         return globalSettingsRepository.findAll();
+    }
+
+    @Override
+    public StatisticResponse getStatisticResponse(int dislikesCount, int likesCount, int postsCount, int viewsCount, long firstPublication) {
+        return StatisticResponse.builder()
+                .dislikesCount(dislikesCount)
+                .firstPublication(firstPublication)
+                .likesCount(likesCount)
+                .postsCount(postsCount)
+                .viewsCount(viewsCount)
+                .build();
     }
 }
