@@ -7,7 +7,6 @@ import org.springframework.context.annotation.PropertySources;
 
 @SpringBootApplication
 @PropertySources({
-        @PropertySource(value = "classpath:config/application.yml"),
         @PropertySource(value = "classpath:config/blog.properties"),
         @PropertySource(value = "classpath:config/captcha.properties")
 })

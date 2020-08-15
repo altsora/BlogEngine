@@ -9,7 +9,6 @@ import org.springframework.context.annotation.ComponentScans;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.scheduling.annotation.EnableAsync;
 
-@PropertySource(value = "classpath:config/application.yml")
 @SpringBootTest
 @ComponentScan(basePackages = "main")
 public class MainTest {

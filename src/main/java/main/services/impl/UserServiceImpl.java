@@ -8,6 +8,7 @@ import main.repositories.UserRepository;
 import main.services.PostService;
 import main.services.UserService;
 import main.utils.TimeUtil;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -16,11 +17,16 @@ import static main.model.enums.ActivityStatus.ACTIVE;
 import static main.utils.MessageUtil.*;
 
 @Service
-@RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
     private final PostService postService;
     private final UserRepository userRepository;
 
+    public UserServiceImpl(
+            @Lazy PostService postService,
+            @Lazy UserRepository userRepository) {
+        this.postService = postService;
+        this.userRepository = userRepository;
+    }
     //==================================================================================================================
 
     @Override
