@@ -86,6 +86,10 @@ public class GeneralController {
             year = LocalDateTime.now(TimeUtil.TIME_ZONE).getYear();
         }
         List<Integer> years = postService.findAllYearsOfPublication(ACTIVE, ACCEPTED);
+        int currentYear = LocalDateTime.now(TimeUtil.TIME_ZONE).getYear();
+        if (!years.contains(currentYear)) {
+            years.add(0, currentYear);
+        }
         Map<String, Long> posts = postService.getDateAndCountPosts(ACTIVE, ACCEPTED, year);
         CalendarResponse calendar = CalendarResponse.builder().years(years).posts(posts).build();
         return ResponseEntity.ok(calendar);
